@@ -85,7 +85,7 @@ body{
   background:var(--bg);color:var(--text);
   font-family:var(--font-mono);font-size:13px;line-height:1.6;
   min-height:100dvh;-webkit-font-smoothing:antialiased;
-  padding-bottom:calc(64px + env(safe-area-inset-bottom,0px) + 20px);
+  padding-bottom:calc(64px + env(safe-area-inset-bottom,0px) + 28px);
   transition:background .3s var(--ease-std),color .3s var(--ease-std);
 }
 a{color:var(--accent);text-decoration:none}
@@ -155,10 +155,10 @@ input{font-family:inherit}
 .lang-option.active{color:var(--accent);font-weight:500}
 
 /* ═══ CONTAINER ═══ */
-.container{max-width:520px;margin:0 auto;padding:0 16px;position:relative;z-index:1}
+.container{max-width:520px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
 
 /* ═══ HEADER / DATE ═══ */
-.page-header{padding:20px 0 4px}
+.page-header{padding:24px 0 8px}
 .header-date{font-family:var(--font-display);font-size:26px;color:var(--white)}
 .header-meta{display:flex;align-items:center;gap:10px;margin-top:4px}
 .header-time{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px}
@@ -176,19 +176,19 @@ input{font-family:inherit}
   letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;
   display:flex;align-items:center;gap:6px;
 }
-.sec-divider{height:1px;background:var(--border);margin:24px 0}
+.sec-divider{height:1px;background:var(--border);margin:32px 0}
 
 /* ═══ THIS WEEKEND HERO ═══ */
 /* ═══ HOME ZONES ═══ */
-.home-zone{margin:20px 0 24px}
+.home-zone{margin:24px 0 28px}
 .zone-header{margin-bottom:14px}
-.zone-title{font-family:var(--font-display);font-size:20px;color:var(--white);display:flex;align-items:center;gap:8px}
+.zone-title{font-family:var(--font-display);font-size:22px;color:var(--white);display:flex;align-items:center;gap:8px}
 .zone-subtitle{font-size:11px;color:var(--text2);margin-top:3px}
 
 /* ── WEATHER OVERVIEW ── */
 .wx-overview{
   background:var(--card);border:1px solid var(--border);
-  border-radius:var(--r);padding:16px;margin:16px 0;
+  border-radius:var(--r);padding:16px;margin:16px 0 24px;
   animation:reveal .5s var(--ease-out) .05s both;
   position:relative;overflow:hidden;
 }
@@ -198,14 +198,15 @@ input{font-family:inherit}
 }
 .wx-eyebrow{font-size:9px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .wx-headline{font-family:var(--font-display);font-size:20px;color:var(--white);line-height:1.3;margin-bottom:8px}
-.wx-timeline{display:flex;gap:0;margin:10px 0;position:relative}
-.wx-timeline::before{content:'';position:absolute;top:11px;left:0;right:0;height:2px;background:var(--border)}
-.wx-phase{flex:1;text-align:center;position:relative;z-index:1}
-.wx-phase-dot{width:10px;height:10px;border-radius:50%;margin:6px auto;border:2px solid var(--border);background:var(--card)}
+.wx-timeline{display:flex;margin:16px 0;position:relative}
+.wx-phase{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;z-index:1}
+.wx-phase-label{font-size:9px;color:var(--text3);letter-spacing:0.5px}
+.wx-phase-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--border);background:var(--card)}
 .wx-phase-dot.active{background:var(--accent);border-color:var(--accent)}
 .wx-phase-dot.past{background:var(--text3);border-color:var(--text3)}
-.wx-phase-label{font-size:9px;color:var(--text3);letter-spacing:.5px;margin-bottom:2px}
 .wx-phase-day{font-size:11px;font-weight:500;color:var(--text)}
+/* Connecting line — positioned at the center of the dots */
+.wx-timeline::before{content:'';position:absolute;top:24px;left:10%;right:10%;height:2px;background:var(--border);z-index:0}
 .wx-summary{font-size:12px;color:var(--text2);line-height:1.6;margin-top:10px}
 .wx-summary strong{color:var(--text)}
 .wx-source{font-size:9px;color:var(--text3);margin-top:8px}
@@ -231,7 +232,7 @@ input{font-family:inherit}
 /* ═══ RECOMMENDATION CARDS ═══ */
 .rec-card{
   background:var(--card);border:1px solid var(--border);
-  border-radius:var(--r);margin-bottom:10px;
+  border-radius:var(--r);margin-bottom:16px;
   overflow:hidden;
   transition:all .2s var(--ease-std);
   animation:reveal .4s var(--ease-out) both;
@@ -241,7 +242,7 @@ input{font-family:inherit}
 .rec-card:nth-child(3){animation-delay:.15s}
 .rec-card:hover{border-color:var(--accent);transform:translateY(-1px)}
 .rec-card.expanded{border-color:var(--accent)}
-.rec-header{display:flex;align-items:center;gap:12px;padding:16px;cursor:pointer}
+.rec-header{display:flex;align-items:center;gap:12px;padding:18px 16px;cursor:pointer}
 .rec-category{
   font-size:8px;letter-spacing:1.5px;text-transform:uppercase;
   padding:3px 8px;border-radius:3px;flex-shrink:0;
@@ -270,24 +271,24 @@ input{font-family:inherit}
 /* ═══ EXPANDED DETAIL ═══ */
 .rec-detail{max-height:0;overflow:hidden;transition:max-height .35s var(--ease-std)}
 .rec-card.expanded .rec-detail{max-height:none}
-.rec-detail-inner{padding:0 16px 16px;border-top:1px solid var(--border)}
+.rec-detail-inner{padding:4px 16px 20px;border-top:1px solid var(--border)}
 
 /* ── Storm Context ── */
 .storm-context{
-  padding:10px 12px;background:var(--sky-soft);border:1px solid rgba(106,175,196,0.15);
+  padding:14px;background:var(--sky-soft);border:1px solid rgba(106,175,196,0.15);
   border-radius:var(--r-sm);margin:12px 0;font-size:11px;color:var(--text2);line-height:1.6;
 }
 .storm-context strong{color:var(--text)}
 .storm-context .storm-label{font-size:9px;color:var(--sky);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
 
 .detail-narrative{
-  font-size:12px;color:var(--text2);line-height:1.7;
+  font-size:12px;color:var(--text2);line-height:1.75;
   padding:12px 0;border-bottom:1px solid var(--border);margin-bottom:12px;
 }
 .detail-narrative strong{color:var(--text)}
 
-.detail-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
-.d-stat{background:var(--card2);border-radius:var(--r-sm);padding:10px}
+.detail-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.d-stat{background:var(--card2);border-radius:var(--r-sm);padding:12px 10px}
 .d-stat-label{font-size:9px;color:var(--text3);letter-spacing:.5px;margin-bottom:3px;display:flex;align-items:center;gap:4px}
 .d-stat-val{font-size:16px;font-weight:600;color:var(--white)}
 .d-stat-link{color:var(--white);text-decoration:none;border-bottom:1px dashed var(--border2)}
@@ -362,8 +363,8 @@ input{font-family:inherit}
 /* ═══ ALL RESORTS LIST ═══ */
 .resort-row{
   display:flex;align-items:center;gap:10px;
-  padding:12px;border:1px solid var(--border);
-  border-radius:var(--r-sm);margin-bottom:6px;cursor:pointer;
+  padding:14px 12px;border:1px solid var(--border);
+  border-radius:var(--r-sm);margin-bottom:8px;cursor:pointer;
   transition:all .15s;
 }
 .resort-row:hover{border-color:var(--accent)}
@@ -431,7 +432,7 @@ input{font-family:inherit}
 /* ═══ EMAIL SUBSCRIPTION ═══ */
 .email-card{
   background:var(--card);border:1px dashed var(--border2);
-  border-radius:var(--r);padding:24px;margin-top:28px;text-align:center;
+  border-radius:var(--r);padding:28px;margin-top:28px;text-align:center;
 }
 .email-eyebrow{font-size:9px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
 .email-heading{font-family:var(--font-display);font-size:20px;color:var(--white);margin-bottom:4px}
@@ -775,7 +776,7 @@ input{font-family:inherit}
       <div class="header-date" id="dateDisplay"></div>
       <div class="header-meta">
         <div class="header-time" id="timeDisplay"></div>
-        <div class="header-demo" data-i18n="demo_data">Demo Data</div>
+        <div class="header-demo" id="dataBadge" data-i18n="demo_data">Demo Data</div>
       </div>
     </div>
 
@@ -997,8 +998,50 @@ const ORIGINS={
   'philadelphia':{lat:39.9526,lng:-75.1652,name:'Philadelphia, PA'},'philly':{lat:39.9526,lng:-75.1652,name:'Philadelphia, PA'},
   'washington dc':{lat:38.9072,lng:-77.0369,name:'Washington, DC'},'dc':{lat:38.9072,lng:-77.0369,name:'Washington, DC'},
   'charlotte':{lat:35.2271,lng:-80.8431,name:'Charlotte, NC'},
+  // Zip code mappings
+  '94102':{lat:37.7749,lng:-122.4194,name:'San Francisco, CA'},
+  '94110':{lat:37.7749,lng:-122.4194,name:'San Francisco, CA'},
+  '94103':{lat:37.7749,lng:-122.4194,name:'San Francisco, CA'},
+  '94107':{lat:37.7749,lng:-122.4194,name:'San Francisco, CA'},
+  '90001':{lat:34.0522,lng:-118.2437,name:'Los Angeles, CA'},
+  '90012':{lat:34.0522,lng:-118.2437,name:'Los Angeles, CA'},
+  '90024':{lat:34.0522,lng:-118.2437,name:'Los Angeles, CA'},
+  '90210':{lat:34.0901,lng:-118.4065,name:'Beverly Hills, CA'},
+  '10001':{lat:40.7128,lng:-74.006,name:'New York, NY'},
+  '10010':{lat:40.7128,lng:-74.006,name:'New York, NY'},
+  '10019':{lat:40.7128,lng:-74.006,name:'New York, NY'},
+  '84101':{lat:40.7608,lng:-111.891,name:'Salt Lake City, UT'},
+  '84102':{lat:40.7608,lng:-111.891,name:'Salt Lake City, UT'},
+  '84111':{lat:40.7608,lng:-111.891,name:'Salt Lake City, UT'},
+  '80202':{lat:39.7392,lng:-104.9903,name:'Denver, CO'},
+  '80203':{lat:39.7392,lng:-104.9903,name:'Denver, CO'},
+  '89101':{lat:36.1699,lng:-115.1398,name:'Las Vegas, NV'},
+  '89109':{lat:36.1699,lng:-115.1398,name:'Las Vegas, NV'},
+  '95814':{lat:38.5816,lng:-121.4944,name:'Sacramento, CA'},
+  '89501':{lat:39.5296,lng:-119.8138,name:'Reno, NV'},
+  '97201':{lat:45.5152,lng:-122.6784,name:'Portland, OR'},
+  '98101':{lat:47.6062,lng:-122.3321,name:'Seattle, WA'},
+  '85001':{lat:33.4484,lng:-112.074,name:'Phoenix, AZ'},
+  '92101':{lat:32.7157,lng:-117.1611,name:'San Diego, CA'},
+  '60601':{lat:41.8781,lng:-87.6298,name:'Chicago, IL'},
+  '02101':{lat:42.3601,lng:-71.0589,name:'Boston, MA'},
+  '33101':{lat:25.7617,lng:-80.1918,name:'Miami, FL'},
+  '30301':{lat:33.749,lng:-84.388,name:'Atlanta, GA'},
+  '75201':{lat:32.7767,lng:-96.797,name:'Dallas, TX'},
+  '77001':{lat:29.7604,lng:-95.3698,name:'Houston, TX'},
+  '55401':{lat:44.9778,lng:-93.265,name:'Minneapolis, MN'},
+  '48201':{lat:42.3314,lng:-83.0458,name:'Detroit, MI'},
+  '19101':{lat:39.9526,lng:-75.1652,name:'Philadelphia, PA'},
+  '20001':{lat:38.9072,lng:-77.0369,name:'Washington, DC'},
+  '28201':{lat:35.2271,lng:-80.8431,name:'Charlotte, NC'},
 };
-function getOrigin(s){const k=s.toLowerCase().trim();for(const[key,v]of Object.entries(ORIGINS)){if(k.includes(key))return v}return ORIGINS['san francisco']}
+function getOrigin(s){
+  const k=s.toLowerCase().trim();
+  // Check for 5-digit zip code
+  if(/^\d{5}$/.test(k)&&ORIGINS[k])return ORIGINS[k];
+  for(const[key,v]of Object.entries(ORIGINS)){if(k.includes(key))return v}
+  return ORIGINS['san francisco'];
+}
 
 function distMiles(a,b){const R=3959,dL=(b.lat-a.lat)*Math.PI/180,dN=(b.lng-a.lng)*Math.PI/180;const x=Math.sin(dL/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dN/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
 
@@ -1025,9 +1068,52 @@ const RESOURCES={
 
 // ── i18n ──
 const T={
-  en:{top_picks:'Top Picks This Weekend',this_weekend:'This Weekend',all_resorts:'All Ikon Pass Resorts',trip_plan:'Trip Planner',my_profile:'My Profile',my_level:'My Level',my_skills:'My Skills',practice:'Practice Routines',resources:'Resources',subscribe:'Subscribe',fresh:'Fresh',base:'Base',lifts:'Lifts',trails:'Trails',distance:'Distance',drive:'Est. Drive',flight:'Flight',open:'Opens',close_t:'Closes',chain_ctrl:'Chain Control',view_detail:'View Full Details',season_total:'Season Total',last_year:'Last Year',average:'5yr Average',next_season:'Next Season Opens',off_season_title:'The mountains are resting',off_season_body:'Season typically opens mid-November. Subscribe to get notified when the first snow falls at your favorite resorts.',days_until:'days until season opens',show_all:'Show all',show_less:'Show less',resorts:'resorts',storm_context:'Storm Context',location:'Location',email:'Email',saved_resort:'Favorite Resort',profile_saved:'Profile saved',seven_day:'7-Day Forecast',hourly_today:'Today Hourly',three_week:'3-Week Outlook',storm_briefing:'Storm Briefing',weather_update:'Weather Update',clear_skies:'Clear skies across the mountains',plan_next:'Plan Your Next Trip',best_windows:'Best windows in the next 3 weeks',week:'Week',snow_chance:'snow chance',expected:'expected',best_bet:'Best bet',score_explain:'What do these scores mean?',score_label:'Score',composite_ranking:'Composite ranking',snow_conditions:'Snow conditions',weather:'Weather',travel_distance:'Travel distance',crowd_factor:'Crowd factor',skill_match:'Skill match',status_labels:'Status Labels',epic:'EPIC',prime:'PRIME',good:'GOOD',limited:'LIMITED',closed:'CLOSED',epic_desc:'15"+ fresh powder day',prime_desc:'8-15" solid conditions',good_desc:'3-8" decent snow',limited_desc:'Minimal natural snow',closed_desc:'Not operating',save_profile:'Save Profile',favorite_resorts:'Favorite Resorts',add_resort:'+ Add resort',powder_alerts:'Powder Alerts',never_miss:'Never miss an epic day',notify_text:'We\'ll notify you when conditions peak at your favorite resorts',condition_alerts:'Condition alerts',storm_forecasts:'Storm forecasts',zero_spam:'Zero spam',subscribed:'You\'re in. We\'ll be in touch when it snows.',selected_resort:'Selected Resort',itinerary:'Sample Powder Day Itinerary',packing:'Packing Checklist',quality:'Quality',snowfall_in:'Snowfall (in)',wind_mph:'Wind (mph)',more_snow:'More snow',drying:'Drying',steady:'Steady',lift_status:'Lifts Status',yoy_inches:'Year over Year (inches)',this_year:'This Year',demo_forecast:'Demo forecast data',demo_subscribe:'subscribe for real alerts',forecast_data:'Forecast data',snow_report:'Snow Report',official_site:'Official Site',instagram:'Instagram',home:'Home',trip:'Trip',profile:'Profile',demo_data:'Demo Data',updated_today:'Updated Today',started:'Started',peaks:'Peaks',clears:'Clears',powder_day:'Powder Day'},
-  zh:{top_picks:'本周末推荐',this_weekend:'本周末',all_resorts:'所有IKON滑雪场',trip_plan:'行程规划',my_profile:'我的资料',my_level:'我的等级',my_skills:'我的技能',practice:'练习计划',resources:'资源',subscribe:'订阅',fresh:'新雪',base:'基础雪',lifts:'缆车',trails:'雪道',distance:'距离',drive:'预计车程',flight:'航班',open:'开放',close_t:'关闭',chain_ctrl:'链条控制',view_detail:'查看详情',season_total:'本季总量',last_year:'去年',average:'5年均值',next_season:'下季开放',off_season_title:'山在休息',off_season_body:'雪季通常在11月中旬开始。订阅以获得首雪通知。',days_until:'天后开季',show_all:'显示全部',show_less:'收起',resorts:'滑雪场',storm_context:'风暴信息',location:'位置',email:'邮箱',saved_resort:'收藏滑雪场',profile_saved:'已保存',seven_day:'7天预报',hourly_today:'今日逐时',three_week:'3周展望',storm_briefing:'风暴简报',weather_update:'天气更新',clear_skies:'山区天气晴朗',plan_next:'规划下次行程',best_windows:'未来3周最佳窗口',week:'第',snow_chance:'降雪概率',expected:'预计',best_bet:'最佳推荐',score_explain:'这些分数是什么意思？',score_label:'分数',composite_ranking:'综合排名',snow_conditions:'雪况',weather:'天气',travel_distance:'路程',crowd_factor:'人流量',skill_match:'技能匹配',status_labels:'状态标签',epic:'极佳',prime:'优秀',good:'良好',limited:'有限',closed:'关闭',epic_desc:'15寸以上新粉雪日',prime_desc:'8-15寸良好雪况',good_desc:'3-8寸尚可降雪',limited_desc:'自然降雪极少',closed_desc:'未运营',save_profile:'保存资料',favorite_resorts:'收藏滑雪场',add_resort:'+ 添加滑雪场',powder_alerts:'粉雪提醒',never_miss:'不错过每个好雪天',notify_text:'当你最爱的滑雪场条件最佳时我们会通知你',condition_alerts:'雪况提醒',storm_forecasts:'暴风雪预报',zero_spam:'无垃圾邮件',subscribed:'已订阅，有雪时我们会通知你。',selected_resort:'已选滑雪场',itinerary:'粉雪日行程示例',packing:'装备清单',quality:'雪质',snowfall_in:'降雪量（英寸）',wind_mph:'风速（mph）',more_snow:'更多降雪',drying:'转晴',steady:'稳定',lift_status:'缆车状态',yoy_inches:'年度对比（英寸）',this_year:'今年',demo_forecast:'演示预报数据',demo_subscribe:'订阅获取真实提醒',forecast_data:'预报数据',snow_report:'雪况报告',official_site:'官方网站',instagram:'Instagram',home:'首页',trip:'行程',profile:'资料',demo_data:'演示数据',updated_today:'今日更新',started:'开始',peaks:'高峰',clears:'放晴',powder_day:'粉雪日'},
-  ja:{top_picks:'今週末のおすすめ',this_weekend:'今週末',all_resorts:'全IKONリゾート',trip_plan:'旅行プランナー',my_profile:'マイプロフィール',my_level:'レベル',my_skills:'スキル',practice:'練習ルーティン',resources:'リソース',subscribe:'登録',fresh:'新雪',base:'ベース',lifts:'リフト',trails:'コース',distance:'距離',drive:'運転時間',flight:'フライト',open:'オープン',close_t:'クローズ',chain_ctrl:'チェーン規制',view_detail:'詳細を見る',season_total:'シーズン合計',last_year:'昨年',average:'5年平均',next_season:'次シーズン',off_season_title:'山は休んでいます',off_season_body:'シーズンは通常11月中旬に始まります。',days_until:'日後にシーズン開始',show_all:'全て表示',show_less:'折りたたむ',resorts:'リゾート',storm_context:'嵐の状況',location:'場所',email:'メール',saved_resort:'お気に入り',profile_saved:'保存済み',seven_day:'7日予報',hourly_today:'今日の時間別',three_week:'3週間の見通し',storm_briefing:'嵐情報',weather_update:'天気更新',clear_skies:'山岳地帯は晴天',plan_next:'次の旅行を計画',best_windows:'今後3週間のベストタイミング',week:'第',snow_chance:'降雪確率',expected:'予想',best_bet:'おすすめ',score_explain:'スコアの意味は？',score_label:'スコア',composite_ranking:'総合評価',snow_conditions:'雪の状態',weather:'天気',travel_distance:'移動距離',crowd_factor:'混雑度',skill_match:'スキルマッチ',status_labels:'ステータス',epic:'最高',prime:'優良',good:'良好',limited:'限定的',closed:'クローズ',epic_desc:'15インチ以上の新雪パウダーデイ',prime_desc:'8-15インチの良好なコンディション',good_desc:'3-8インチのまずまずの雪',limited_desc:'自然降雪が少ない',closed_desc:'営業していない',save_profile:'プロフィール保存',favorite_resorts:'お気に入りリゾート',add_resort:'+ リゾート追加',powder_alerts:'パウダーアラート',never_miss:'最高の日を見逃さない',notify_text:'お気に入りリゾートのコンディションがピークの時にお知らせします',condition_alerts:'コンディション通知',storm_forecasts:'嵐の予報',zero_spam:'スパムなし',subscribed:'登録完了。雪が降ったらお知らせします。',selected_resort:'選択中のリゾート',itinerary:'パウダーデイのスケジュール例',packing:'持ち物チェックリスト',quality:'雪質',snowfall_in:'降雪量（インチ）',wind_mph:'風速（mph）',more_snow:'雪増加',drying:'乾燥',steady:'安定',lift_status:'リフト状況',yoy_inches:'前年比（インチ）',this_year:'今年',demo_forecast:'デモ予報データ',demo_subscribe:'リアルアラートを購読',forecast_data:'予報データ',snow_report:'積雪レポート',official_site:'公式サイト',instagram:'Instagram',home:'ホーム',trip:'旅行',profile:'プロフィール',demo_data:'デモデータ',updated_today:'本日更新',started:'開始',peaks:'ピーク',clears:'晴れ',powder_day:'パウダーデイ'}
+  en:{top_picks:'Top Picks This Weekend',this_weekend:'This Weekend',all_resorts:'All Ikon Pass Resorts',trip_plan:'Trip Planner',my_profile:'My Profile',my_level:'My Level',my_skills:'My Skills',practice:'Practice Routines',resources:'Resources',subscribe:'Subscribe',fresh:'Fresh',base:'Base',lifts:'Lifts',trails:'Trails',distance:'Distance',drive:'Est. Drive',flight:'Flight',open:'Opens',close_t:'Closes',chain_ctrl:'Chain Control',view_detail:'View Full Details',season_total:'Season Total',last_year:'Last Year',average:'5yr Average',next_season:'Next Season Opens',off_season_title:'The mountains are resting',off_season_body:'Season typically opens mid-November. Subscribe to get notified when the first snow falls at your favorite resorts.',days_until:'days until season opens',show_all:'Show all',show_less:'Show less',resorts:'resorts',storm_context:'Storm Context',location:'Location',email:'Email',saved_resort:'Favorite Resort',profile_saved:'Profile saved',seven_day:'7-Day Forecast',hourly_today:'Today Hourly',three_week:'3-Week Outlook',storm_briefing:'Storm Briefing',weather_update:'Weather Update',clear_skies:'Clear skies across the mountains',plan_next:'Plan Your Next Trip',best_windows:'Best windows in the next 3 weeks',week:'Week',snow_chance:'snow chance',expected:'expected',best_bet:'Best bet',score_explain:'What do these scores mean?',score_label:'Score',composite_ranking:'Composite ranking',snow_conditions:'Snow conditions',weather:'Weather',travel_distance:'Travel distance',crowd_factor:'Crowd factor',skill_match:'Skill match',status_labels:'Status Labels',epic:'EPIC',prime:'PRIME',good:'GOOD',limited:'LIMITED',closed:'CLOSED',epic_desc:'15"+ fresh powder day',prime_desc:'8-15" solid conditions',good_desc:'3-8" decent snow',limited_desc:'Minimal natural snow',closed_desc:'Not operating',save_profile:'Save Profile',favorite_resorts:'Favorite Resorts',add_resort:'+ Add resort',powder_alerts:'Powder Alerts',never_miss:'Never miss an epic day',notify_text:'We\'ll notify you when conditions peak at your favorite resorts',condition_alerts:'Condition alerts',storm_forecasts:'Storm forecasts',zero_spam:'Zero spam',subscribed:'You\'re in. We\'ll be in touch when it snows.',selected_resort:'Selected Resort',itinerary:'Sample Powder Day Itinerary',packing:'Packing Checklist',quality:'Quality',snowfall_in:'Snowfall (in)',wind_mph:'Wind (mph)',more_snow:'More snow',drying:'Drying',steady:'Steady',lift_status:'Lifts Status',yoy_inches:'Year over Year (inches)',this_year:'This Year',demo_forecast:'Demo forecast data',demo_subscribe:'subscribe for real alerts',forecast_data:'Forecast data',snow_report:'Snow Report',official_site:'Official Site',instagram:'Instagram',home:'Home',trip:'Trip',profile:'Profile',demo_data:'Demo Data',updated_today:'Updated Today',started:'Started',peaks:'Peaks',clears:'Clears',powder_day:'Powder Day',
+    // Fix 4 & 8 new keys
+    storm_started:'Storm started',peaks_at:'Peaks',clears_at:'Clears',best_window:'Best day window',morning_label:'morning',
+    night_skiing:'Night skiing',epic_conditions:'Epic conditions',great_conditions:'Great conditions',worth_considering:'Worth considering',
+    live_data:'Live Data',updating:'Updating...',snow_report_demo:'Snow report data: demo',weather_openmeteo:'Weather: Open-Meteo',
+    no_significant_snow:'No significant snowfall in the forecast.',packed_base_for_groomers:'packed base for groomer days.',check_back:'Check back \u2014 spring storms can surprise.',
+    pacific_front_since:'Pacific front since',dropping:'dropping',of_quality:'of',more_with:'with 4-6" more',fresh_tracks:'for fresh tracks',
+    narrative_powder_day:'makes this a powder day.',narrative_solid:'Solid',narrative_overnight:'overnight.',narrative_conditions_across:'conditions across the mountain.',
+    narrative_conditions_with:'conditions with a',narrative_base:'base.',narrative_trails_open:'trails open.',
+    search:'Search...',my_level_label:'My Level',
+    depart_early:'Depart Early',arrive_gear:'Arrive & Gear Up',summit_fresh:'Summit \u2014 Fresh Lines',sidecountry:'Side-Country Window',lunch_break:'Lunch Break',park_groomers:'Park or Groomers',last_runs:'Last Runs',apres_ski:'Apr\u00E8s-Ski',
+    safety:'Safety',clothing:'Clothing',equipment:'Equipment',misc:'Misc',
+    above_avg:'above',excellent_year:'the 5-year average. Excellent year.',below_avg:'Season snowfall is below the 5-year average.',near_avg:'Season snowfall is near the 5-year average.',tracking:'This season is tracking',
+    source:'Source',chain_active_since:'Active since',all_vehicles_chains:'All vehicles must carry chains.',expected_label:'Expected',updated_label:'Updated',this_morning:'this morning',last_night:'last night',
+    score_label_detail:'Score'
+  },
+  zh:{top_picks:'本周末推荐',this_weekend:'本周末',all_resorts:'所有IKON滑雪场',trip_plan:'行程规划',my_profile:'我的资料',my_level:'我的等级',my_skills:'我的技能',practice:'练习计划',resources:'资源',subscribe:'订阅',fresh:'新雪',base:'基础雪',lifts:'缆车',trails:'雪道',distance:'距离',drive:'预计车程',flight:'航班',open:'开放',close_t:'关闭',chain_ctrl:'链条控制',view_detail:'查看详情',season_total:'本季总量',last_year:'去年',average:'5年均值',next_season:'下季开放',off_season_title:'山在休息',off_season_body:'雪季通常在11月中旬开始。订阅以获得首雪通知。',days_until:'天后开季',show_all:'显示全部',show_less:'收起',resorts:'滑雪场',storm_context:'风暴信息',location:'位置',email:'邮箱',saved_resort:'收藏滑雪场',profile_saved:'已保存',seven_day:'7天预报',hourly_today:'今日逐时',three_week:'3周展望',storm_briefing:'风暴简报',weather_update:'天气更新',clear_skies:'山区天气晴朗',plan_next:'规划下次行程',best_windows:'未来3周最佳窗口',week:'第',snow_chance:'降雪概率',expected:'预计',best_bet:'最佳推荐',score_explain:'这些分数是什么意思？',score_label:'分数',composite_ranking:'综合排名',snow_conditions:'雪况',weather:'天气',travel_distance:'路程',crowd_factor:'人流量',skill_match:'技能匹配',status_labels:'状态标签',epic:'极佳',prime:'优秀',good:'良好',limited:'有限',closed:'关闭',epic_desc:'15寸以上新粉雪日',prime_desc:'8-15寸良好雪况',good_desc:'3-8寸尚可降雪',limited_desc:'自然降雪极少',closed_desc:'未运营',save_profile:'保存资料',favorite_resorts:'收藏滑雪场',add_resort:'+ 添加滑雪场',powder_alerts:'粉雪提醒',never_miss:'不错过每个好雪天',notify_text:'当你最爱的滑雪场条件最佳时我们会通知你',condition_alerts:'雪况提醒',storm_forecasts:'暴风雪预报',zero_spam:'无垃圾邮件',subscribed:'已订阅，有雪时我们会通知你。',selected_resort:'已选滑雪场',itinerary:'粉雪日行程示例',packing:'装备清单',quality:'雪质',snowfall_in:'降雪量（英寸）',wind_mph:'风速（mph）',more_snow:'更多降雪',drying:'转晴',steady:'稳定',lift_status:'缆车状态',yoy_inches:'年度对比（英寸）',this_year:'今年',demo_forecast:'演示预报数据',demo_subscribe:'订阅获取真实提醒',forecast_data:'预报数据',snow_report:'雪况报告',official_site:'官方网站',instagram:'Instagram',home:'首页',trip:'行程',profile:'资料',demo_data:'演示数据',updated_today:'今日更新',started:'开始',peaks:'高峰',clears:'放晴',powder_day:'粉雪日',
+    storm_started:'暴风雪开始',peaks_at:'高峰',clears_at:'放晴',best_window:'最佳时间',morning_label:'早上',
+    night_skiing:'夜间滑雪',epic_conditions:'极佳条件',great_conditions:'良好条件',worth_considering:'值得考虑',
+    live_data:'实时数据',updating:'更新中...',snow_report_demo:'雪况数据：演示',weather_openmeteo:'天气：Open-Meteo',
+    no_significant_snow:'预报中无明显降雪。',packed_base_for_groomers:'压实基础适合压雪道。',check_back:'请关注——春季风暴可能突然来袭。',
+    pacific_front_since:'太平洋锋面自',dropping:'降下',of_quality:'的',more_with:'还有4-6"',fresh_tracks:'去追新雪',
+    narrative_powder_day:'是粉雪日。',narrative_solid:'不错的',narrative_overnight:'隔夜降雪。',narrative_conditions_across:'全山条件。',
+    narrative_conditions_with:'条件良好，',narrative_base:'基础。',narrative_trails_open:'条雪道开放。',
+    search:'搜索...',my_level_label:'我的等级',
+    depart_early:'早出发',arrive_gear:'到达准备',summit_fresh:'登顶——新雪线路',sidecountry:'侧区窗口',lunch_break:'午餐休息',park_groomers:'公园或压雪道',last_runs:'最后几趟',apres_ski:'滑后休闲',
+    safety:'安全',clothing:'服装',equipment:'装备',misc:'杂项',
+    above_avg:'以上',excellent_year:'五年平均。优秀年份。',below_avg:'本季降雪低于五年平均。',near_avg:'本季降雪接近五年平均。',tracking:'本季表现',
+    source:'来源',chain_active_since:'生效自',all_vehicles_chains:'所有车辆必须携带链条。',expected_label:'预计',updated_label:'更新',this_morning:'今早',last_night:'昨晚',
+    score_label_detail:'分数'
+  },
+  ja:{top_picks:'今週末のおすすめ',this_weekend:'今週末',all_resorts:'全IKONリゾート',trip_plan:'旅行プランナー',my_profile:'マイプロフィール',my_level:'レベル',my_skills:'スキル',practice:'練習ルーティン',resources:'リソース',subscribe:'登録',fresh:'新雪',base:'ベース',lifts:'リフト',trails:'コース',distance:'距離',drive:'運転時間',flight:'フライト',open:'オープン',close_t:'クローズ',chain_ctrl:'チェーン規制',view_detail:'詳細を見る',season_total:'シーズン合計',last_year:'昨年',average:'5年平均',next_season:'次シーズン',off_season_title:'山は休んでいます',off_season_body:'シーズンは通常11月中旬に始まります。',days_until:'日後にシーズン開始',show_all:'全て表示',show_less:'折りたたむ',resorts:'リゾート',storm_context:'嵐の状況',location:'場所',email:'メール',saved_resort:'お気に入り',profile_saved:'保存済み',seven_day:'7日予報',hourly_today:'今日の時間別',three_week:'3週間の見通し',storm_briefing:'嵐情報',weather_update:'天気更新',clear_skies:'山岳地帯は晴天',plan_next:'次の旅行を計画',best_windows:'今後3週間のベストタイミング',week:'第',snow_chance:'降雪確率',expected:'予想',best_bet:'おすすめ',score_explain:'スコアの意味は？',score_label:'スコア',composite_ranking:'総合評価',snow_conditions:'雪の状態',weather:'天気',travel_distance:'移動距離',crowd_factor:'混雑度',skill_match:'スキルマッチ',status_labels:'ステータス',epic:'最高',prime:'優良',good:'良好',limited:'限定的',closed:'クローズ',epic_desc:'15インチ以上の新雪パウダーデイ',prime_desc:'8-15インチの良好なコンディション',good_desc:'3-8インチのまずまずの雪',limited_desc:'自然降雪が少ない',closed_desc:'営業していない',save_profile:'プロフィール保存',favorite_resorts:'お気に入りリゾート',add_resort:'+ リゾート追加',powder_alerts:'パウダーアラート',never_miss:'最高の日を見逃さない',notify_text:'お気に入りリゾートのコンディションがピークの時にお知らせします',condition_alerts:'コンディション通知',storm_forecasts:'嵐の予報',zero_spam:'スパムなし',subscribed:'登録完了。雪が降ったらお知らせします。',selected_resort:'選択中のリゾート',itinerary:'パウダーデイのスケジュール例',packing:'持ち物チェックリスト',quality:'雪質',snowfall_in:'降雪量（インチ）',wind_mph:'風速（mph）',more_snow:'雪増加',drying:'乾燥',steady:'安定',lift_status:'リフト状況',yoy_inches:'前年比（インチ）',this_year:'今年',demo_forecast:'デモ予報データ',demo_subscribe:'リアルアラートを購読',forecast_data:'予報データ',snow_report:'積雪レポート',official_site:'公式サイト',instagram:'Instagram',home:'ホーム',trip:'旅行',profile:'プロフィール',demo_data:'デモデータ',updated_today:'本日更新',started:'開始',peaks:'ピーク',clears:'晴れ',powder_day:'パウダーデイ',
+    storm_started:'嵐の開始',peaks_at:'ピーク',clears_at:'晴れ',best_window:'ベストタイム',morning_label:'朝',
+    night_skiing:'ナイター',epic_conditions:'最高のコンディション',great_conditions:'良好なコンディション',worth_considering:'検討の価値あり',
+    live_data:'ライブデータ',updating:'更新中...',snow_report_demo:'積雪データ：デモ',weather_openmeteo:'天気：Open-Meteo',
+    no_significant_snow:'予報に大きな降雪はありません。',packed_base_for_groomers:'圧雪ベースでグルーミングデイに。',check_back:'春の嵐に注意してください。',
+    pacific_front_since:'太平洋前線',dropping:'降雪',of_quality:'の',more_with:'さらに4-6"',fresh_tracks:'新雪を滑りに',
+    narrative_powder_day:'パウダーデイです。',narrative_solid:'良い',narrative_overnight:'夜間降雪。',narrative_conditions_across:'全山のコンディション。',
+    narrative_conditions_with:'コンディション良好、',narrative_base:'ベース。',narrative_trails_open:'コースオープン。',
+    search:'検索...',my_level_label:'レベル',
+    depart_early:'早朝出発',arrive_gear:'到着・準備',summit_fresh:'山頂へ——新雪ライン',sidecountry:'サイドカントリー',lunch_break:'ランチ休憩',park_groomers:'パークまたはグルーミング',last_runs:'ラストラン',apres_ski:'アフタースキー',
+    safety:'安全',clothing:'ウェア',equipment:'装備',misc:'その他',
+    above_avg:'以上',excellent_year:'5年平均。素晴らしいシーズン。',below_avg:'今シーズンの降雪は5年平均以下。',near_avg:'今シーズンの降雪は5年平均に近い。',tracking:'今シーズンは',
+    source:'ソース',chain_active_since:'発効',all_vehicles_chains:'全車両チェーン必要。',expected_label:'予想',updated_label:'更新',this_morning:'今朝',last_night:'昨夜',
+    score_label_detail:'スコア'
+  }
 };
 let lang=localStorage.getItem('sbLang')||'en';
 function t(k){return(T[lang]&&T[lang][k])||T.en[k]||k}
@@ -1051,6 +1137,177 @@ let activeResort=localStorage.getItem('sbResort')||'mammoth';
 let userLocation=localStorage.getItem('sbOrigin')||'San Francisco, CA';
 let currentTab='home';
 let showAllResorts=false;
+
+// ── WEATHER CACHE & API (Fix 1) ──
+const weatherCache = {};
+const WEATHER_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+async function fetchWeather(lat, lng) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,windspeed_10m,snowfall,weathercode&daily=temperature_2m_max,temperature_2m_min,windspeed_10m_max,snowfall_sum,weathercode&timezone=auto&forecast_days=7&temperature_unit=fahrenheit&windspeed_unit=mph`;
+  const res = await fetch(url);
+  return res.json();
+}
+
+async function fetchSnowDepth(lat, lng) {
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=snow_depth&timezone=auto&forecast_days=1`;
+  const res = await fetch(url);
+  return res.json();
+}
+
+function getCachedWeather(resortId) {
+  const c = weatherCache[resortId];
+  if (c && (Date.now() - c.ts) < WEATHER_CACHE_TTL) return c.data;
+  return null;
+}
+
+function weatherCodeToIcon(code) {
+  if (code <= 1) return 'w-sunny';
+  if (code <= 3) return 'w-partly-cloudy';
+  if (code <= 49) return 'w-cloudy';
+  if (code >= 71 && code <= 77) return 'w-snow';
+  if (code >= 85) return 'w-heavy-snow';
+  return 'w-cloudy';
+}
+
+async function loadWeatherForResorts(resorts) {
+  // Update badge to "Updating..."
+  const badge = document.getElementById('dataBadge');
+  if (badge) { badge.textContent = t('updating'); badge.style.color = 'var(--sky)'; badge.style.background = 'var(--sky-soft)'; }
+
+  const promises = resorts.map(async (r) => {
+    if (getCachedWeather(r.id)) return;
+    try {
+      const [weather, snowDepth] = await Promise.all([
+        fetchWeather(r.lat, r.lng),
+        fetchSnowDepth(r.lat, r.lng)
+      ]);
+      weatherCache[r.id] = { data: { weather, snowDepth }, ts: Date.now() };
+    } catch (e) {
+      console.warn('Weather fetch failed for', r.name, e);
+    }
+  });
+
+  await Promise.allSettled(promises);
+
+  // Update badge to "Live Data"
+  if (badge) {
+    const anyLoaded = resorts.some(r => getCachedWeather(r.id));
+    if (anyLoaded) {
+      badge.textContent = t('live_data');
+      badge.style.color = 'var(--fresh)';
+      badge.style.background = 'var(--fresh-soft)';
+      badge.style.animation = 'none';
+      const dot = badge.querySelector('::before');
+    } else {
+      badge.textContent = t('demo_data');
+    }
+  }
+}
+
+function getWeatherForecast(r) {
+  const cached = getCachedWeather(r.id);
+  if (!cached) return generateForecast(r); // fallback to demo
+  const w = cached.weather;
+  if (!w.daily) return generateForecast(r);
+  const days = [];
+  for (let i = 0; i < 7 && i < w.daily.time.length; i++) {
+    const d = new Date(w.daily.time[i] + 'T12:00:00');
+    const dayName = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : d.toLocaleDateString('en-US', { weekday: 'short' });
+    days.push({
+      dayName,
+      date: d,
+      high: Math.round(w.daily.temperature_2m_max[i]),
+      low: Math.round(w.daily.temperature_2m_min[i]),
+      wind: Math.round(w.daily.windspeed_10m_max[i]),
+      snowfall: Math.round((w.daily.snowfall_sum[i] || 0) * 0.394), // cm to inches approx
+      condition: weatherCodeToIcon(w.daily.weathercode[i])
+    });
+  }
+  return days;
+}
+
+function getWeatherHourly(r) {
+  const cached = getCachedWeather(r.id);
+  if (!cached) return generateHourly(r);
+  const w = cached.weather;
+  if (!w.hourly) return generateHourly(r);
+  const hours = [];
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  for (let h = 0; h < 24; h++) {
+    const idx = w.hourly.time.findIndex(t => t.startsWith(todayStr) && new Date(t).getHours() === h);
+    if (idx >= 0) {
+      hours.push({
+        hour: h,
+        temp: Math.round(w.hourly.temperature_2m[idx]),
+        wind: Math.round(w.hourly.windspeed_10m[idx]),
+        snow: Math.round((w.hourly.snowfall[idx] || 0) * 0.394 * 10) / 10
+      });
+    } else {
+      hours.push({ hour: h, temp: '--', wind: '--', snow: 0 });
+    }
+  }
+  return hours;
+}
+
+function getFresh24h(r) {
+  const cached = getCachedWeather(r.id);
+  if (!cached) return r.fresh;
+  const w = cached.weather;
+  if (!w.hourly || !w.hourly.snowfall) return r.fresh;
+  const now = new Date();
+  let total = 0;
+  for (let i = Math.max(0, w.hourly.snowfall.length - 24); i < w.hourly.snowfall.length; i++) {
+    total += (w.hourly.snowfall[i] || 0);
+  }
+  const inches = Math.round(total * 0.394);
+  return inches > 0 ? inches : r.fresh; // fallback to demo if API returns 0
+}
+
+// ── ROUTE CACHE (Fix 7) ──
+const routeCache = {};
+
+async function fetchRoute(origin, dest) {
+  const key = `${origin.lat},${origin.lng}-${dest.lat},${dest.lng}`;
+  if (routeCache[key]) return routeCache[key];
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${dest.lng},${dest.lat}?overview=full&geometries=geojson`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.routes && data.routes[0]) {
+      const route = data.routes[0];
+      const hours = Math.floor(route.duration / 3600);
+      const mins = Math.round((route.duration % 3600) / 60);
+      const miles = Math.round(route.distance * 0.000621371);
+      routeCache[key] = { duration: route.duration, hours, mins, miles, driveStr: `${hours}h ${mins}m`, geometry: route.geometry };
+      return routeCache[key];
+    }
+  } catch (e) { console.warn('Route fetch failed', e); }
+  return null;
+}
+
+async function loadRoutesForResorts(resorts) {
+  const origin = getOrigin(userLocation);
+  const promises = resorts.filter(r => r.travel && r.travel.dist < 800).map(async (r) => {
+    const route = await fetchRoute(origin, { lat: r.lat, lng: r.lng });
+    if (route) {
+      // Update drive time displays in the DOM
+      const card = document.querySelector(`[data-resort="${r.id}"]`);
+      if (card) {
+        const driveCells = card.querySelectorAll('.drive-val');
+        if (driveCells.length >= 2) {
+          driveCells[1].textContent = route.driveStr;
+        }
+        // Also update the rec-sub line
+        const sub = card.querySelector('.rec-sub');
+        if (sub && !r.travel.flightStr) {
+          sub.innerHTML = sub.innerHTML.replace(r.travel.driveStr + ' ' + t('drive'), route.driveStr + ' ' + t('drive'));
+        }
+      }
+    }
+  });
+  await Promise.allSettled(promises);
+}
 
 // ── SCORING (Fixed granular travel score) ──
 function scoreResort(r,origin){
@@ -1095,13 +1352,19 @@ function getTravelInfo(origin,r){
 
 // ── STORM CONTEXT (per resort) ──
 function getStormContext(r){
-  const now=new Date();const dow=now.getDay();
+  const now=new Date();
   if(r.fresh<3) return null;
-  const stormStart=dow<=4?'Thursday':'last night';
-  const stormPeak=dow<=5?'Saturday':'today';
-  const clearDay=dow<=5?'Sunday':'tomorrow';
-  const bestWindow=dow<=5?'Sunday morning':'tomorrow morning';
-  return{stormStart,stormPeak,clearDay,bestWindow};
+  const fmt=(d)=>d.toLocaleDateString(lang==='zh'?'zh-CN':lang==='ja'?'ja-JP':'en-US',{weekday:'short',month:'short',day:'numeric'});
+  const stormStartDate=new Date(now);stormStartDate.setDate(stormStartDate.getDate()-1);
+  const peakDate=new Date(now);
+  const clearDate=new Date(now);clearDate.setDate(clearDate.getDate()+1);
+  const bestDate=new Date(now);bestDate.setDate(bestDate.getDate()+1);
+  return{
+    stormStart:`${fmt(stormStartDate)} evening`,
+    stormPeak:`${fmt(peakDate)}, midday`,
+    clearDay:`${fmt(clearDate)}, afternoon`,
+    bestWindow:`${fmt(bestDate)}, 6:00 AM \u2013 12:00 PM`
+  };
 }
 
 // ── GENERATE DEMO FORECAST DATA ──
@@ -1176,18 +1439,19 @@ function renderWeatherOverview(){
       <div class="wx-overview">
         <div class="wx-eyebrow">${icon('sun',12)} ${t('weather_update')}</div>
         <div class="wx-headline">${t('clear_skies')}</div>
-        <div class="wx-summary">No significant snowfall in the forecast. ${topResort?topResort.name+' has a '+topResort.base+'" packed base for groomer days.':'All resorts quiet.'} Check back — spring storms can surprise.</div>
+        <div class="wx-summary">${t('no_significant_snow')} ${topResort?topResort.name+' '+topResort.base+'" '+t('packed_base_for_groomers'):'All resorts quiet.'} ${t('check_back')}</div>
       </div>`;
     return;
   }
-  const stormStart=dow<=4?'Thursday':'Friday';
-  const stormPeak=dow<=5?'Saturday':'Today';
-  const clearDay=dow<=5?'Sunday':'Tomorrow';
+  const fmtShort=(d)=>d.toLocaleDateString(lang==='zh'?'zh-CN':lang==='ja'?'ja-JP':'en-US',{weekday:'short',month:'short',day:'numeric'});
+  const stormStartDate=new Date(now);stormStartDate.setDate(stormStartDate.getDate()-1);
+  const peakDate=new Date(now);
+  const clearDate=new Date(now);clearDate.setDate(clearDate.getDate()+1);
   const phases=[
-    {label:t('started'),day:stormStart,state:'past'},
-    {label:t('peaks'),day:stormPeak,state:dow<=5?'active':'past'},
-    {label:t('clears'),day:clearDay,state:dow<=5?'':'active'},
-    {label:t('powder_day'),day:dow<=5?'Sunday AM':'Tomorrow AM',state:''}
+    {label:t('started'),day:fmtShort(stormStartDate),state:'past'},
+    {label:t('peaks'),day:fmtShort(peakDate),state:'active'},
+    {label:t('clears'),day:fmtShort(clearDate),state:''},
+    {label:t('powder_day'),day:fmtShort(clearDate)+' AM',state:''}
   ];
   document.getElementById('weatherOverview').innerHTML=`
     <div class="wx-overview">
@@ -1200,8 +1464,8 @@ function renderWeatherOverview(){
           <div class="wx-phase-day">${p.day}</div>
         </div>`).join('')}
       </div>
-      <div class="wx-summary">Pacific front since <strong>${stormStart}</strong>, dropping ${topResort.fresh}" of ${topResort.quality.toLowerCase()}. Peaks <strong>${stormPeak}</strong> with 4-6" more, clears <strong>${clearDay}</strong>. Best window: <strong>${clearDay} morning</strong> for fresh tracks.</div>
-      <div class="wx-source">${icon('external-link',10)} <a href="${topResort.links.snow}" target="_blank">${topResort.name} Snow Report</a></div>
+      <div class="wx-summary">Pacific front since <strong>${fmtShort(stormStartDate)}</strong>, dropping ${topResort.fresh}" of ${topResort.quality.toLowerCase()}. ${t('peaks')} <strong>${fmtShort(peakDate)}</strong> with 4-6" more, ${t('clears').toLowerCase()} <strong>${fmtShort(clearDate)}</strong>. ${t('best_window')}: <strong>${fmtShort(clearDate)} ${t('morning_label')}</strong> for fresh tracks.</div>
+      <div class="wx-source">${icon('external-link',10)} <a href="${topResort.links.snow}" target="_blank">${topResort.name} ${t('snow_report')}</a> &middot; <a href="https://open-meteo.com" target="_blank">Open-Meteo</a></div>
     </div>`;
 }
 
@@ -1244,7 +1508,7 @@ function renderNextTrip(){
             return `<div class="outlook-resort-row" onclick="scrollToResort('${r.id}');event.stopPropagation()">
               <span class="outlook-region-tag ${tagClass}">${regionTag}</span>
               <strong style="color:var(--white)">${r.name}</strong>
-              <span>&middot; Score ${r.score}</span>
+              <span>&middot; ${t('score_label')} ${r.score}</span>
             </div>`;
           }).join('')}
         </div>
@@ -1280,14 +1544,14 @@ function renderTopPicks(){
   document.getElementById('topPicks').innerHTML=picks.map((r,i)=>{
     const catLabel=r.region==='ca'?'CA':r.region==='us'?'US':'INTL';
     const catClass=r.region==='ca'?'cat-ca':r.region==='us'?'cat-us':'cat-intl';
-    const travelLine=r.travel.flightStr?`${icon('plane',12)} ${r.travel.flightStr}`:r.travel.driveStr+' drive';
+    const travelLine=r.travel.flightStr?`${icon('plane',12)} ${r.travel.flightStr}`:r.travel.driveStr+' '+t('drive');
     const hlClass=r.score>=80?'hl-go':r.score>=65?'hl-good':'hl-ok';
-    const hlText=r.score>=80?'Epic conditions':r.score>=65?'Great conditions':'Worth considering';
+    const hlText=r.score>=80?t('epic_conditions'):r.score>=65?t('great_conditions'):t('worth_considering');
     const storm=getStormContext(r);
     const stormHTML=storm?`<div class="storm-context">
       <div class="storm-label">${icon('cloud-snow',12)} ${t('storm_context')}</div>
-      <strong>Storm started:</strong> ${storm.stormStart} &middot; <strong>Peaks:</strong> ${storm.stormPeak} &middot; <strong>Clears:</strong> ${storm.clearDay}<br>
-      <strong>Best day window:</strong> ${storm.bestWindow}
+      <strong>${t('storm_started')}:</strong> ${storm.stormStart} &middot; <strong>${t('peaks_at')}:</strong> ${storm.stormPeak} &middot; <strong>${t('clears_at')}:</strong> ${storm.clearDay}<br>
+      <strong>${t('best_window')}:</strong> ${storm.bestWindow}
     </div>`:'';
     return`<div class="rec-card expanded" data-resort="${r.id}">
       <div class="rec-header" onclick="toggleRec(this.parentElement)">
@@ -1295,7 +1559,7 @@ function renderTopPicks(){
         <div class="rec-score">${r.score}</div>
         <div class="rec-info">
           <div class="rec-name">${r.name}</div>
-          <div class="rec-sub">${icon('cloud-snow',12)} ${r.fresh}" fresh &middot; ${travelLine}${r.travel.hasChain?' &middot; '+icon('chain',12):''}${r.id==='brighton'?' &middot; Night skiing':''}</div>
+          <div class="rec-sub">${icon('cloud-snow',12)} ${r.fresh}" ${t('fresh')} &middot; ${travelLine}${r.travel.hasChain?' &middot; '+icon('chain',12):''}${r.id==='brighton'?' &middot; '+t('night_skiing'):''}</div>
           <div class="rec-highlight ${hlClass}">${icon('star',10)} ${hlText}</div>
         </div>
         <div class="rec-chevron">${icon('chevron-up',14)}</div>
@@ -1314,7 +1578,8 @@ function renderTopPicks(){
           <div class="drive-cell"><div class="drive-label">${r.travel.flightStr?icon('plane',12):icon('clock',12)} ${r.travel.flightStr?t('flight'):t('drive')}</div><div class="drive-val" style="color:${r.travel.driveHours>8?'var(--danger)':r.travel.hasChain?'var(--warn)':'var(--fresh)'}">${r.travel.flightStr||r.travel.driveStr}</div>${r.travel.hasChain?'<div class="drive-note">+30 min for chains</div>':''}</div>
         </div>
         ${r.travel.hasChain?getChainAlertHTML(r):''}
-        <div class="data-source">${icon('external-link',10)} Source: <a href="${r.links.snow}" target="_blank">${r.name} Snow Report ${icon('external-link',10)}</a></div>
+        <div class="data-source">${icon('external-link',10)} ${t('source')}: <a href="${r.links.snow}" target="_blank">${r.name} ${t('snow_report')} ${icon('external-link',10)}</a></div>
+        <div class="data-source">${getCachedWeather(r.id)?t('snow_report_demo')+' \u00B7 '+t('weather_openmeteo'):t('demo_forecast')}</div>
         <button class="cta-btn" onclick="event.stopPropagation();openDetail('${r.id}')">${icon('eye',14)} ${t('view_detail')}</button>
       </div></div>
     </div>`}).join('');
@@ -1353,7 +1618,7 @@ function getChainAlertHTML(r){
     alta:{road:'Little Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'11:00 PM last night',expected:'All day during storm'},
   };
   const a=alerts[r.id];if(!a)return'';
-  return`<div class="chain-alert"><div class="chain-icon">${icon('alert-triangle',16)}</div><div><div class="chain-title">${icon('chain',12)} ${t('chain_ctrl')} R2 \u2014 ${a.road}</div><div class="chain-meta">Active since ${a.since}. All vehicles must carry chains.<br>Expected: ${a.expected}.</div><div class="chain-source"><a href="${a.url}" target="_blank">${a.src} ${icon('external-link',10)}</a> &middot; Updated ${new Date().getHours()>6?'this morning':'last night'}</div></div></div>`;
+  return`<div class="chain-alert"><div class="chain-icon">${icon('alert-triangle',16)}</div><div><div class="chain-title">${icon('chain',12)} ${t('chain_ctrl')} R2 \u2014 ${a.road}</div><div class="chain-meta">${t('chain_active_since')} ${a.since}. ${t('all_vehicles_chains')}<br>${t('expected_label')}: ${a.expected}.</div><div class="chain-source"><a href="${a.url}" target="_blank">${a.src} ${icon('external-link',10)}</a> &middot; ${t('updated_label')} ${new Date().getHours()>6?t('this_morning'):t('last_night')}</div></div></div>`;
 }
 
 // ── RENDER: LEGEND ──
@@ -1405,7 +1670,7 @@ function renderAllResorts(){
     statusOrder.forEach(status=>{
       const group=scored.filter(r=>r.status===status);
       if(group.length===0)return;
-      html+=`<div class="status-group-header" style="color:${statusColors[status]}">${status} (${group.length})</div>`;
+      html+=`<div class="status-group-header" style="color:${statusColors[status]}">${t(status.toLowerCase())} (${group.length})</div>`;
       html+=group.map(r=>renderResortRow(r)).join('');
     });
     document.getElementById('allResorts').innerHTML=html;
@@ -1419,8 +1684,8 @@ function renderResortRow(r){
   const travelLine=r.travel.flightStr?icon('plane',10)+' '+r.travel.flightStr:r.travel.driveStr;
   return`<div class="resort-row ${bgClass}${r.status==='CLOSED'?' closed-resort':''}" data-resort-id="${r.id}" onclick="openDetail('${r.id}')">
     <div class="rr-score"${r.status==='CLOSED'?' style="color:var(--text3)"':''}>${r.status==='CLOSED'?'\u2014':r.score}</div>
-    <div class="rr-info"><div class="rr-name">${r.name}</div><div class="rr-meta">${icon('cloud-snow',10)} ${r.fresh}" fresh &middot; ${travelLine} &middot; Ikon: ${r.ikonDays}</div></div>
-    <div class="rr-chip ${chipClass}">${r.status}</div>
+    <div class="rr-info"><div class="rr-name">${r.name}</div><div class="rr-meta">${icon('cloud-snow',10)} ${r.fresh}" ${t('fresh')} &middot; ${travelLine} &middot; Ikon: ${r.ikonDays}</div></div>
+    <div class="rr-chip ${chipClass}">${t(r.status.toLowerCase())}</div>
   </div>`;
 }
 
@@ -1513,7 +1778,7 @@ function renderProfile(){
   `;
 
   const lv=calcLevel(skillVals);
-  document.getElementById('levelCard').innerHTML=`<div class="level-label">${icon('star',12)} My Level</div><div class="level-name">${lv.label}</div><div class="level-desc">${lv.desc}</div>`;
+  document.getElementById('levelCard').innerHTML=`<div class="level-label">${icon('star',12)} ${t('my_level_label')}</div><div class="level-name">${lv.label}</div><div class="level-desc">${lv.desc}</div>`;
 
   document.getElementById('skillSliders').innerHTML=SKILL_CATS.map(c=>`
     <div class="skill-row">
@@ -1691,8 +1956,8 @@ function openDetail(id){
   const ti=getTravelInfo(origin,r);
   const score=scoreResort(r,origin);
   const maxYOY=Math.max(r.yoy.thisYear,r.yoy.lastYear,r.yoy.avg);
-  const forecast=generateForecast(r);
-  const hourly=generateHourly(r);
+  const forecast=getWeatherForecast(r);
+  const hourly=getWeatherHourly(r);
   const outlook=generateWeekOutlook(r);
 
   document.getElementById('detailContent').innerHTML=`
@@ -1700,7 +1965,7 @@ function openDetail(id){
     <div style="font-size:11px;color:var(--text2);margin-bottom:16px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">${icon('pin',12)} ${r.loc} &middot; ${r.elev.toLocaleString()} ft &middot; ${r.acres.toLocaleString()} acres &middot; Ikon: ${r.ikonDays}</div>
 
     <div class="detail-stats">
-      <div class="d-stat"><div class="d-stat-label">${icon('star',10)} Score</div><div class="d-stat-val" style="color:${score>=80?'var(--fresh)':score>=65?'var(--sky)':'var(--warn)'}">${score}</div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('star',10)} ${t('score_label_detail')}</div><div class="d-stat-val" style="color:${score>=80?'var(--fresh)':score>=65?'var(--sky)':'var(--warn)'}">${score}</div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('cloud-snow',10)} ${t('fresh')}</div><div class="d-stat-val">${r.fresh}"</div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('mountain',10)} ${t('base')}</div><div class="d-stat-val">${r.base}"</div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('arrow-right',10)} ${t('trails')}</div><div class="d-stat-val">${r.trailsOpen}/${r.trails}</div></div>
@@ -1709,7 +1974,7 @@ function openDetail(id){
     </div>
 
     <div style="padding:10px 12px;background:var(--card);border-radius:var(--r-sm);border:1px solid var(--border);margin:12px 0;font-size:11px;color:var(--text2);line-height:1.6">
-      ${icon('clock',12)} ${t('open')}: <strong style="color:var(--fresh)">${r.open}</strong> &mdash; ${t('close_t')}: <strong style="color:var(--danger)">${r.close}</strong>
+      ${icon('clock',12)} ${t('open')}: <strong style="color:var(--fresh)">${r.open}</strong> \u2014 ${t('close_t')}: <strong style="color:var(--danger)">${r.close}</strong>
       <br>${icon('plane',12)} ${r.airport}
     </div>
 
@@ -1784,11 +2049,11 @@ function openDetail(id){
 
     <div class="season-outlook">
       <strong>${t('next_season')}:</strong> ${r.nextSeason}<br>
-      ${r.yoy.thisYear>r.yoy.avg?`This season is tracking <strong>${Math.round((r.yoy.thisYear/r.yoy.avg-1)*100)}% above</strong> the 5-year average. Excellent year.`:`Season snowfall is ${r.yoy.thisYear<r.yoy.avg?'below':'near'} the 5-year average.`}
+      ${r.yoy.thisYear>r.yoy.avg?`${t('tracking')} <strong>${Math.round((r.yoy.thisYear/r.yoy.avg-1)*100)}% ${t('above_avg')}</strong> ${t('excellent_year')}`:`${r.yoy.thisYear<r.yoy.avg?t('below_avg'):t('near_avg')}`}
     </div>
 
     <div class="data-source" style="margin:12px 0 4px">${icon('external-link',10)} ${t('forecast_data')}: <a href="${r.links.snow}" target="_blank">${r.name} ${t('snow_report')} ${icon('external-link',10)}</a></div>
-    <div class="data-source">${t('demo_forecast')}. ${icon('alert-triangle',10)}</div>
+    <div class="data-source">${getCachedWeather(r.id)?t('snow_report_demo')+' \u00B7 '+t('weather_openmeteo'):t('demo_forecast')}. ${icon('alert-triangle',10)}</div>
 
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">
       <a href="${r.links.official}" target="_blank" class="ghost-btn" style="flex:1;min-width:100px">${icon('external-link',12)} ${t('official_site')}</a>
@@ -1868,6 +2133,18 @@ function toggleTheme(){
   h.setAttribute('data-theme',next);
   localStorage.setItem('sbTheme',next);
   updateThemeIcon();
+  updateMapTiles();
+}
+
+function updateMapTiles(){
+  destroyMaps();
+  // Re-render the active tab to recreate maps with correct tiles
+  const activeSection=document.querySelector('.tab-section.active-tab');
+  if(activeSection){
+    const id=activeSection.id;
+    if(id==='home'){renderTopPicks();}
+    if(id==='trip'){renderTrip();}
+  }
 }
 function updateThemeIcon(){
   const isDark=document.documentElement.getAttribute('data-theme')==='dark';
@@ -1918,8 +2195,25 @@ const savedTheme=localStorage.getItem('sbTheme');
 if(savedTheme)document.documentElement.setAttribute('data-theme',savedTheme);
 renderNavIcons();
 updateThemeIcon();
-renderAll();
+renderAll(); // Stage 1: render immediately with hardcoded data
 setInterval(tick,1000);
+
+// Stage 2 & 3: fetch real weather data in background, then update UI
+(async function initWeatherAndRoutes(){
+  const origin=getOrigin(userLocation);
+  const top3=RESORTS.filter(r=>r.status!=='CLOSED')
+    .map(r=>({...r,score:scoreResort(r,origin)}))
+    .sort((a,b)=>b.score-a.score)
+    .slice(0,3);
+  await loadWeatherForResorts(top3);
+  // Re-render with live data
+  renderWeatherOverview();
+  renderTopPicks();
+  // Also load routes for top 3
+  const origin2=getOrigin(userLocation);
+  const top3WithTravel=top3.map(r=>({...r,travel:getTravelInfo(origin2,r)}));
+  loadRoutesForResorts(top3WithTravel);
+})();
 </script>
 </body>
 </html>
