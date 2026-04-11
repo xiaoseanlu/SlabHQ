@@ -1,10 +1,50 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>SlabHQ — Snow Trip Intelligence</title>
-<meta name="description" content="Personalized ski & snowboard trip recommendations. Ranked resorts, storm tracking, road conditions, gear advice.">
+<title>SlabHQ — Know Before You Go | Snow Trip Intelligence</title>
+<meta name="description" content="Real-time snow conditions, personalized resort rankings, storm tracking, and trip planning for Ikon Pass riders. 35+ resorts scored by snow, weather, distance, and your skill level.">
+<meta name="keywords" content="snow report, ski conditions, snowboard trip planner, Ikon Pass, powder alerts, resort rankings, storm tracking, snow forecast, ski resort, snowboard, winter sports">
+<meta name="author" content="SlabHQ">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://xiaoseanlu.github.io/SlabHQ/">
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://xiaoseanlu.github.io/SlabHQ/">
+<meta property="og:title" content="SlabHQ — Know Before You Go">
+<meta property="og:description" content="Real-time snow conditions, personalized resort rankings, and storm tracking for 35+ Ikon Pass resorts. Your snow trip starts here.">
+<meta property="og:image" content="https://xiaoseanlu.github.io/SlabHQ/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:site_name" content="SlabHQ">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="zh_CN">
+<meta property="og:locale:alternate" content="ja_JP">
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SlabHQ — Know Before You Go">
+<meta name="twitter:description" content="Real-time snow conditions, personalized resort rankings, and storm tracking for 35+ Ikon Pass resorts.">
+<meta name="twitter:image" content="https://xiaoseanlu.github.io/SlabHQ/og-image.png">
+<!-- PWA / Mobile -->
+<meta name="theme-color" content="#c4956a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SlabHQ">
+<!-- Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "SlabHQ",
+  "description": "Real-time snow conditions, personalized resort rankings, storm tracking, and trip planning for Ikon Pass riders.",
+  "url": "https://xiaoseanlu.github.io/SlabHQ/",
+  "applicationCategory": "SportsApplication",
+  "operatingSystem": "Any",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Organization", "name": "SlabHQ" }
+}
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -113,8 +153,11 @@ input{font-family:inherit}
   backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
   transition:background .3s,border-color .3s;
 }
+.logo-group{display:flex;align-items:baseline;gap:8px}
 .logo{font-family:var(--font-display);font-size:22px;color:var(--white)}
 .logo-accent{color:var(--accent)}
+.logo-tagline{font-family:var(--font-mono);font-size:9px;color:var(--text3);letter-spacing:0.5px;white-space:nowrap}
+@media(max-width:360px){.logo-tagline{display:none}}
 .top-actions{display:flex;align-items:center;gap:6px}
 .top-btn{
   display:flex;align-items:center;justify-content:center;
@@ -245,15 +288,16 @@ input{font-family:inherit}
 .rec-header{display:flex;align-items:center;gap:12px;padding:18px 16px;cursor:pointer}
 .rec-category{
   font-size:8px;letter-spacing:1.5px;text-transform:uppercase;
-  padding:3px 8px;border-radius:3px;flex-shrink:0;
-  line-height:1;display:flex;align-items:center;justify-content:center;
+  padding:2px 7px;border-radius:3px;
+  line-height:1;display:inline-flex;align-items:center;justify-content:center;
+  margin-bottom:3px;
 }
 .cat-ca{background:var(--sky-soft);color:var(--sky);border:1px solid rgba(106,175,196,0.2)}
 .cat-us{background:var(--fresh-soft);color:var(--fresh);border:1px solid rgba(106,191,123,0.2)}
 .cat-intl{background:var(--accent-soft);color:var(--accent);border:1px solid rgba(196,149,106,0.2)}
 .rec-score{
   font-family:var(--font-display);font-size:36px;color:var(--white);
-  line-height:1;min-width:44px;
+  line-height:1;min-width:44px;flex-shrink:0;
 }
 .rec-info{flex:1;min-width:0}
 .rec-name{font-family:var(--font-display);font-size:18px;color:var(--white);line-height:1.2}
@@ -456,6 +500,14 @@ input{font-family:inherit}
 .email-success.show{display:flex}
 .email-success{display:none}
 .email-note{font-size:10px;color:var(--text3);margin-top:10px}
+.alert-prefs{margin-top:12px;padding:12px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-sm)}
+.alert-pref-title{font-size:10px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.alert-opt{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text);padding:5px 0;cursor:pointer}
+.alert-opt input[type="checkbox"]{accent-color:var(--accent);width:14px;height:14px;cursor:pointer}
+.alert-logic{margin-top:12px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm)}
+.alert-logic-title{font-size:10px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:4px;font-weight:500}
+.alert-logic-item{font-size:10px;color:var(--text3);padding:3px 0;display:flex;align-items:flex-start;gap:6px;line-height:1.4}
+.alert-logic-item svg{flex-shrink:0;margin-top:1px}
 
 /* ═══ EMPTY / SEASONAL STATE ═══ */
 .empty-state{
@@ -617,6 +669,11 @@ input{font-family:inherit}
 .level-desc{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.6}
 
 /* ═══ ROUTINES & RESOURCES ═══ */
+.routine-goal{font-size:11px;color:var(--accent);padding:6px 0 8px;display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.routine-measure{font-size:10px;color:var(--fresh);padding:10px 0 4px;margin-top:8px;border-top:1px solid var(--border);display:flex;align-items:flex-start;gap:6px;line-height:1.5}
+.routine-measure strong{color:var(--text);white-space:nowrap}
+.routine-measure svg{flex-shrink:0;margin-top:2px}
+.step-num{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;background:var(--border);color:var(--text);font-size:9px;font-weight:600;border-radius:50%;flex-shrink:0;font-family:var(--font-mono)}
 .routine-card{
   background:var(--card);border:1px solid var(--border);
   border-radius:var(--r-sm);padding:12px;margin-bottom:8px;
@@ -627,10 +684,9 @@ input{font-family:inherit}
 .routine-title{font-size:12px;font-weight:500;color:var(--white)}
 .routine-dur{font-size:9px;color:var(--fresh);background:var(--fresh-soft);padding:2px 7px;border-radius:3px}
 .routine-steps{list-style:none}
-.routine-steps li{font-size:10px;color:var(--text2);padding:2px 0;display:flex;gap:6px;align-items:center}
-.routine-steps li svg{flex-shrink:0;color:var(--accent)}
+.routine-steps li{font-size:10px;color:var(--text2);padding:4px 0;display:flex;gap:8px;align-items:flex-start;line-height:1.5}
 .routine-body{max-height:0;overflow:hidden;transition:max-height .25s var(--ease-std)}
-.routine-card.open .routine-body{max-height:300px}
+.routine-card.open .routine-body{max-height:800px}
 
 .res-link{
   display:flex;align-items:center;gap:10px;
@@ -754,7 +810,7 @@ input{font-family:inherit}
 
 <!-- TOP BAR -->
 <header class="top-bar">
-  <div class="logo">Slab<span class="logo-accent">HQ</span></div>
+  <div class="logo-group"><div class="logo">Slab<span class="logo-accent">HQ</span></div><div class="logo-tagline" data-i18n="tagline">Know before you go.</div></div>
   <div class="top-actions">
     <button class="top-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme"></button>
     <div class="lang-wrap" id="langWrap">
@@ -837,26 +893,14 @@ input{font-family:inherit}
     <div class="sec-label" style="margin-top:20px" data-i18n="my_skills">My Skills</div>
     <div id="skillSliders"></div>
 
-    <div class="sec-label" style="margin-top:24px" data-i18n="practice">Practice Routines</div>
+    <div class="sec-label" style="margin-top:24px" data-i18n="practice">Training Programs</div>
     <div id="routineList"></div>
 
     <div class="sec-label" style="margin-top:24px" data-i18n="resources">Resources</div>
     <div id="resourceList"></div>
 
-    <!-- EMAIL in Profile -->
-    <div class="email-card" style="margin-top:24px">
-      <div class="email-eyebrow" data-i18n="powder_alerts">Powder Alerts</div>
-      <div class="email-heading" data-i18n="never_miss">Never miss an epic day</div>
-      <div class="email-sub" data-i18n="notify_text">We'll notify you when conditions peak at your favorite resorts</div>
-      <form id="emailForm" onsubmit="submitEmail(event)">
-        <div class="email-row">
-          <input class="email-input" type="email" name="email" placeholder="your@email.com" required />
-          <button class="email-btn" type="submit" data-i18n="subscribe">Subscribe</button>
-        </div>
-      </form>
-      <div class="email-success" id="emailSuccess"></div>
-      <div class="email-note"><span data-i18n="condition_alerts">Condition alerts</span> &middot; <span data-i18n="storm_forecasts">Storm forecasts</span> &middot; <span data-i18n="zero_spam">Zero spam</span></div>
-    </div>
+    <!-- EMAIL SUBSCRIPTION (rendered via JS for icon support) -->
+    <div id="emailWrap" style="margin-top:24px"></div>
   </section>
 
 </div>
@@ -1061,11 +1105,27 @@ let skillVals=JSON.parse(localStorage.getItem('sbSkills')||'null')||{carving:55,
 function calcLevel(v){const avg=Object.values(v).reduce((a,b)=>a+b,0)/Object.values(v).length;if(avg>=80)return{label:t('lv_expert'),desc:t('lv_expert_desc'),key:'expert'};if(avg>=65)return{label:t('lv_advanced'),desc:t('lv_advanced_desc'),key:'advanced'};if(avg>=48)return{label:t('lv_intermediate'),desc:t('lv_intermediate_desc'),key:'intermediate'};if(avg>=30)return{label:t('lv_novice'),desc:t('lv_novice_desc'),key:'novice'};return{label:t('lv_beginner'),desc:t('lv_beginner_desc'),key:'beginner'}}
 
 const ROUTINES={
-  beginner:[{title:'First Steps',dur:'2 days',steps:['Skating \u2014 one foot in bindings on flat','Falling leaf: sideslip heel and toe','J-turns: heel first, then toe','Link 3 turns on gentle green','Film yourself \u2014 watch upper body']}],
-  novice:[{title:'Blue Run Progression',dur:'30 min',steps:['2 warm-up runs on easy green','Pick one blue: focus on rhythm','Short-radius turns between markers','Controlled speed check at bottom']}],
-  intermediate:[{title:'Morning Carve Warm-Up',dur:'30 min',steps:['3 groomed blues \u2014 full toe/heel carves','2 runs switch on easy blue','High-speed traverse on edge','Ollie + nollie practice on flat']},{title:'Park Introduction',dur:'45 min',steps:['Walk all features before hitting','Smallest box: straight through','50-50 on medium box','Smallest jump: straight air, land centered']}],
-  advanced:[{title:'Switch Progression',dur:'60 min',steps:['30-min switch-only on blue','Heelside switch turns','Switch 180 into small features','Cab 180: switch takeoff to forward']},{title:'Powder Day Protocol',dur:'All day',steps:['Set bindings +1.5-2" back','Dolphin turns in shin-deep snow','Treeline stashes after first groomer','Stay with a partner always']}],
-  expert:[{title:'Expert Morning Protocol',dur:'2h',steps:['Beacon check before leaving car','Scope overnight snow on south blacks','Side-country 9-11 AM \u2014 partner only','Push edge limits on steep groomed']},{title:'Backcountry Readiness',dur:'Pre-trip',steps:['Beacon drill: 3-min search','Review avalanche forecast','Know aspect + slope angle','Carry: beacon, probe, shovel, blanket','Never solo \u2014 2+ people minimum']}]
+  beginner:[
+    {title:'Week 1-2: Finding Your Balance',dur:'4 sessions',goal:'Stand, slide, and stop with confidence.',steps:['Session 1: Skating on flat \u2014 one foot strapped in, push with back foot for 15 min','Session 2: Falling leaf drill \u2014 heel-side sideslip down a gentle slope, then toe-side. 10 reps each','Session 3: J-turns on green \u2014 start with heel-side only, arc to a stop. Then toe-side. Alternate for 20 min','Session 4: Link 3 turns on a gentle green. Film yourself \u2014 watch for counter-rotation in upper body'],measure:'Can you stop reliably on both edges within 5 seconds?'},
+    {title:'Week 3-4: Linking Turns',dur:'4 sessions',goal:'Smooth linked turns on greens. Ready for easy blues.',steps:['Session 5: Garland turns \u2014 toe-side traverses with small turns back uphill. 15 min','Session 6: Full linked turns on green \u2014 focus on rhythm, not speed. Count "1-2-3-turn"','Session 7: Speed control drill \u2014 alternate between fast and slow turns. Feel the edges grip','Session 8: First easy blue run! Stay in control. Take breaks. Celebrate.'],measure:'Can you link 8+ turns on a green without falling?'}
+  ],
+  novice:[
+    {title:'Blue Run Mastery',dur:'3 sessions/week \u00D7 2 weeks',goal:'Confident on all blues. Intro to carving.',steps:['Warm-up: 2 green runs at moderate speed, focus on smooth edge transitions','Drill 1: Short-radius turns \u2014 set poles/markers 20ft apart, turn between them. 3 runs','Drill 2: Edge-hold traverses \u2014 cross the slope on your toe edge only, then heel. Feel the angle','Drill 3: Speed run \u2014 one blue at comfortable speed, then same run trying to go 20% faster','Cool-down: 1 easy run switch stance (just try it, falling is fine)'],measure:'Can you descend any blue in control without speed-checking?'},
+    {title:'First Park Day',dur:'1 session',goal:'Ride your first box and small jump safely.',steps:['Walk the entire park first. Study each feature and how others ride them','Straight-run the flat box 3 times \u2014 eyes forward, knees soft, arms quiet','50-50 the small box \u2014 approach straight, stay centered, ride off clean','Smallest jump: straight air only. Pop off the lip, land centered with knees bent. 5 reps','STOP if fatigued. Park injuries happen when you\u2019re tired.'],measure:'Can you 50-50 a box and land a straight air cleanly?'}
+  ],
+  intermediate:[
+    {title:'Carving Bootcamp',dur:'2 sessions/week \u00D7 3 weeks',goal:'Lay trenches. Full toe/heel carves on blues, intro carving on blacks.',steps:['Week 1: Euro-carves on groomed blue \u2014 drag your hand/glove on the snow each turn. 3 runs per session','Week 1: One-footed turns \u2014 unstrap back foot on mellow terrain, carve with front foot only. Builds edge awareness','Week 2: High-speed GS turns on blue \u2014 long arcs, full edge engagement. Film from behind to check pencil-thin tracks','Week 2: Intro to black carving \u2014 pick an easy black, moderate speed, focus on completing each turn','Week 3: Carve + speed combo \u2014 3 fast carves then 3 slow carves. Vary rhythm within a single run','Week 3: Carve assessment \u2014 film yourself. Are your tracks clean lines or skidded? Adjust angulation.'],measure:'Can you leave pencil-thin carved lines on a blue groomer?'},
+    {title:'Park Progression: Boxes to Rails',dur:'2 sessions/week \u00D7 2 weeks',goal:'Consistent 50-50s on all boxes. Intro to rails and small kickers.',steps:['Session 1: 50-50 every box in the park. Focus on balance point and quiet upper body','Session 2: Front-side boardslide on flat box \u2014 approach at slight angle, rotate 90\u00B0, stay centered','Session 3: First rail attempt \u2014 50-50 the widest, flattest rail. Commit or bail early, never half-send','Session 4: Small kicker progression \u2014 straight air \u2192 grab (indy or melon) \u2192 shifty. 5 clean reps of each before moving on'],measure:'Can you boardslide a flat box and grab on a small kicker?'},
+    {title:'Switch Riding Foundation',dur:'4 sessions',goal:'Comfortable switch on blues. Essential for park and all-mountain progression.',steps:['Session 1: Switch on green \u2014 entire run switch. Focus on looking downhill, not at your feet','Session 2: Switch on easy blue \u2014 if you fall, identify which edge caught. Adjust body position','Session 3: Regular \u2192 switch transitions \u2014 ride 3 turns regular, spin 180, ride 3 turns switch. Repeat','Session 4: Switch carving on green \u2014 yes, carved turns in switch. This is the test.'],measure:'Can you descend a blue run entirely in switch without falling?'}
+  ],
+  advanced:[
+    {title:'Freestyle Progression: Spins & Style',dur:'3 sessions/week \u00D7 4 weeks',goal:'Clean 360s, stylish grabs, and rail tricks.',steps:['Week 1: Flat-ground 180s \u2014 frontside and backside on groomed run. 20 clean reps each direction','Week 1: Butter/press combos \u2014 nose press \u2192 nollie \u2192 tail press \u2192 ollie. Flow between them','Week 2: Jump 180s on small kicker \u2014 both directions. Focus on spotting the landing','Week 2: Boardslide to front-side and back-side on boxes. Controlled exit every time','Week 3: 360 commitment week \u2014 small kicker only. Start with frontside, lock in head turn and spot','Week 3: Rail progression \u2014 50-50 on round rail, then front boardslide. Bail practice (fall safely)','Week 4: Style refinement \u2014 add grabs to 180s and 360s. Film and review. Poke those grabs out','Week 4: Line building \u2014 link 3+ features in a single park run with flow'],measure:'Can you land a clean frontside 360 with a grab?'},
+    {title:'Powder & Steep Terrain Mastery',dur:'Storm day protocol',goal:'Own any conditions. Deep powder, steep chutes, variable snow.',steps:['Before riding: Move bindings back 1.5-2" from center. This changes your float dramatically','First run: Pick a groomed black, warm up with aggressive carves at full speed','Powder entry: Start on moderate pitch. Weight on back foot, dolphin-turn rhythm, hands forward','Steep chutes: Side-slip entry, then committed hop-turns. Never lean into the hill on steeps','Tree riding: Slow is smooth, smooth is fast. Plan 3 turns ahead. Stop and scout if unsure','Variable snow: Ride with softer knees. Let the board flex over crud, don\u2019t fight it','ALWAYS ride with a partner in side-country. Tell someone your plan.'],measure:'Can you ride a steep, ungroomed run in powder without stopping?'}
+  ],
+  expert:[
+    {title:'Big Mountain Protocol',dur:'Ongoing \u2014 every ride day',goal:'Push limits safely. Side-country, big lines, technical terrain.',steps:['Pre-dawn: Check avalanche forecast (avalanche.org). Know danger rating, problem type, and aspect','Gear check: Beacon battery >50%. Probe + shovel accessible. Partner beacon check before first lift','First chair strategy: Scope conditions from the lift. Note wind loading, cornices, recent slide activity','7:30-10 AM: Hit steep north-facing first \u2014 snow is cold and stable. Commit to your line','10 AM-12 PM: Side-country window. Only with partner. South-facing stashes before sun affect','Afternoon: Return to resort. Push edge limits on steep groomers. Practice emergency stops','Log your runs: Note conditions, terrain, what went well, what felt sketchy. Review weekly'],measure:'Can you assess avalanche terrain and choose safe lines independently?'},
+    {title:'Backcountry Readiness Program',dur:'Pre-season + ongoing',goal:'Self-sufficient in the backcountry. This is not optional training.',steps:['Take AIARE Level 1 (or equivalent). This is non-negotiable for backcountry riding','Beacon drill: Practice weekly. Target < 3 min for single burial search + probe strike','Physical fitness: Uphill skinning/hiking requires cardio. 3x/week: run, bike, or stair climb','Gear familiarity: Practice setting up splitboard skins, transitions, and descending in touring mode','Route planning: Learn to read topo maps. Identify terrain traps, safe zones, and escape routes','First tour: Go with an experienced mentor. Follow, observe, ask questions. Don\u2019t lead yet','Decision-making: Practice turning back. The mountain will be there tomorrow. Ego kills in the backcountry'],measure:'Have you completed AIARE L1 and can execute a full companion rescue in under 5 minutes?'}
+  ]
 };
 const RESOURCES={
   beginner:[{icon:'external-link',title:'Snowboard Beginner Tutorial',url:'https://www.youtube.com/results?search_query=snowboard+beginner+2024',desc:'Shred School, SnowboardProCamp'}],
@@ -1077,7 +1137,7 @@ const RESOURCES={
 
 // ── i18n ──
 const T={
-  en:{top_picks:'Top Picks This Weekend',this_weekend:'This Weekend',all_resorts:'All Ikon Pass Resorts',trip_plan:'Trip Planner',my_profile:'My Profile',my_level:'My Level',my_skills:'My Skills',practice:'Practice Routines',resources:'Resources',subscribe:'Subscribe',fresh:'Fresh',base:'Base',lifts:'Lifts',trails:'Trails',distance:'Distance',drive:'Est. Drive',flight:'Flight',open:'Opens',close_t:'Closes',chain_ctrl:'Chain Control',view_detail:'View Full Details',season_total:'Season Total',last_year:'Last Year',average:'5yr Average',next_season:'Next Season Opens',off_season_title:'The mountains are resting',off_season_body:'Season typically opens mid-November. Subscribe to get notified when the first snow falls at your favorite resorts.',days_until:'days until season opens',show_all:'Show all',show_less:'Show less',resorts:'resorts',storm_context:'Storm Context',location:'Location',email:'Email',saved_resort:'Favorite Resort',profile_saved:'Profile saved',seven_day:'7-Day Forecast',hourly_today:'Today Hourly',three_week:'3-Week Outlook',storm_briefing:'Storm Briefing',weather_update:'Weather Update',clear_skies:'Clear skies across the mountains',plan_next:'Plan Your Next Trip',best_windows:'Best windows in the next 3 weeks',week:'Week',snow_chance:'snow chance',expected:'expected',best_bet:'Best bet',score_explain:'What do these scores mean?',score_label:'Score',composite_ranking:'Composite ranking',snow_conditions:'Snow conditions',weather:'Weather',travel_distance:'Travel distance',crowd_factor:'Crowd factor',skill_match:'Skill match',status_labels:'Status Labels',epic:'EPIC',prime:'PRIME',good:'GOOD',limited:'LIMITED',closed:'CLOSED',epic_desc:'15"+ fresh powder day',prime_desc:'8-15" solid conditions',good_desc:'3-8" decent snow',limited_desc:'Minimal natural snow',closed_desc:'Not operating',save_profile:'Save Profile',favorite_resorts:'Favorite Resorts',add_resort:'+ Add resort',powder_alerts:'Powder Alerts',never_miss:'Never miss an epic day',notify_text:'We\'ll notify you when conditions peak at your favorite resorts',condition_alerts:'Condition alerts',storm_forecasts:'Storm forecasts',zero_spam:'Zero spam',subscribed:'You\'re in. We\'ll be in touch when it snows.',selected_resort:'Selected Resort',itinerary:'Sample Powder Day Itinerary',packing:'Packing Checklist',quality:'Quality',snowfall_in:'Snowfall (in)',wind_mph:'Wind (mph)',more_snow:'More snow',drying:'Drying',steady:'Steady',lift_status:'Lifts Status',yoy_inches:'Year over Year (inches)',this_year:'This Year',demo_forecast:'Demo forecast data',demo_subscribe:'subscribe for real alerts',forecast_data:'Forecast data',snow_report:'Snow Report',official_site:'Official Site',instagram:'Instagram',home:'Home',trip:'Trip',profile:'Profile',demo_data:'Demo Data',updated_today:'Updated Today',started:'Started',peaks:'Peaks',clears:'Clears',powder_day:'Powder Day',
+  en:{top_picks:'Top Picks This Weekend',this_weekend:'This Weekend',all_resorts:'All Ikon Pass Resorts',trip_plan:'Trip Planner',my_profile:'My Profile',my_level:'My Level',my_skills:'My Skills',practice:'Training Programs',resources:'Resources',subscribe:'Subscribe',fresh:'Fresh Snow',base:'Base Depth',lifts:'Lifts',trails:'Trails',distance:'Distance',drive:'Est. Drive',flight:'Flight',open:'Opens',close_t:'Closes',chain_ctrl:'Chain Control',view_detail:'View Full Details',season_total:'Season Total',last_year:'Last Year',average:'5yr Average',next_season:'Next Season Opens',off_season_title:'The mountains are resting',off_season_body:'Season typically opens mid-November. Subscribe to get notified when the first snow falls at your favorite resorts.',days_until:'days until season opens',show_all:'Show all',show_less:'Show less',resorts:'resorts',storm_context:'Storm Context',location:'Location',email:'Email',saved_resort:'Favorite Resort',profile_saved:'Profile saved',seven_day:'7-Day Forecast',hourly_today:'Today Hourly',three_week:'3-Week Outlook',storm_briefing:'Storm Briefing',weather_update:'Weather Update',clear_skies:'Clear skies across the mountains',plan_next:'Plan Your Next Trip',best_windows:'Best windows in the next 3 weeks',week:'Week',snow_chance:'snow chance',expected:'expected',best_bet:'Best bet',score_explain:'What do these scores mean?',score_label:'Score',composite_ranking:'Composite ranking',snow_conditions:'Snow conditions',weather:'Weather',travel_distance:'Travel distance',crowd_factor:'Crowd factor',skill_match:'Skill match',status_labels:'Status Labels',epic:'EPIC',prime:'PRIME',good:'GOOD',limited:'LIMITED',closed:'CLOSED',epic_desc:'15"+ fresh powder day',prime_desc:'8-15" solid conditions',good_desc:'3-8" decent snow',limited_desc:'Minimal natural snow',closed_desc:'Not operating',save_profile:'Save Profile',favorite_resorts:'Favorite Resorts',add_resort:'+ Add resort',powder_alerts:'Powder Alerts',never_miss:'Never miss an epic day',notify_text:'We\'ll notify you when conditions peak at your favorite resorts',condition_alerts:'Condition alerts',storm_forecasts:'Storm forecasts',zero_spam:'Zero spam',subscribed:'You\'re in. We\'ll be in touch when it snows.',selected_resort:'Selected Resort',itinerary:'Sample Powder Day Itinerary',packing:'Packing Checklist',quality:'Quality',snowfall_in:'Snowfall (in)',wind_mph:'Wind (mph)',more_snow:'More snow',drying:'Drying',steady:'Steady',lift_status:'Lifts Status',yoy_inches:'Year over Year (inches)',this_year:'This Year',demo_forecast:'Demo forecast data',demo_subscribe:'subscribe for real alerts',forecast_data:'Forecast data',snow_report:'Snow Report',official_site:'Official Site',instagram:'Instagram',home:'Home',trip:'Trip',profile:'Profile',demo_data:'Demo Data',updated_today:'Updated Today',started:'Started',peaks:'Peaks',clears:'Clears',powder_day:'Powder Day',
     // Fix 4 & 8 new keys
     storm_started:'Storm started',peaks_at:'Peaks',clears_at:'Clears',best_window:'Best day window',morning_label:'morning',
     night_skiing:'Night skiing',epic_conditions:'Epic conditions',great_conditions:'Great conditions',worth_considering:'Worth considering',
@@ -1126,9 +1186,13 @@ const T={
     lv_novice_desc:'Comfortable on greens, beginning blues. Linking turns.',
     lv_beginner_desc:'Learning to link turns. Focus on balance and greens.',
     time_evening:'evening',time_midday:'midday',time_afternoon:'afternoon',
-    today_label:'Today',tomorrow_label:'Tomorrow'
+    today_label:'Today',tomorrow_label:'Tomorrow',
+    tagline:'Know before you go.',
+    alert_when:'Alert me when:',alert_powder:'8"+ fresh snow at my resorts',alert_storm:'Major storm incoming (12"+)',alert_epic:'EPIC conditions (score 85+)',alert_weekly:'Weekly forecast digest (Wednesdays)',
+    alert_logic_title:'When do alerts fire?',alert_logic_powder:'Powder: When any of your favorite resorts reports 8"+ fresh overnight',alert_logic_storm:'Storm: 48h before a major system hits (12"+ forecast)',alert_logic_epic:'Epic: When a resort scores 85+ based on snow + weather + your location',alert_logic_weekly:'Weekly: Wednesday evening — weekend forecast for your top resorts',
+    checkpoint:'Checkpoint:'
   },
-  zh:{top_picks:'本周末推荐',this_weekend:'本周末',all_resorts:'所有IKON滑雪场',trip_plan:'行程规划',my_profile:'我的资料',my_level:'我的等级',my_skills:'我的技能',practice:'练习计划',resources:'资源',subscribe:'订阅',fresh:'新雪',base:'基础雪',lifts:'缆车',trails:'雪道',distance:'距离',drive:'预计车程',flight:'航班',open:'开放',close_t:'关闭',chain_ctrl:'链条控制',view_detail:'查看详情',season_total:'本季总量',last_year:'去年',average:'5年均值',next_season:'下季开放',off_season_title:'山在休息',off_season_body:'雪季通常在11月中旬开始。订阅以获得首雪通知。',days_until:'天后开季',show_all:'显示全部',show_less:'收起',resorts:'滑雪场',storm_context:'风暴信息',location:'位置',email:'邮箱',saved_resort:'收藏滑雪场',profile_saved:'已保存',seven_day:'7天预报',hourly_today:'今日逐时',three_week:'3周展望',storm_briefing:'风暴简报',weather_update:'天气更新',clear_skies:'山区天气晴朗',plan_next:'规划下次行程',best_windows:'未来3周最佳窗口',week:'第',snow_chance:'降雪概率',expected:'预计',best_bet:'最佳推荐',score_explain:'这些分数是什么意思？',score_label:'分数',composite_ranking:'综合排名',snow_conditions:'雪况',weather:'天气',travel_distance:'路程',crowd_factor:'人流量',skill_match:'技能匹配',status_labels:'状态标签',epic:'极佳',prime:'优秀',good:'良好',limited:'有限',closed:'关闭',epic_desc:'15寸以上新粉雪日',prime_desc:'8-15寸良好雪况',good_desc:'3-8寸尚可降雪',limited_desc:'自然降雪极少',closed_desc:'未运营',save_profile:'保存资料',favorite_resorts:'收藏滑雪场',add_resort:'+ 添加滑雪场',powder_alerts:'粉雪提醒',never_miss:'不错过每个好雪天',notify_text:'当你最爱的滑雪场条件最佳时我们会通知你',condition_alerts:'雪况提醒',storm_forecasts:'暴风雪预报',zero_spam:'无垃圾邮件',subscribed:'已订阅，有雪时我们会通知你。',selected_resort:'已选滑雪场',itinerary:'粉雪日行程示例',packing:'装备清单',quality:'雪质',snowfall_in:'降雪量（英寸）',wind_mph:'风速（mph）',more_snow:'更多降雪',drying:'转晴',steady:'稳定',lift_status:'缆车状态',yoy_inches:'年度对比（英寸）',this_year:'今年',demo_forecast:'演示预报数据',demo_subscribe:'订阅获取真实提醒',forecast_data:'预报数据',snow_report:'雪况报告',official_site:'官方网站',instagram:'Instagram',home:'首页',trip:'行程',profile:'资料',demo_data:'演示数据',updated_today:'今日更新',started:'开始',peaks:'高峰',clears:'放晴',powder_day:'粉雪日',
+  zh:{top_picks:'本周末推荐',this_weekend:'本周末',all_resorts:'所有IKON滑雪场',trip_plan:'行程规划',my_profile:'我的资料',my_level:'我的等级',my_skills:'我的技能',practice:'训练计划',resources:'资源',subscribe:'订阅',fresh:'新雪量',base:'积雪深度',lifts:'缆车',trails:'雪道',distance:'距离',drive:'预计车程',flight:'航班',open:'开放',close_t:'关闭',chain_ctrl:'链条控制',view_detail:'查看详情',season_total:'本季总量',last_year:'去年',average:'5年均值',next_season:'下季开放',off_season_title:'山在休息',off_season_body:'雪季通常在11月中旬开始。订阅以获得首雪通知。',days_until:'天后开季',show_all:'显示全部',show_less:'收起',resorts:'滑雪场',storm_context:'风暴信息',location:'位置',email:'邮箱',saved_resort:'收藏滑雪场',profile_saved:'已保存',seven_day:'7天预报',hourly_today:'今日逐时',three_week:'3周展望',storm_briefing:'风暴简报',weather_update:'天气更新',clear_skies:'山区天气晴朗',plan_next:'规划下次行程',best_windows:'未来3周最佳窗口',week:'第',snow_chance:'降雪概率',expected:'预计',best_bet:'最佳推荐',score_explain:'这些分数是什么意思？',score_label:'分数',composite_ranking:'综合排名',snow_conditions:'雪况',weather:'天气',travel_distance:'路程',crowd_factor:'人流量',skill_match:'技能匹配',status_labels:'状态标签',epic:'极佳',prime:'优秀',good:'良好',limited:'有限',closed:'关闭',epic_desc:'15寸以上新粉雪日',prime_desc:'8-15寸良好雪况',good_desc:'3-8寸尚可降雪',limited_desc:'自然降雪极少',closed_desc:'未运营',save_profile:'保存资料',favorite_resorts:'收藏滑雪场',add_resort:'+ 添加滑雪场',powder_alerts:'粉雪提醒',never_miss:'不错过每个好雪天',notify_text:'当你最爱的滑雪场条件最佳时我们会通知你',condition_alerts:'雪况提醒',storm_forecasts:'暴风雪预报',zero_spam:'无垃圾邮件',subscribed:'已订阅，有雪时我们会通知你。',selected_resort:'已选滑雪场',itinerary:'粉雪日行程示例',packing:'装备清单',quality:'雪质',snowfall_in:'降雪量（英寸）',wind_mph:'风速（mph）',more_snow:'更多降雪',drying:'转晴',steady:'稳定',lift_status:'缆车状态',yoy_inches:'年度对比（英寸）',this_year:'今年',demo_forecast:'演示预报数据',demo_subscribe:'订阅获取真实提醒',forecast_data:'预报数据',snow_report:'雪况报告',official_site:'官方网站',instagram:'Instagram',home:'首页',trip:'行程',profile:'资料',demo_data:'演示数据',updated_today:'今日更新',started:'开始',peaks:'高峰',clears:'放晴',powder_day:'粉雪日',
     storm_started:'暴风雪开始',peaks_at:'高峰',clears_at:'放晴',best_window:'最佳时间',morning_label:'早上',
     night_skiing:'夜间滑雪',epic_conditions:'极佳条件',great_conditions:'良好条件',worth_considering:'值得考虑',
     live_data:'实时数据',updating:'更新中...',snow_report_demo:'雪况数据：演示',weather_openmeteo:'天气：Open-Meteo',
@@ -1176,9 +1240,13 @@ const T={
     lv_novice_desc:'绿道舒适，开始蓝道。连续转弯。',
     lv_beginner_desc:'学习连续转弯。专注平衡和绿道。',
     time_evening:'晚间',time_midday:'中午',time_afternoon:'下午',
-    today_label:'今天',tomorrow_label:'明天'
+    today_label:'今天',tomorrow_label:'明天',
+    tagline:'出发前，先看这里。',
+    alert_when:'提醒条件：',alert_powder:'我的滑雪场8寸以上新雪',alert_storm:'大暴风雪来袭（12寸以上）',alert_epic:'极佳条件（评分85+）',alert_weekly:'每周预报摘要（周三）',
+    alert_logic_title:'何时发送提醒？',alert_logic_powder:'粉雪：你收藏的滑雪场一夜降雪8寸以上',alert_logic_storm:'暴风雪：重大天气系统到达前48小时（预报12寸+）',alert_logic_epic:'极佳：滑雪场综合评分达85+（雪况+天气+你的位置）',alert_logic_weekly:'每周：周三晚间——周末你的滑雪场预报',
+    checkpoint:'检查点：'
   },
-  ja:{top_picks:'今週末のおすすめ',this_weekend:'今週末',all_resorts:'全IKONリゾート',trip_plan:'旅行プランナー',my_profile:'マイプロフィール',my_level:'レベル',my_skills:'スキル',practice:'練習ルーティン',resources:'リソース',subscribe:'登録',fresh:'新雪',base:'ベース',lifts:'リフト',trails:'コース',distance:'距離',drive:'運転時間',flight:'フライト',open:'オープン',close_t:'クローズ',chain_ctrl:'チェーン規制',view_detail:'詳細を見る',season_total:'シーズン合計',last_year:'昨年',average:'5年平均',next_season:'次シーズン',off_season_title:'山は休んでいます',off_season_body:'シーズンは通常11月中旬に始まります。',days_until:'日後にシーズン開始',show_all:'全て表示',show_less:'折りたたむ',resorts:'リゾート',storm_context:'嵐の状況',location:'場所',email:'メール',saved_resort:'お気に入り',profile_saved:'保存済み',seven_day:'7日予報',hourly_today:'今日の時間別',three_week:'3週間の見通し',storm_briefing:'嵐情報',weather_update:'天気更新',clear_skies:'山岳地帯は晴天',plan_next:'次の旅行を計画',best_windows:'今後3週間のベストタイミング',week:'第',snow_chance:'降雪確率',expected:'予想',best_bet:'おすすめ',score_explain:'スコアの意味は？',score_label:'スコア',composite_ranking:'総合評価',snow_conditions:'雪の状態',weather:'天気',travel_distance:'移動距離',crowd_factor:'混雑度',skill_match:'スキルマッチ',status_labels:'ステータス',epic:'最高',prime:'優良',good:'良好',limited:'限定的',closed:'クローズ',epic_desc:'15インチ以上の新雪パウダーデイ',prime_desc:'8-15インチの良好なコンディション',good_desc:'3-8インチのまずまずの雪',limited_desc:'自然降雪が少ない',closed_desc:'営業していない',save_profile:'プロフィール保存',favorite_resorts:'お気に入りリゾート',add_resort:'+ リゾート追加',powder_alerts:'パウダーアラート',never_miss:'最高の日を見逃さない',notify_text:'お気に入りリゾートのコンディションがピークの時にお知らせします',condition_alerts:'コンディション通知',storm_forecasts:'嵐の予報',zero_spam:'スパムなし',subscribed:'登録完了。雪が降ったらお知らせします。',selected_resort:'選択中のリゾート',itinerary:'パウダーデイのスケジュール例',packing:'持ち物チェックリスト',quality:'雪質',snowfall_in:'降雪量（インチ）',wind_mph:'風速（mph）',more_snow:'雪増加',drying:'乾燥',steady:'安定',lift_status:'リフト状況',yoy_inches:'前年比（インチ）',this_year:'今年',demo_forecast:'デモ予報データ',demo_subscribe:'リアルアラートを購読',forecast_data:'予報データ',snow_report:'積雪レポート',official_site:'公式サイト',instagram:'Instagram',home:'ホーム',trip:'旅行',profile:'プロフィール',demo_data:'デモデータ',updated_today:'本日更新',started:'開始',peaks:'ピーク',clears:'晴れ',powder_day:'パウダーデイ',
+  ja:{top_picks:'今週末のおすすめ',this_weekend:'今週末',all_resorts:'全IKONリゾート',trip_plan:'旅行プランナー',my_profile:'マイプロフィール',my_level:'レベル',my_skills:'スキル',practice:'トレーニングプログラム',resources:'リソース',subscribe:'登録',fresh:'新雪量',base:'ベース',lifts:'リフト',trails:'コース',distance:'距離',drive:'運転時間',flight:'フライト',open:'オープン',close_t:'クローズ',chain_ctrl:'チェーン規制',view_detail:'詳細を見る',season_total:'シーズン合計',last_year:'昨年',average:'5年平均',next_season:'次シーズン',off_season_title:'山は休んでいます',off_season_body:'シーズンは通常11月中旬に始まります。',days_until:'日後にシーズン開始',show_all:'全て表示',show_less:'折りたたむ',resorts:'リゾート',storm_context:'嵐の状況',location:'場所',email:'メール',saved_resort:'お気に入り',profile_saved:'保存済み',seven_day:'7日予報',hourly_today:'今日の時間別',three_week:'3週間の見通し',storm_briefing:'嵐情報',weather_update:'天気更新',clear_skies:'山岳地帯は晴天',plan_next:'次の旅行を計画',best_windows:'今後3週間のベストタイミング',week:'第',snow_chance:'降雪確率',expected:'予想',best_bet:'おすすめ',score_explain:'スコアの意味は？',score_label:'スコア',composite_ranking:'総合評価',snow_conditions:'雪の状態',weather:'天気',travel_distance:'移動距離',crowd_factor:'混雑度',skill_match:'スキルマッチ',status_labels:'ステータス',epic:'最高',prime:'優良',good:'良好',limited:'限定的',closed:'クローズ',epic_desc:'15インチ以上の新雪パウダーデイ',prime_desc:'8-15インチの良好なコンディション',good_desc:'3-8インチのまずまずの雪',limited_desc:'自然降雪が少ない',closed_desc:'営業していない',save_profile:'プロフィール保存',favorite_resorts:'お気に入りリゾート',add_resort:'+ リゾート追加',powder_alerts:'パウダーアラート',never_miss:'最高の日を見逃さない',notify_text:'お気に入りリゾートのコンディションがピークの時にお知らせします',condition_alerts:'コンディション通知',storm_forecasts:'嵐の予報',zero_spam:'スパムなし',subscribed:'登録完了。雪が降ったらお知らせします。',selected_resort:'選択中のリゾート',itinerary:'パウダーデイのスケジュール例',packing:'持ち物チェックリスト',quality:'雪質',snowfall_in:'降雪量（インチ）',wind_mph:'風速（mph）',more_snow:'雪増加',drying:'乾燥',steady:'安定',lift_status:'リフト状況',yoy_inches:'前年比（インチ）',this_year:'今年',demo_forecast:'デモ予報データ',demo_subscribe:'リアルアラートを購読',forecast_data:'予報データ',snow_report:'積雪レポート',official_site:'公式サイト',instagram:'Instagram',home:'ホーム',trip:'旅行',profile:'プロフィール',demo_data:'デモデータ',updated_today:'本日更新',started:'開始',peaks:'ピーク',clears:'晴れ',powder_day:'パウダーデイ',
     storm_started:'嵐の開始',peaks_at:'ピーク',clears_at:'晴れ',best_window:'ベストタイム',morning_label:'朝',
     night_skiing:'ナイター',epic_conditions:'最高のコンディション',great_conditions:'良好なコンディション',worth_considering:'検討の価値あり',
     live_data:'ライブデータ',updating:'更新中...',snow_report_demo:'積雪データ：デモ',weather_openmeteo:'天気：Open-Meteo',
@@ -1226,7 +1294,11 @@ const T={
     lv_novice_desc:'グリーンで快適、ブルー開始。ターン連結。',
     lv_beginner_desc:'ターン連結を練習中。バランスとグリーンに集中。',
     time_evening:'夕方',time_midday:'正午',time_afternoon:'午後',
-    today_label:'今日',tomorrow_label:'明日'
+    today_label:'今日',tomorrow_label:'明日',
+    tagline:'行く前に、知る。',
+    alert_when:'通知条件：',alert_powder:'8インチ以上の新雪',alert_storm:'大嵐の接近（12インチ以上）',alert_epic:'最高コンディション（スコア85+）',alert_weekly:'週間予報ダイジェスト（水曜日）',
+    alert_logic_title:'いつアラートが届く？',alert_logic_powder:'パウダー：お気に入りリゾートに一晩で8インチ以上降雪時',alert_logic_storm:'嵐：大規模気象到達48時間前（12インチ以上予報）',alert_logic_epic:'最高：リゾートのスコアが85+（雪質+天気+あなたの位置）',alert_logic_weekly:'毎週：水曜夕方—お気に入りリゾートの週末予報',
+    checkpoint:'チェックポイント：'
   }
 };
 let lang=localStorage.getItem('sbLang')||'en';
@@ -1705,13 +1777,13 @@ function renderTopPicks(){
     </div>`:'';
     return`<div class="rec-card expanded" data-resort="${r.id}">
       <div class="rec-header" onclick="toggleRec(this.parentElement)">
-        <div class="rec-category ${catClass}">${catLabel}</div>
-        <div class="rec-score">${r.score}</div>
         <div class="rec-info">
+          <div class="rec-category ${catClass}">${catLabel}</div>
           <div class="rec-name">${r.name}</div>
           <div class="rec-sub">${icon('cloud-snow',12)} ${r.fresh}" ${t('fresh')} &middot; ${travelLine}${r.travel.hasChain?' &middot; '+icon('chain',12):''}${r.id==='brighton'?' &middot; '+t('night_skiing'):''}</div>
           <div class="rec-highlight ${hlClass}">${icon('star',10)} ${hlText}</div>
         </div>
+        <div class="rec-score">${r.score}</div>
         <div class="rec-chevron">${icon('chevron-up',14)}</div>
       </div>
       <div class="rec-detail" style="max-height:none"><div class="rec-detail-inner">
@@ -1945,8 +2017,12 @@ function renderProfile(){
   const routines=ROUTINES[key]||ROUTINES.intermediate;
   document.getElementById('routineList').innerHTML=routines.map(r=>`
     <div class="routine-card" onclick="this.classList.toggle('open')">
-      <div class="routine-head"><div class="routine-title" data-translate="${r.title}">${r.title}</div><div class="routine-dur" data-translate="${r.dur}">${r.dur}</div></div>
-      <div class="routine-body"><ul class="routine-steps">${r.steps.map(s=>`<li>${icon('arrow-right',10)} <span data-translate="${s.replace(/"/g,'&quot;')}">${s}</span></li>`).join('')}</ul></div>
+      <div class="routine-head"><div class="routine-title" data-translate="${r.title}">${r.title}</div><div class="routine-dur">${icon('clock',10)} <span data-translate="${r.dur}">${r.dur}</span></div></div>
+      <div class="routine-body">
+        ${r.goal?`<div class="routine-goal">${icon('target',12)} <span data-translate="${r.goal.replace(/"/g,'&quot;')}">${r.goal}</span></div>`:''}
+        <ul class="routine-steps">${r.steps.map((s,i)=>`<li><span class="step-num">${i+1}</span> <span data-translate="${s.replace(/"/g,'&quot;')}">${s}</span></li>`).join('')}</ul>
+        ${r.measure?`<div class="routine-measure">${icon('check',12)} <strong data-translate="checkpoint">Checkpoint:</strong> <span data-translate="${r.measure.replace(/"/g,'&quot;')}">${r.measure}</span></div>`:''}
+      </div>
     </div>`).join('');
 
   const resources=RESOURCES[key]||RESOURCES.intermediate;
@@ -1959,6 +2035,50 @@ function renderProfile(){
       const src=el.getAttribute('data-translate');
       if(src)translateEl(el,src);
     });
+  }
+
+  // Render email subscription card
+  document.getElementById('emailWrap').innerHTML=`
+    <div class="email-card">
+      <div class="email-eyebrow">${icon('bell',12)} ${t('powder_alerts')}</div>
+      <div class="email-heading">${t('never_miss')}</div>
+      <div class="email-sub">${t('notify_text')}</div>
+      <form id="emailForm" action="https://formspree.io/f/mwpkqqpr" method="POST" onsubmit="submitEmail(event)">
+        <input type="hidden" name="_subject" value="SlabHQ Powder Alert Signup" />
+        <input type="hidden" name="_replyto" id="emailReply" />
+        <input type="hidden" name="location" id="emailLoc" />
+        <input type="hidden" name="favorites" id="emailFavs" />
+        <input type="hidden" name="alert_prefs" id="emailPrefs" />
+        <div class="email-row">
+          <input class="email-input" type="email" name="email" placeholder="your@email.com" required id="emailInput" />
+          <button class="email-btn" type="submit">${t('subscribe')}</button>
+        </div>
+        <div class="alert-prefs">
+          <div class="alert-pref-title">${icon('settings',10)} ${t('alert_when')}</div>
+          <label class="alert-opt"><input type="checkbox" name="pref_powder" checked /> ${t('alert_powder')}</label>
+          <label class="alert-opt"><input type="checkbox" name="pref_storm" checked /> ${t('alert_storm')}</label>
+          <label class="alert-opt"><input type="checkbox" name="pref_epic" checked /> ${t('alert_epic')}</label>
+          <label class="alert-opt"><input type="checkbox" name="pref_weekly" /> ${t('alert_weekly')}</label>
+        </div>
+      </form>
+      <div class="email-success" id="emailSuccess"></div>
+      <div class="alert-logic">
+        <div class="alert-logic-title">${icon('info',10)} ${t('alert_logic_title')}</div>
+        <div class="alert-logic-item">${icon('cloud-snow',10)} ${t('alert_logic_powder')}</div>
+        <div class="alert-logic-item">${icon('alert-triangle',10)} ${t('alert_logic_storm')}</div>
+        <div class="alert-logic-item">${icon('star',10)} ${t('alert_logic_epic')}</div>
+        <div class="alert-logic-item">${icon('calendar',10)} ${t('alert_logic_weekly')}</div>
+      </div>
+      <div class="email-note">${t('condition_alerts')} &middot; ${t('storm_forecasts')} &middot; ${t('zero_spam')}</div>
+    </div>`;
+
+  // Restore subscription state if already subscribed
+  const subData=JSON.parse(localStorage.getItem('sbSubscribed')||'null');
+  if(subData){
+    const form=document.getElementById('emailForm');
+    const successEl=document.getElementById('emailSuccess');
+    if(form)form.style.display='none';
+    if(successEl){successEl.innerHTML=`${icon('check',14)} ${t('subscribed')} (${subData.email})`;successEl.style.display='flex';}
   }
 
   // Close suggestions on outside click
@@ -2396,11 +2516,43 @@ function closeLangMenu(){document.getElementById('langWrap').classList.remove('o
 document.addEventListener('click',e=>{if(!e.target.closest('.lang-wrap'))closeLangMenu()});
 
 // ── EMAIL ──
-function submitEmail(e){
+async function submitEmail(e){
   e.preventDefault();
-  document.getElementById('emailForm').style.display='none';
-  document.getElementById('emailSuccess').innerHTML=`${icon('check',14)} ${t('subscribed')}`;
-  document.getElementById('emailSuccess').style.display='flex';
+  const form=document.getElementById('emailForm');
+  const emailVal=document.getElementById('emailInput').value;
+  // Populate hidden fields with user context
+  document.getElementById('emailReply').value=emailVal;
+  document.getElementById('emailLoc').value=userLocation;
+  document.getElementById('emailFavs').value=getFavorites().join(', ')||'none set';
+  const prefs=[];
+  if(form.querySelector('[name="pref_powder"]').checked)prefs.push('powder_8in');
+  if(form.querySelector('[name="pref_storm"]').checked)prefs.push('storm_12in');
+  if(form.querySelector('[name="pref_epic"]').checked)prefs.push('epic_85');
+  if(form.querySelector('[name="pref_weekly"]').checked)prefs.push('weekly_digest');
+  document.getElementById('emailPrefs').value=prefs.join(', ');
+  // Submit via Formspree AJAX
+  const btn=form.querySelector('.email-btn');
+  btn.textContent=t('updating')||'Sending...';
+  btn.disabled=true;
+  try{
+    const res=await fetch(form.action,{method:'POST',body:new FormData(form),headers:{'Accept':'application/json'}});
+    if(res.ok){
+      form.style.display='none';
+      const successEl=document.getElementById('emailSuccess');
+      successEl.innerHTML=`${icon('check',14)} ${t('subscribed')}`;
+      successEl.style.display='flex';
+      // Save subscription state locally
+      localStorage.setItem('sbSubscribed',JSON.stringify({email:emailVal,prefs,date:new Date().toISOString()}));
+    } else {
+      btn.textContent=t('subscribe');
+      btn.disabled=false;
+      alert('Subscription failed. Please try again.');
+    }
+  }catch(err){
+    btn.textContent=t('subscribe');
+    btn.disabled=false;
+    alert('Network error. Please try again.');
+  }
 }
 
 // ── BOTTOM NAV ICONS ──
