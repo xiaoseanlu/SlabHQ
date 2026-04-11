@@ -585,6 +585,10 @@ input{font-family:inherit}
 }
 .loc-suggest-item:last-child{border-bottom:none}
 .loc-suggest-item:hover{background:var(--accent-soft);color:var(--accent)}
+.loc-suggest-item.loc-geo{color:var(--text2);display:flex;align-items:center;gap:6px}
+.loc-suggest-item.loc-geo svg{flex-shrink:0;opacity:.6}
+.loc-suggest-item.loc-loading{color:var(--text3);pointer-events:none;font-style:italic}
+.loc-suggest-item.loc-no-result{color:var(--text3);pointer-events:none}
 
 .skill-row{
   display:flex;align-items:center;gap:10px;margin-bottom:12px;
@@ -1035,21 +1039,26 @@ const ORIGINS={
   '20001':{lat:38.9072,lng:-77.0369,name:'Washington, DC'},
   '28201':{lat:35.2271,lng:-80.8431,name:'Charlotte, NC'},
 };
+// Geocoded location cache (persisted in localStorage)
+let geocodedOrigin=JSON.parse(localStorage.getItem('sbGeocodedOrigin')||'null');
+
 function getOrigin(s){
   const k=s.toLowerCase().trim();
   // Check for 5-digit zip code
   if(/^\d{5}$/.test(k)&&ORIGINS[k])return ORIGINS[k];
   for(const[key,v]of Object.entries(ORIGINS)){if(k.includes(key))return v}
+  // Use geocoded result if available and matches current location
+  if(geocodedOrigin&&geocodedOrigin.query===k)return geocodedOrigin;
   return ORIGINS['san francisco'];
 }
 
 function distMiles(a,b){const R=3959,dL=(b.lat-a.lat)*Math.PI/180,dN=(b.lng-a.lng)*Math.PI/180;const x=Math.sin(dL/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dN/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
 
 // ── SKILLS ──
-const SKILL_CATS=[{id:'carving',label:'Carving'},{id:'park',label:'Park / Pipe'},{id:'powder',label:'Powder'},{id:'switch',label:'Switch Riding'},{id:'jumps',label:'Jumps & Air'},{id:'backcountry',label:'Backcountry'}];
+const SKILL_CATS=[{id:'carving',labelKey:'sk_carving'},{id:'park',labelKey:'sk_park'},{id:'powder',labelKey:'sk_powder'},{id:'switch',labelKey:'sk_switch'},{id:'jumps',labelKey:'sk_jumps'},{id:'backcountry',labelKey:'sk_backcountry'}];
 let skillVals=JSON.parse(localStorage.getItem('sbSkills')||'null')||{carving:55,park:30,powder:45,switch:30,jumps:35,backcountry:20};
 
-function calcLevel(v){const avg=Object.values(v).reduce((a,b)=>a+b,0)/Object.values(v).length;if(avg>=80)return{label:'Expert / Freestyle',desc:'Double blacks, big park, backcountry. Full mountain mastery.',key:'expert'};if(avg>=65)return{label:'Advanced',desc:'Confident on blacks, switch riding, mid-size park features.',key:'advanced'};if(avg>=48)return{label:'Intermediate',desc:'Solid on blues, exploring blacks. Learning to carve.',key:'intermediate'};if(avg>=30)return{label:'Novice',desc:'Comfortable on greens, beginning blues. Linking turns.',key:'novice'};return{label:'Beginner',desc:'Learning to link turns. Focus on balance and greens.',key:'beginner'}}
+function calcLevel(v){const avg=Object.values(v).reduce((a,b)=>a+b,0)/Object.values(v).length;if(avg>=80)return{label:t('lv_expert'),desc:t('lv_expert_desc'),key:'expert'};if(avg>=65)return{label:t('lv_advanced'),desc:t('lv_advanced_desc'),key:'advanced'};if(avg>=48)return{label:t('lv_intermediate'),desc:t('lv_intermediate_desc'),key:'intermediate'};if(avg>=30)return{label:t('lv_novice'),desc:t('lv_novice_desc'),key:'novice'};return{label:t('lv_beginner'),desc:t('lv_beginner_desc'),key:'beginner'}}
 
 const ROUTINES={
   beginner:[{title:'First Steps',dur:'2 days',steps:['Skating \u2014 one foot in bindings on flat','Falling leaf: sideslip heel and toe','J-turns: heel first, then toe','Link 3 turns on gentle green','Film yourself \u2014 watch upper body']}],
@@ -1082,7 +1091,42 @@ const T={
     safety:'Safety',clothing:'Clothing',equipment:'Equipment',misc:'Misc',
     above_avg:'above',excellent_year:'the 5-year average. Excellent year.',below_avg:'Season snowfall is below the 5-year average.',near_avg:'Season snowfall is near the 5-year average.',tracking:'This season is tracking',
     source:'Source',chain_active_since:'Active since',all_vehicles_chains:'All vehicles must carry chains.',expected_label:'Expected',updated_label:'Updated',this_morning:'this morning',last_night:'last night',
-    score_label_detail:'Score'
+    score_label_detail:'Score',
+    searching:'Searching...',no_results:'No results found',location_updated:'Location updated',
+    storm_hitting:'storm hitting',pacific_front:'Pacific front since',dropping_of:'dropping',more_with_fresh:'with 4-6" more',for_fresh_tracks:'for fresh tracks',
+    depart_desc:'Beat traffic. {drive} to {resort}. Chains in trunk.',
+    arrive_desc:'Park early. Beacon check. Snacks in pack.',
+    summit_desc:'Head to top lift immediately. Hit untracked lines.',
+    sidecountry_desc:'With partner only. South-facing stashes.',
+    lunch_desc:'On-mountain or packed lunch. Rest boots.',
+    park_desc:'Afternoon = reset park features or buttery corduroy.',
+    last_runs_desc:'Golden hour carving. Best snow surface of the day.',
+    apres_desc:'Rehydrate. Mountain bar. Plan tomorrow.',
+    first_lift:'First Lift',
+    safety_items:'Avalanche beacon · Probe + shovel · MIPS helmet · First aid',
+    clothing_items:'Merino base · Fleece mid · Waterproof shell · Bibs · Balaclava · Mittens ×2',
+    equipment_items:'Board + bindings (tuned) · Boots · Goggles (low-light lens)',
+    misc_items:'SPF lip balm · Hand warmers ×8 · Snacks · Water · Offline maps · R2 chains',
+    niseko_narrative:'<strong>Niseko is in peak Japow season.</strong> 24" of legendary dry powder overnight. Night skiing until 8:30 PM means you can ride all day and evening. The tree runs are wide open. If you\'ve been dreaming about Japan, this is the week.',
+    revelstoke_narrative:'<strong>Revelstoke just got hammered.</strong> 20" of deep BC powder on North America\'s biggest vertical drop (5,620 ft). Expert terrain is fully open. This is big-mountain riding at its finest — not for the faint of heart.',
+    chamonix_narrative:'<strong>Chamonix spring conditions.</strong> High alpine still has solid coverage. Grands Montets and Vallee Blanche offer world-class spring skiing with stunning Mont-Blanc views.',
+    zermatt_narrative:'<strong>Zermatt glacier skiing.</strong> Year-round operations on the Matterhorn Glacier Paradise. Spring cruising with incredible Alpine scenery.',
+    makes_powder_day:'makes this a powder day.',
+    solid_overnight:'overnight',
+    conditions_across:'conditions across the mountain.',
+    conditions_with_base:'conditions with a',
+    trails_open:'trails open.',
+    all_resorts_quiet:'All resorts quiet.',
+    ongoing_storm:'Ongoing during storm',lift_by:'Lift by 2:00 PM',ongoing:'Ongoing',all_day_storm:'All day during storm',four_wd:'4WD recommended',
+    sk_carving:'Carving',sk_park:'Park / Pipe',sk_powder:'Powder',sk_switch:'Switch Riding',sk_jumps:'Jumps & Air',sk_backcountry:'Backcountry',
+    lv_expert:'Expert / Freestyle',lv_advanced:'Advanced',lv_intermediate:'Intermediate',lv_novice:'Novice',lv_beginner:'Beginner',
+    lv_expert_desc:'Double blacks, big park, backcountry. Full mountain mastery.',
+    lv_advanced_desc:'Confident on blacks, switch riding, mid-size park features.',
+    lv_intermediate_desc:'Solid on blues, exploring blacks. Learning to carve.',
+    lv_novice_desc:'Comfortable on greens, beginning blues. Linking turns.',
+    lv_beginner_desc:'Learning to link turns. Focus on balance and greens.',
+    time_evening:'evening',time_midday:'midday',time_afternoon:'afternoon',
+    today_label:'Today',tomorrow_label:'Tomorrow'
   },
   zh:{top_picks:'本周末推荐',this_weekend:'本周末',all_resorts:'所有IKON滑雪场',trip_plan:'行程规划',my_profile:'我的资料',my_level:'我的等级',my_skills:'我的技能',practice:'练习计划',resources:'资源',subscribe:'订阅',fresh:'新雪',base:'基础雪',lifts:'缆车',trails:'雪道',distance:'距离',drive:'预计车程',flight:'航班',open:'开放',close_t:'关闭',chain_ctrl:'链条控制',view_detail:'查看详情',season_total:'本季总量',last_year:'去年',average:'5年均值',next_season:'下季开放',off_season_title:'山在休息',off_season_body:'雪季通常在11月中旬开始。订阅以获得首雪通知。',days_until:'天后开季',show_all:'显示全部',show_less:'收起',resorts:'滑雪场',storm_context:'风暴信息',location:'位置',email:'邮箱',saved_resort:'收藏滑雪场',profile_saved:'已保存',seven_day:'7天预报',hourly_today:'今日逐时',three_week:'3周展望',storm_briefing:'风暴简报',weather_update:'天气更新',clear_skies:'山区天气晴朗',plan_next:'规划下次行程',best_windows:'未来3周最佳窗口',week:'第',snow_chance:'降雪概率',expected:'预计',best_bet:'最佳推荐',score_explain:'这些分数是什么意思？',score_label:'分数',composite_ranking:'综合排名',snow_conditions:'雪况',weather:'天气',travel_distance:'路程',crowd_factor:'人流量',skill_match:'技能匹配',status_labels:'状态标签',epic:'极佳',prime:'优秀',good:'良好',limited:'有限',closed:'关闭',epic_desc:'15寸以上新粉雪日',prime_desc:'8-15寸良好雪况',good_desc:'3-8寸尚可降雪',limited_desc:'自然降雪极少',closed_desc:'未运营',save_profile:'保存资料',favorite_resorts:'收藏滑雪场',add_resort:'+ 添加滑雪场',powder_alerts:'粉雪提醒',never_miss:'不错过每个好雪天',notify_text:'当你最爱的滑雪场条件最佳时我们会通知你',condition_alerts:'雪况提醒',storm_forecasts:'暴风雪预报',zero_spam:'无垃圾邮件',subscribed:'已订阅，有雪时我们会通知你。',selected_resort:'已选滑雪场',itinerary:'粉雪日行程示例',packing:'装备清单',quality:'雪质',snowfall_in:'降雪量（英寸）',wind_mph:'风速（mph）',more_snow:'更多降雪',drying:'转晴',steady:'稳定',lift_status:'缆车状态',yoy_inches:'年度对比（英寸）',this_year:'今年',demo_forecast:'演示预报数据',demo_subscribe:'订阅获取真实提醒',forecast_data:'预报数据',snow_report:'雪况报告',official_site:'官方网站',instagram:'Instagram',home:'首页',trip:'行程',profile:'资料',demo_data:'演示数据',updated_today:'今日更新',started:'开始',peaks:'高峰',clears:'放晴',powder_day:'粉雪日',
     storm_started:'暴风雪开始',peaks_at:'高峰',clears_at:'放晴',best_window:'最佳时间',morning_label:'早上',
@@ -1097,7 +1141,42 @@ const T={
     safety:'安全',clothing:'服装',equipment:'装备',misc:'杂项',
     above_avg:'以上',excellent_year:'五年平均。优秀年份。',below_avg:'本季降雪低于五年平均。',near_avg:'本季降雪接近五年平均。',tracking:'本季表现',
     source:'来源',chain_active_since:'生效自',all_vehicles_chains:'所有车辆必须携带链条。',expected_label:'预计',updated_label:'更新',this_morning:'今早',last_night:'昨晚',
-    score_label_detail:'分数'
+    score_label_detail:'分数',
+    searching:'搜索中...',no_results:'未找到结果',location_updated:'位置已更新',
+    storm_hitting:'暴风雪袭击',pacific_front:'太平洋锋面自',dropping_of:'降下',more_with_fresh:'还有4-6"降雪',for_fresh_tracks:'去追新雪',
+    depart_desc:'尽早出发。{drive}到{resort}。后备箱放防滑链。',
+    arrive_desc:'早到停车。检查信标。准备零食。',
+    summit_desc:'立即前往顶部缆车。去滑未开发的路线。',
+    sidecountry_desc:'仅限搭档同行。南向隐蔽区域。',
+    lunch_desc:'山上用餐或自带午餐。休息脚部。',
+    park_desc:'下午 = 公园区或压雪道。',
+    last_runs_desc:'黄金时段刻滑。一天中最好的雪面。',
+    apres_desc:'补充水分。山上酒吧。计划明天。',
+    first_lift:'首班缆车',
+    safety_items:'雪崩信标 · 探杆+铲子 · MIPS头盔 · 急救包',
+    clothing_items:'美利奴底层 · 抓绒中层 · 防水外壳 · 滑雪裤 · 面罩 · 手套×2',
+    equipment_items:'滑板+固定器（已调校） · 雪靴 · 雪镜（暗光镜片）',
+    misc_items:'防晒润唇膏 · 暖手宝×8 · 零食 · 水 · 离线地图 · R2防滑链',
+    niseko_narrative:'<strong>二世谷正处于Japow巅峰季节。</strong>24"传奇级干粉雪一夜降下。夜间滑雪至晚上8:30，全天候畅滑。树林雪道全面开放。如果你一直梦想着日本滑雪，就是这周。',
+    revelstoke_narrative:'<strong>雷夫尔斯托克刚下了暴雪。</strong>20"深厚BC粉雪覆盖北美最大垂直落差（5,620英尺）。专家地形全面开放。这是大山滑行的极致——不适合胆小的人。',
+    chamonix_narrative:'<strong>霞慕尼春季条件。</strong>高山区仍有良好覆盖。大蒙特和白谷提供世界级春季滑雪和壮丽的勃朗峰景观。',
+    zermatt_narrative:'<strong>采尔马特冰川滑雪。</strong>马特宏峰冰川天堂全年运营。春季巡游配以绝美阿尔卑斯风光。',
+    makes_powder_day:'是粉雪日。',
+    solid_overnight:'隔夜',
+    conditions_across:'全山条件。',
+    conditions_with_base:'条件良好，',
+    trails_open:'条雪道开放。',
+    all_resorts_quiet:'所有滑雪场平静。',
+    ongoing_storm:'暴风雪期间持续',lift_by:'预计下午2:00解除',ongoing:'持续中',all_day_storm:'暴风雪期间全天',four_wd:'建议四驱车',
+    sk_carving:'刻滑',sk_park:'公园 / 半管',sk_powder:'粉雪',sk_switch:'反脚滑行',sk_jumps:'跳跃 & 空中',sk_backcountry:'野雪',
+    lv_expert:'专家 / 自由式',lv_advanced:'高级',lv_intermediate:'中级',lv_novice:'初学进阶',lv_beginner:'初学者',
+    lv_expert_desc:'双黑道、大型公园、野雪。全山掌握。',
+    lv_advanced_desc:'黑道自如、反脚滑行、中型公园设施。',
+    lv_intermediate_desc:'蓝道稳定，探索黑道。学习刻滑。',
+    lv_novice_desc:'绿道舒适，开始蓝道。连续转弯。',
+    lv_beginner_desc:'学习连续转弯。专注平衡和绿道。',
+    time_evening:'晚间',time_midday:'中午',time_afternoon:'下午',
+    today_label:'今天',tomorrow_label:'明天'
   },
   ja:{top_picks:'今週末のおすすめ',this_weekend:'今週末',all_resorts:'全IKONリゾート',trip_plan:'旅行プランナー',my_profile:'マイプロフィール',my_level:'レベル',my_skills:'スキル',practice:'練習ルーティン',resources:'リソース',subscribe:'登録',fresh:'新雪',base:'ベース',lifts:'リフト',trails:'コース',distance:'距離',drive:'運転時間',flight:'フライト',open:'オープン',close_t:'クローズ',chain_ctrl:'チェーン規制',view_detail:'詳細を見る',season_total:'シーズン合計',last_year:'昨年',average:'5年平均',next_season:'次シーズン',off_season_title:'山は休んでいます',off_season_body:'シーズンは通常11月中旬に始まります。',days_until:'日後にシーズン開始',show_all:'全て表示',show_less:'折りたたむ',resorts:'リゾート',storm_context:'嵐の状況',location:'場所',email:'メール',saved_resort:'お気に入り',profile_saved:'保存済み',seven_day:'7日予報',hourly_today:'今日の時間別',three_week:'3週間の見通し',storm_briefing:'嵐情報',weather_update:'天気更新',clear_skies:'山岳地帯は晴天',plan_next:'次の旅行を計画',best_windows:'今後3週間のベストタイミング',week:'第',snow_chance:'降雪確率',expected:'予想',best_bet:'おすすめ',score_explain:'スコアの意味は？',score_label:'スコア',composite_ranking:'総合評価',snow_conditions:'雪の状態',weather:'天気',travel_distance:'移動距離',crowd_factor:'混雑度',skill_match:'スキルマッチ',status_labels:'ステータス',epic:'最高',prime:'優良',good:'良好',limited:'限定的',closed:'クローズ',epic_desc:'15インチ以上の新雪パウダーデイ',prime_desc:'8-15インチの良好なコンディション',good_desc:'3-8インチのまずまずの雪',limited_desc:'自然降雪が少ない',closed_desc:'営業していない',save_profile:'プロフィール保存',favorite_resorts:'お気に入りリゾート',add_resort:'+ リゾート追加',powder_alerts:'パウダーアラート',never_miss:'最高の日を見逃さない',notify_text:'お気に入りリゾートのコンディションがピークの時にお知らせします',condition_alerts:'コンディション通知',storm_forecasts:'嵐の予報',zero_spam:'スパムなし',subscribed:'登録完了。雪が降ったらお知らせします。',selected_resort:'選択中のリゾート',itinerary:'パウダーデイのスケジュール例',packing:'持ち物チェックリスト',quality:'雪質',snowfall_in:'降雪量（インチ）',wind_mph:'風速（mph）',more_snow:'雪増加',drying:'乾燥',steady:'安定',lift_status:'リフト状況',yoy_inches:'前年比（インチ）',this_year:'今年',demo_forecast:'デモ予報データ',demo_subscribe:'リアルアラートを購読',forecast_data:'予報データ',snow_report:'積雪レポート',official_site:'公式サイト',instagram:'Instagram',home:'ホーム',trip:'旅行',profile:'プロフィール',demo_data:'デモデータ',updated_today:'本日更新',started:'開始',peaks:'ピーク',clears:'晴れ',powder_day:'パウダーデイ',
     storm_started:'嵐の開始',peaks_at:'ピーク',clears_at:'晴れ',best_window:'ベストタイム',morning_label:'朝',
@@ -1112,11 +1191,81 @@ const T={
     safety:'安全',clothing:'ウェア',equipment:'装備',misc:'その他',
     above_avg:'以上',excellent_year:'5年平均。素晴らしいシーズン。',below_avg:'今シーズンの降雪は5年平均以下。',near_avg:'今シーズンの降雪は5年平均に近い。',tracking:'今シーズンは',
     source:'ソース',chain_active_since:'発効',all_vehicles_chains:'全車両チェーン必要。',expected_label:'予想',updated_label:'更新',this_morning:'今朝',last_night:'昨夜',
-    score_label_detail:'スコア'
+    score_label_detail:'スコア',
+    searching:'検索中...',no_results:'結果が見つかりません',location_updated:'場所が更新されました',
+    storm_hitting:'嵐が襲来',pacific_front:'太平洋前線',dropping_of:'降雪',more_with_fresh:'さらに4-6"降雪',for_fresh_tracks:'新雪を滑りに',
+    depart_desc:'早めに出発。{drive}で{resort}へ。チェーンをトランクに。',
+    arrive_desc:'早めに駐車。ビーコン確認。スナック準備。',
+    summit_desc:'すぐに頂上リフトへ。未踏ラインを攻める。',
+    sidecountry_desc:'パートナーと一緒に。南向きの隠れスポット。',
+    lunch_desc:'山上で食事またはお弁当。ブーツを休ませる。',
+    park_desc:'午後 = パークまたはグルーミングバーン。',
+    last_runs_desc:'ゴールデンアワーカービング。一日で最高の雪面。',
+    apres_desc:'水分補給。マウンテンバー。明日の計画。',
+    first_lift:'ファーストリフト',
+    safety_items:'雪崩ビーコン · プローブ+ショベル · MIPSヘルメット · 救急キット',
+    clothing_items:'メリノベース · フリースミッド · 防水シェル · ビブ · バラクラバ · ミトン×2',
+    equipment_items:'ボード+ビンディング（チューン済） · ブーツ · ゴーグル（ローライトレンズ）',
+    misc_items:'日焼け止めリップ · ハンドウォーマー×8 · スナック · 水 · オフラインマップ · R2チェーン',
+    niseko_narrative:'<strong>ニセコはJapowのピークシーズン。</strong>24"の伝説的なドライパウダーが一晩で積もりました。ナイタースキーは20:30まで、一日中滑れます。ツリーランは全面オープン。日本でのスキーを夢見ていたなら、今週がその時です。',
+    revelstoke_narrative:'<strong>レベルストークに大雪が降りました。</strong>北米最大の垂直落差（5,620フィート）に20"のディープBCパウダー。エキスパートテレインは完全オープン。これはビッグマウンテンライディングの最高峰——弱い者には向きません。',
+    chamonix_narrative:'<strong>シャモニーの春コンディション。</strong>高山帯はまだ十分な積雪があります。グランモンテとヴァレブランシュは世界クラスの春スキーとモンブランの絶景を提供します。',
+    zermatt_narrative:'<strong>ツェルマットの氷河スキー。</strong>マッターホルン・グレッシャー・パラダイスは通年営業。素晴らしいアルプスの景色と春のクルージング。',
+    makes_powder_day:'パウダーデイです。',
+    solid_overnight:'夜間降雪',
+    conditions_across:'全山のコンディション。',
+    conditions_with_base:'コンディション良好、',
+    trails_open:'コースオープン。',
+    all_resorts_quiet:'全リゾート穏やか。',
+    ongoing_storm:'嵐の間継続',lift_by:'午後2時解除予定',ongoing:'継続中',all_day_storm:'嵐の間終日',four_wd:'四駆推奨',
+    sk_carving:'カービング',sk_park:'パーク / パイプ',sk_powder:'パウダー',sk_switch:'スイッチ',sk_jumps:'ジャンプ & エア',sk_backcountry:'バックカントリー',
+    lv_expert:'エキスパート / フリースタイル',lv_advanced:'上級',lv_intermediate:'中級',lv_novice:'初級',lv_beginner:'ビギナー',
+    lv_expert_desc:'ダブルブラック、ビッグパーク、バックカントリー。全山制覇。',
+    lv_advanced_desc:'ブラックに自信あり、スイッチ、中型パーク。',
+    lv_intermediate_desc:'ブルーで安定、ブラック挑戦中。カービング練習中。',
+    lv_novice_desc:'グリーンで快適、ブルー開始。ターン連結。',
+    lv_beginner_desc:'ターン連結を練習中。バランスとグリーンに集中。',
+    time_evening:'夕方',time_midday:'正午',time_afternoon:'午後',
+    today_label:'今日',tomorrow_label:'明日'
   }
 };
 let lang=localStorage.getItem('sbLang')||'en';
 function t(k){return(T[lang]&&T[lang][k])||T.en[k]||k}
+const QUALITY_I18N={
+  zh:{'Packed Powder':'压实粉雪','Machine Groomed':'机器压雪','Light Powder':'轻粉雪','Powder':'粉雪','Deep Powder':'深粉雪','Champagne Powder':'香槟粉雪','Dry Powder':'干粉雪','Spring Snow':'春雪','Japow \u2014 Legendary Dry Powder':'Japow — 传奇干粉雪'},
+  ja:{'Packed Powder':'パックドパウダー','Machine Groomed':'圧雪','Light Powder':'ライトパウダー','Powder':'パウダー','Deep Powder':'ディープパウダー','Champagne Powder':'シャンパンパウダー','Dry Powder':'ドライパウダー','Spring Snow':'春雪','Japow \u2014 Legendary Dry Powder':'Japow — 伝説のドライパウダー'}
+};
+function tq(q){return(QUALITY_I18N[lang]&&QUALITY_I18N[lang][q])||q;}
+
+// Dynamic translation cache for content not in T object
+const transCache=JSON.parse(localStorage.getItem('sbTransCache')||'{}');
+async function translateText(text,targetLang){
+  if(targetLang==='en')return text;
+  const cacheKey=targetLang+':'+text.substring(0,60);
+  if(transCache[cacheKey])return transCache[cacheKey];
+  try{
+    const langMap={zh:'zh-CN',ja:'ja'};
+    const tl=langMap[targetLang]||targetLang;
+    const res=await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text.substring(0,500))}&langpair=en|${tl}`);
+    const data=await res.json();
+    if(data.responseStatus===200&&data.responseData.translatedText){
+      const translated=data.responseData.translatedText;
+      transCache[cacheKey]=translated;
+      localStorage.setItem('sbTransCache',JSON.stringify(transCache));
+      return translated;
+    }
+  }catch(e){console.warn('Translation error:',e);}
+  return text;
+}
+
+// Translate an element's text content dynamically
+async function translateEl(el,text){
+  if(lang==='en'){el.textContent=text;return;}
+  el.textContent=text;
+  const translated=await translateText(text,lang);
+  el.textContent=translated;
+}
+
 function setLang(l){
   lang=l;localStorage.setItem('sbLang',l);
   document.querySelectorAll('.lang-option').forEach(o=>o.classList.toggle('active',o.textContent.startsWith(l==='en'?'EN':l==='zh'?'\u4E2D\u6587':'\u65E5\u672C\u8A9E')));
@@ -1360,9 +1509,9 @@ function getStormContext(r){
   const clearDate=new Date(now);clearDate.setDate(clearDate.getDate()+1);
   const bestDate=new Date(now);bestDate.setDate(bestDate.getDate()+1);
   return{
-    stormStart:`${fmt(stormStartDate)} evening`,
-    stormPeak:`${fmt(peakDate)}, midday`,
-    clearDay:`${fmt(clearDate)}, afternoon`,
+    stormStart:`${fmt(stormStartDate)} ${t('time_evening')}`,
+    stormPeak:`${fmt(peakDate)}, ${t('time_midday')}`,
+    clearDay:`${fmt(clearDate)}, ${t('time_afternoon')}`,
     bestWindow:`${fmt(bestDate)}, 6:00 AM \u2013 12:00 PM`
   };
 }
@@ -1375,7 +1524,7 @@ function generateForecast(r){
   const baseTemp=r.elev>10000?18:r.elev>8000?24:30;
   for(let i=0;i<7;i++){
     const d=new Date(now);d.setDate(d.getDate()+i);
-    const dayName=i===0?'Today':i===1?'Tomorrow':d.toLocaleDateString('en-US',{weekday:'short'});
+    const dayName=i===0?t('today_label'):i===1?t('tomorrow_label'):d.toLocaleDateString(lang==='zh'?'zh-CN':lang==='ja'?'ja-JP':'en-US',{weekday:'short'});
     const high=baseTemp+Math.round(Math.random()*10-3);
     const low=high-Math.round(8+Math.random()*6);
     const windBase=r.elev>10000?15:10;
@@ -1413,7 +1562,8 @@ function getWeekendRange(){
   const dow=now.getDay();
   const sat=new Date(now);sat.setDate(now.getDate()+(6-dow));
   const sun=new Date(sat);sun.setDate(sat.getDate()+1);
-  return sat.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' \u2013 '+sun.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  const loc=lang==='zh'?'zh-CN':lang==='ja'?'ja-JP':'en-US';
+  return sat.toLocaleDateString(loc,{month:'short',day:'numeric'})+' \u2013 '+sun.toLocaleDateString(loc,{month:'short',day:'numeric'});
 }
 
 // ── TAB SWITCHING ──
@@ -1439,7 +1589,7 @@ function renderWeatherOverview(){
       <div class="wx-overview">
         <div class="wx-eyebrow">${icon('sun',12)} ${t('weather_update')}</div>
         <div class="wx-headline">${t('clear_skies')}</div>
-        <div class="wx-summary">${t('no_significant_snow')} ${topResort?topResort.name+' '+topResort.base+'" '+t('packed_base_for_groomers'):'All resorts quiet.'} ${t('check_back')}</div>
+        <div class="wx-summary">${t('no_significant_snow')} ${topResort?topResort.name+' '+topResort.base+'" '+t('packed_base_for_groomers'):t('all_resorts_quiet')} ${t('check_back')}</div>
       </div>`;
     return;
   }
@@ -1456,7 +1606,7 @@ function renderWeatherOverview(){
   document.getElementById('weatherOverview').innerHTML=`
     <div class="wx-overview">
       <div class="wx-eyebrow">${icon('cloud-snow',12)} ${t('storm_briefing')} · ${t('updated_today')}</div>
-      <div class="wx-headline">${topResort.fresh}" storm hitting ${topResort.name}</div>
+      <div class="wx-headline">${topResort.fresh}" ${t('storm_hitting')} ${topResort.name}</div>
       <div class="wx-timeline">
         ${phases.map(p=>`<div class="wx-phase">
           <div class="wx-phase-label">${p.label}</div>
@@ -1464,7 +1614,7 @@ function renderWeatherOverview(){
           <div class="wx-phase-day">${p.day}</div>
         </div>`).join('')}
       </div>
-      <div class="wx-summary">Pacific front since <strong>${fmtShort(stormStartDate)}</strong>, dropping ${topResort.fresh}" of ${topResort.quality.toLowerCase()}. ${t('peaks')} <strong>${fmtShort(peakDate)}</strong> with 4-6" more, ${t('clears').toLowerCase()} <strong>${fmtShort(clearDate)}</strong>. ${t('best_window')}: <strong>${fmtShort(clearDate)} ${t('morning_label')}</strong> for fresh tracks.</div>
+      <div class="wx-summary">${t('pacific_front')} <strong>${fmtShort(stormStartDate)}</strong>, ${t('dropping_of')} ${topResort.fresh}" ${tq(topResort.quality).toLowerCase()}. ${t('peaks')} <strong>${fmtShort(peakDate)}</strong> ${t('more_with_fresh')}, ${t('clears').toLowerCase()} <strong>${fmtShort(clearDate)}</strong>. ${t('best_window')}: <strong>${fmtShort(clearDate)} ${t('morning_label')}</strong> ${t('for_fresh_tracks')}.</div>
       <div class="wx-source">${icon('external-link',10)} <a href="${topResort.links.snow}" target="_blank">${topResort.name} ${t('snow_report')}</a> &middot; <a href="https://open-meteo.com" target="_blank">Open-Meteo</a></div>
     </div>`;
 }
@@ -1597,28 +1747,28 @@ function renderTopPicks(){
 
 function getResortNarrative(r){
   if(r.region==='intl'){
-    if(r.id==='niseko')return`<strong>Niseko is in peak Japow season.</strong> 24" of legendary dry powder overnight. Night skiing until 8:30 PM means you can ride all day and evening. The tree runs are wide open. If you've been dreaming about Japan, this is the week.`;
-    if(r.id==='revelstoke')return`<strong>Revelstoke just got hammered.</strong> 20" of deep BC powder on North America's biggest vertical drop (5,620 ft). Expert terrain is fully open. This is big-mountain riding at its finest \u2014 not for the faint of heart.`;
-    if(r.id==='chamonix')return`<strong>Chamonix spring conditions.</strong> High alpine still has solid coverage. Grands Montets and Vallee Blanche offer world-class spring skiing with stunning Mont-Blanc views.`;
-    if(r.id==='zermatt')return`<strong>Zermatt glacier skiing.</strong> Year-round operations on the Matterhorn Glacier Paradise. Spring cruising with incredible Alpine scenery.`;
+    if(r.id==='niseko')return t('niseko_narrative');
+    if(r.id==='revelstoke')return t('revelstoke_narrative');
+    if(r.id==='chamonix')return t('chamonix_narrative');
+    if(r.id==='zermatt')return t('zermatt_narrative');
   }
-  if(r.fresh>=15)return`<strong>${r.fresh}" of fresh ${r.quality.toLowerCase()}</strong> makes this a powder day. ${r.liftsOpen}/${r.lifts} lifts spinning. ${r.ann}`;
-  if(r.fresh>=8)return`Solid <strong>${r.fresh}" overnight</strong>. ${r.quality} conditions across the mountain. ${r.trailsOpen}/${r.trails} trails open. ${r.ann}`;
-  return`${r.quality} conditions with a ${r.base}" base. ${r.trailsOpen}/${r.trails} trails open. ${r.ann}`;
+  if(r.fresh>=15)return`<strong>${r.fresh}" ${tq(r.quality).toLowerCase()}</strong> ${t('makes_powder_day')} ${r.liftsOpen}/${r.lifts} ${t('lifts')}. <span data-translate="${r.ann.replace(/"/g,'&quot;')}">${r.ann}</span>`;
+  if(r.fresh>=8)return`${t('narrative_solid')} <strong>${r.fresh}" ${t('solid_overnight')}</strong>. ${tq(r.quality)} ${t('conditions_across')} ${r.trailsOpen}/${r.trails} ${t('trails_open')} <span data-translate="${r.ann.replace(/"/g,'&quot;')}">${r.ann}</span>`;
+  return`${tq(r.quality)} ${t('conditions_with_base')} ${r.base}" ${t('narrative_base')} ${r.trailsOpen}/${r.trails} ${t('trails_open')} <span data-translate="${r.ann.replace(/"/g,'&quot;')}">${r.ann}</span>`;
 }
 
 function getChainAlertHTML(r){
   const alerts={
-    mammoth:{road:'SR-203 to Mammoth Lakes',src:'Caltrans',url:'https://quickmap.dot.ca.gov',since:'4:00 AM',expected:'Ongoing during storm'},
-    palisades:{road:'I-80 Eastbound to Tahoe',src:'Caltrans',url:'https://quickmap.dot.ca.gov',since:'4:20 AM',expected:'Lift by 2:00 PM'},
-    june:{road:'US-395 to June Lake',src:'Caltrans',url:'https://roads.dot.ca.gov',since:'3:00 AM',expected:'Ongoing'},
-    snowbird:{road:'Little Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'11:00 PM last night',expected:'All day during storm'},
-    brighton:{road:'Big Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'10:00 PM last night',expected:'4WD recommended'},
-    solitude:{road:'Big Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'10:00 PM last night',expected:'4WD recommended'},
-    alta:{road:'Little Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'11:00 PM last night',expected:'All day during storm'},
+    mammoth:{road:'SR-203 to Mammoth Lakes',src:'Caltrans',url:'https://quickmap.dot.ca.gov',since:'4:00 AM',expectedKey:'ongoing_storm'},
+    palisades:{road:'I-80 Eastbound to Tahoe',src:'Caltrans',url:'https://quickmap.dot.ca.gov',since:'4:20 AM',expectedKey:'lift_by'},
+    june:{road:'US-395 to June Lake',src:'Caltrans',url:'https://roads.dot.ca.gov',since:'3:00 AM',expectedKey:'ongoing'},
+    snowbird:{road:'Little Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'11:00 PM',expectedKey:'all_day_storm'},
+    brighton:{road:'Big Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'10:00 PM',expectedKey:'four_wd'},
+    solitude:{road:'Big Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'10:00 PM',expectedKey:'four_wd'},
+    alta:{road:'Little Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'11:00 PM',expectedKey:'all_day_storm'},
   };
   const a=alerts[r.id];if(!a)return'';
-  return`<div class="chain-alert"><div class="chain-icon">${icon('alert-triangle',16)}</div><div><div class="chain-title">${icon('chain',12)} ${t('chain_ctrl')} R2 \u2014 ${a.road}</div><div class="chain-meta">${t('chain_active_since')} ${a.since}. ${t('all_vehicles_chains')}<br>${t('expected_label')}: ${a.expected}.</div><div class="chain-source"><a href="${a.url}" target="_blank">${a.src} ${icon('external-link',10)}</a> &middot; ${t('updated_label')} ${new Date().getHours()>6?t('this_morning'):t('last_night')}</div></div></div>`;
+  return`<div class="chain-alert"><div class="chain-icon">${icon('alert-triangle',16)}</div><div><div class="chain-title">${icon('chain',12)} ${t('chain_ctrl')} R2 \u2014 ${a.road}</div><div class="chain-meta">${t('chain_active_since')} ${a.since}. ${t('all_vehicles_chains')}<br>${t('expected_label')}: ${t(a.expectedKey)}.</div><div class="chain-source"><a href="${a.url}" target="_blank">${a.src} ${icon('external-link',10)}</a> &middot; ${t('updated_label')} ${new Date().getHours()>6?t('this_morning'):t('last_night')}</div></div></div>`;
 }
 
 // ── RENDER: LEGEND ──
@@ -1711,20 +1861,20 @@ function renderTrip(){
       <div class="d-stat"><div class="d-stat-label">${icon('bolt',10)} ${t('lifts')}</div><div class="d-stat-val">${r.liftsOpen}/${r.lifts}</div></div>
     </div>
     <div class="sec-label">${icon('calendar',12)} ${t('itinerary')}</div>
-    ${[['5:30 AM','Depart Early',`Beat traffic. ${ti.driveStr} to ${r.name}. Chains in trunk.`],
-       ['~'+r.open,'Arrive & Gear Up','Park early. Beacon check. Snacks in pack.'],
-       ['First Lift','Summit \u2014 Fresh Lines','Head to top lift immediately. Hit untracked lines.'],
-       ['10:30 AM','Side-Country Window','With partner only. South-facing stashes.'],
-       ['12:00 PM','Lunch Break','On-mountain or packed lunch. Rest boots.'],
-       ['1:00 PM','Park or Groomers','Afternoon = reset park features or buttery corduroy.'],
-       ['3:30 PM','Last Runs','Golden hour carving. Best snow surface of the day.'],
-       [r.close,'Apr\u00E8s-Ski','Rehydrate. Mountain bar. Plan tomorrow.']
+    ${[['5:30 AM',t('depart_early'),t('depart_desc').replace('{drive}',ti.driveStr).replace('{resort}',r.name)],
+       ['~'+r.open,t('arrive_gear'),t('arrive_desc')],
+       [t('first_lift'),t('summit_fresh'),t('summit_desc')],
+       ['10:30 AM',t('sidecountry'),t('sidecountry_desc')],
+       ['12:00 PM',t('lunch_break'),t('lunch_desc')],
+       ['1:00 PM',t('park_groomers'),t('park_desc')],
+       ['3:30 PM',t('last_runs'),t('last_runs_desc')],
+       [r.close,t('apres_ski'),t('apres_desc')]
     ].map(([time,title,detail])=>`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)"><div style="font-size:10px;color:var(--accent);min-width:60px;display:flex;align-items:flex-start;gap:4px">${icon('clock',10)} ${time}</div><div><div style="font-size:12px;font-weight:500;color:var(--white)">${title}</div><div style="font-size:11px;color:var(--text2);margin-top:2px">${detail}</div></div></div>`).join('')}
     <div class="sec-label" style="margin-top:24px">${icon('check',12)} ${t('packing')}</div>
-    ${[['Safety','Avalanche beacon \u00B7 Probe + shovel \u00B7 MIPS helmet \u00B7 First aid'],
-       ['Clothing','Merino base \u00B7 Fleece mid \u00B7 Waterproof shell \u00B7 Bibs \u00B7 Balaclava \u00B7 Mittens \u00D72'],
-       ['Equipment','Board + bindings (tuned) \u00B7 Boots \u00B7 Goggles (low-light lens)'],
-       ['Misc','SPF lip balm \u00B7 Hand warmers \u00D78 \u00B7 Snacks \u00B7 Water \u00B7 Offline maps \u00B7 R2 chains']
+    ${[[t('safety'),t('safety_items')],
+       [t('clothing'),t('clothing_items')],
+       [t('equipment'),t('equipment_items')],
+       [t('misc'),t('misc_items')]
     ].map(([cat,items])=>`<div style="margin-bottom:12px"><div style="font-size:9px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">${cat}</div><div style="font-size:11px;color:var(--text2);line-height:1.8">${items}</div></div>`).join('')}`;
   // Init trip map
   setTimeout(()=>{
@@ -1782,7 +1932,7 @@ function renderProfile(){
 
   document.getElementById('skillSliders').innerHTML=SKILL_CATS.map(c=>`
     <div class="skill-row">
-      <div class="skill-name">${c.label}</div>
+      <div class="skill-name">${t(c.labelKey)}</div>
       <div class="skill-bar"><div class="skill-fill" style="width:${skillVals[c.id]}%"></div></div>
       <div class="skill-val">${skillVals[c.id]}%</div>
       <div class="skill-btns">
@@ -1795,13 +1945,21 @@ function renderProfile(){
   const routines=ROUTINES[key]||ROUTINES.intermediate;
   document.getElementById('routineList').innerHTML=routines.map(r=>`
     <div class="routine-card" onclick="this.classList.toggle('open')">
-      <div class="routine-head"><div class="routine-title">${r.title}</div><div class="routine-dur">${r.dur}</div></div>
-      <div class="routine-body"><ul class="routine-steps">${r.steps.map(s=>`<li>${icon('arrow-right',10)} ${s}</li>`).join('')}</ul></div>
+      <div class="routine-head"><div class="routine-title" data-translate="${r.title}">${r.title}</div><div class="routine-dur" data-translate="${r.dur}">${r.dur}</div></div>
+      <div class="routine-body"><ul class="routine-steps">${r.steps.map(s=>`<li>${icon('arrow-right',10)} <span data-translate="${s.replace(/"/g,'&quot;')}">${s}</span></li>`).join('')}</ul></div>
     </div>`).join('');
 
   const resources=RESOURCES[key]||RESOURCES.intermediate;
   document.getElementById('resourceList').innerHTML=resources.map(r=>`
-    <a href="${r.url}" target="_blank" class="res-link"><div class="res-icon">${icon(r.icon,16)}</div><div><div class="res-title">${r.title}</div><div class="res-desc">${r.desc}</div></div></a>`).join('');
+    <a href="${r.url}" target="_blank" class="res-link"><div class="res-icon">${icon(r.icon,16)}</div><div><div class="res-title" data-translate="${r.title}">${r.title}</div><div class="res-desc" data-translate="${r.desc}">${r.desc}</div></div></a>`).join('');
+
+  // Dynamically translate routine/resource content if not English
+  if(lang!=='en'){
+    document.querySelectorAll('[data-translate]').forEach(el=>{
+      const src=el.getAttribute('data-translate');
+      if(src)translateEl(el,src);
+    });
+  }
 
   // Close suggestions on outside click
   setTimeout(()=>{
@@ -1814,26 +1972,92 @@ function renderProfile(){
   },100);
 }
 
-// ── LOCATION AUTOCOMPLETE ──
+// ── LOCATION AUTOCOMPLETE (with Nominatim geocoding) ──
+let geoDebounce=null;
 function onLocationInput(){
   const input=document.getElementById('profileLocation');
   const suggest=document.getElementById('locSuggest');
   if(!input||!suggest)return;
   const val=input.value.toLowerCase().trim();
   if(val.length<1){suggest.classList.remove('show');return;}
-  // Get unique city names from ORIGINS
+  // First check local ORIGINS
   const seen=new Set();
   const matches=[];
   for(const[key,v]of Object.entries(ORIGINS)){
     if(seen.has(v.name))continue;
     if(v.name.toLowerCase().includes(val)||key.includes(val)){
       seen.add(v.name);
-      matches.push(v.name);
+      matches.push({name:v.name,type:'local'});
     }
   }
-  if(matches.length===0){suggest.classList.remove('show');return;}
-  suggest.innerHTML=matches.slice(0,8).map(m=>`<div class="loc-suggest-item" onmousedown="selectLocation('${m}')">${m}</div>`).join('');
+  if(matches.length>0){
+    showLocSuggestions(suggest,matches);
+  } else {
+    suggest.innerHTML=`<div class="loc-suggest-item loc-loading">${t('searching')||'Searching...'}</div>`;
+    suggest.classList.add('show');
+  }
+  // Debounced Nominatim geocoding for unmatched input
+  clearTimeout(geoDebounce);
+  if(val.length>=2){
+    geoDebounce=setTimeout(()=>geocodeNominatim(val,suggest,matches),400);
+  }
+}
+
+function showLocSuggestions(suggest,matches){
+  suggest.innerHTML=matches.slice(0,8).map(m=>{
+    const esc=m.name.replace(/'/g,"\\'");
+    if(m.type==='geo'){
+      return `<div class="loc-suggest-item loc-geo" onmousedown="selectGeoLocation('${esc}',${m.lat},${m.lng})">${icon('map-pin',12)} ${m.name}</div>`;
+    }
+    return `<div class="loc-suggest-item" onmousedown="selectLocation('${esc}')">${m.name}</div>`;
+  }).join('');
   suggest.classList.add('show');
+}
+
+async function geocodeNominatim(query,suggest,localMatches){
+  try{
+    const url=`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=5&addressdetails=1`;
+    const res=await fetch(url,{headers:{'Accept-Language':lang}});
+    if(!res.ok)return;
+    const data=await res.json();
+    const geoMatches=data.map(d=>{
+      const addr=d.address||{};
+      const city=addr.city||addr.town||addr.village||addr.county||d.display_name.split(',')[0];
+      const state=addr.state||'';
+      const country=addr.country_code?addr.country_code.toUpperCase():'';
+      let name=city;
+      if(state)name+=', '+state;
+      if(country&&country!=='US')name+=' ('+country+')';
+      return {name,lat:parseFloat(d.lat),lng:parseFloat(d.lon),type:'geo'};
+    });
+    // Merge local + geo, deduplicate
+    const allMatches=[...localMatches];
+    const existing=new Set(localMatches.map(m=>m.name.toLowerCase()));
+    for(const g of geoMatches){
+      if(!existing.has(g.name.toLowerCase())){allMatches.push(g);existing.add(g.name.toLowerCase());}
+    }
+    if(allMatches.length>0){
+      showLocSuggestions(suggest,allMatches);
+    } else {
+      suggest.innerHTML=`<div class="loc-suggest-item loc-no-result">${t('no_results')||'No results found'}</div>`;
+      suggest.classList.add('show');
+    }
+  }catch(e){console.warn('Geocoding error:',e);}
+}
+
+function selectGeoLocation(name,lat,lng){
+  const input=document.getElementById('profileLocation');
+  const suggest=document.getElementById('locSuggest');
+  if(input)input.value=name;
+  if(suggest)suggest.classList.remove('show');
+  // Save geocoded coordinates
+  geocodedOrigin={lat,lng,name,query:name.toLowerCase().trim()};
+  localStorage.setItem('sbGeocodedOrigin',JSON.stringify(geocodedOrigin));
+  userLocation=name;
+  localStorage.setItem('sbOrigin',name);
+  destroyMaps();
+  renderAll();
+  flashProfileSaved();
 }
 
 function selectLocation(name){
@@ -1841,10 +2065,21 @@ function selectLocation(name){
   const suggest=document.getElementById('locSuggest');
   if(input)input.value=name;
   if(suggest)suggest.classList.remove('show');
+  // Clear any geocoded origin since we're using a known location
+  geocodedOrigin=null;
+  localStorage.removeItem('sbGeocodedOrigin');
   userLocation=name;
   localStorage.setItem('sbOrigin',name);
   destroyMaps();
   renderAll();
+  flashProfileSaved();
+}
+
+function flashProfileSaved(){
+  const btn=document.querySelector('.profile-save-btn');
+  if(!btn)return;
+  btn.innerHTML=`${icon('check',12)} ${t('profile_saved')}`;
+  setTimeout(()=>{btn.innerHTML=`${icon('check',12)} ${t('save_profile')}`;},1500);
 }
 
 function saveProfile(){
@@ -1852,10 +2087,7 @@ function saveProfile(){
   const resort=document.getElementById('profileResort').value;
   if(loc){userLocation=loc;localStorage.setItem('sbOrigin',loc);}
   if(resort){activeResort=resort;localStorage.setItem('sbResort',resort);}
-  // Flash save confirmation
-  const btn=document.querySelector('.profile-save-btn');
-  btn.innerHTML=`${icon('check',12)} ${t('profile_saved')}`;
-  setTimeout(()=>{btn.innerHTML=`${icon('check',12)} ${t('save_profile')}`;},1500);
+  flashProfileSaved();
   destroyMaps();
   renderAll();
 }
@@ -1970,7 +2202,7 @@ function openDetail(id){
       <div class="d-stat"><div class="d-stat-label">${icon('mountain',10)} ${t('base')}</div><div class="d-stat-val">${r.base}"</div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('arrow-right',10)} ${t('trails')}</div><div class="d-stat-val">${r.trailsOpen}/${r.trails}</div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('bolt',10)} ${t('lifts')}</div><div class="d-stat-val">${r.liftsOpen}/${r.lifts}</div></div>
-      <div class="d-stat"><div class="d-stat-label">${icon('eye',10)} ${t('quality')}</div><div class="d-stat-val" style="font-size:12px">${r.quality}</div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('eye',10)} ${t('quality')}</div><div class="d-stat-val" style="font-size:12px">${tq(r.quality)}</div></div>
     </div>
 
     <div style="padding:10px 12px;background:var(--card);border-radius:var(--r-sm);border:1px solid var(--border);margin:12px 0;font-size:11px;color:var(--text2);line-height:1.6">
@@ -1978,7 +2210,7 @@ function openDetail(id){
       <br>${icon('plane',12)} ${r.airport}
     </div>
 
-    ${r.ann?`<div style="padding:10px 12px;background:var(--accent-soft);border:1px solid rgba(196,149,106,0.15);border-radius:var(--r-sm);margin:10px 0;font-size:11px;color:var(--text2);line-height:1.6">${icon('bolt',12)} ${r.ann}</div>`:''}
+    ${r.ann?`<div style="padding:10px 12px;background:var(--accent-soft);border:1px solid rgba(196,149,106,0.15);border-radius:var(--r-sm);margin:10px 0;font-size:11px;color:var(--text2);line-height:1.6">${icon('bolt',12)} <span data-translate="${r.ann.replace(/"/g,'&quot;')}">${r.ann}</span></div>`:''}
 
     <!-- 7-DAY FORECAST -->
     <div class="sec-label" style="margin-top:16px">${icon('calendar',12)} ${t('seven_day')}</div>
@@ -2063,6 +2295,13 @@ function openDetail(id){
 
   document.getElementById('detailOverlay').classList.add('open');
   document.body.style.overflow='hidden';
+  // Translate dynamic content in detail modal
+  if(lang!=='en'){
+    document.querySelectorAll('#detailContent [data-translate]').forEach(el=>{
+      const src=el.getAttribute('data-translate');
+      if(src)translateEl(el,src);
+    });
+  }
 }
 
 function closeDetail(e){
@@ -2188,6 +2427,15 @@ function tick(){
 function renderAll(){
   tick();renderWeatherOverview();renderTopPicks();renderNextTrip();renderAllResorts();renderTrip();renderProfile();
   document.querySelectorAll('[data-i18n]').forEach(el=>{const v=t(el.dataset.i18n);if(v)el.textContent=v});
+  // Dynamically translate data-translate elements when not English
+  if(lang!=='en'){
+    setTimeout(()=>{
+      document.querySelectorAll('[data-translate]').forEach(el=>{
+        const src=el.getAttribute('data-translate');
+        if(src)translateEl(el,src);
+      });
+    },500);
+  }
 }
 
 // ── INIT ──
