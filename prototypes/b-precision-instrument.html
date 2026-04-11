@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>SlabHQ — Direction B: Precision Instrument</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* ── DIRECTION B: PRECISION INSTRUMENT ──
+   Space Grotesk + JetBrains Mono
+   Clinical, confident, Swiss — Braun weather station
+*/
+
+:root {
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  --ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --ease-std: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --r: 10px;
+  --r-sm: 6px;
+}
+
+[data-theme="dark"] {
+  --bg: #09090b;
+  --surface: #111114;
+  --card: #16161a;
+  --card2: #1c1c22;
+  --border: #26262e;
+  --border2: #32323c;
+  --accent: #5bc4e0;
+  --accent-dim: rgba(91,196,224,0.08);
+  --fresh: #42c97a;
+  --fresh-dim: rgba(66,201,122,0.08);
+  --warn: #e0960a;
+  --warn-dim: rgba(224,150,10,0.08);
+  --danger: #e83d3d;
+  --danger-dim: rgba(232,61,61,0.08);
+  --sky: #5ba8d4;
+  --text: #d0d8e4;
+  --text2: #6a7486;
+  --text3: #3e4452;
+  --white: #edf0f7;
+}
+
+[data-theme="light"] {
+  --bg: #f4f5f7;
+  --surface: #eaecf0;
+  --card: #ffffff;
+  --card2: #f8f9fb;
+  --border: #d8dbe2;
+  --border2: #c4c8d2;
+  --accent: #1a8aab;
+  --accent-dim: rgba(26,138,171,0.06);
+  --fresh: #1a8a4a;
+  --fresh-dim: rgba(26,138,74,0.06);
+  --warn: #9a7008;
+  --warn-dim: rgba(154,112,8,0.06);
+  --danger: #c03030;
+  --danger-dim: rgba(192,48,48,0.06);
+  --sky: #2a7a9a;
+  --text: #1a1e28;
+  --text2: #5a6272;
+  --text3: #8a92a2;
+  --white: #0e1018;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px) + 20px);
+  transition: background 0.3s var(--ease-std), color 0.3s var(--ease-std);
+}
+
+/* ── TOP BAR ── */
+.top-bar {
+  position: sticky; top: 0; z-index: 400;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; height: 48px;
+  background: color-mix(in srgb, var(--bg) 90%, transparent);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  transition: background 0.3s, border-color 0.3s;
+}
+.logo {
+  font-family: var(--font-display); font-size: 18px; font-weight: 700;
+  color: var(--white); letter-spacing: -0.5px;
+}
+.logo-accent { color: var(--accent); font-weight: 400; }
+.top-actions { display: flex; align-items: center; gap: 6px; }
+.top-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px; background: var(--card); border: 1px solid var(--border);
+  color: var(--text2); border-radius: 8px; cursor: pointer; font-size: 14px;
+  transition: all 0.15s;
+}
+.top-btn:hover { border-color: var(--accent); color: var(--accent); }
+.lang-btn {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+  padding: 6px 10px; background: var(--card); border: 1px solid var(--border);
+  color: var(--text2); border-radius: 6px; cursor: pointer;
+  transition: all 0.15s; letter-spacing: 0.5px;
+}
+.lang-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── CONTENT CONTAINER ── */
+.container { max-width: 480px; margin: 0 auto; padding: 0 16px; }
+
+/* ── DATE & TIME ── */
+.header-meta {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 0 4px;
+}
+.header-date {
+  font-family: var(--font-display); font-size: 13px; font-weight: 600;
+  color: var(--white);
+}
+.header-time {
+  font-family: var(--font-mono); font-size: 11px; color: var(--text3);
+}
+.demo-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-family: var(--font-mono); font-size: 9px; font-weight: 500;
+  color: var(--warn); background: var(--warn-dim);
+  border: 1px solid rgba(224,150,10,0.15);
+  padding: 3px 8px; border-radius: 4px; margin-left: 8px;
+}
+.demo-dot {
+  width: 5px; height: 5px; border-radius: 50%; background: var(--warn);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── LOCATION ── */
+.location-row {
+  display: flex; align-items: center; gap: 8px;
+  margin: 12px 0 20px;
+}
+.location-icon { color: var(--accent); font-size: 14px; flex-shrink: 0; }
+.location-input {
+  flex: 1; background: transparent; border: none; border-bottom: 1px solid var(--border);
+  color: var(--text); font-family: var(--font-display); font-size: 14px;
+  padding: 8px 0; outline: none; transition: border-color 0.15s;
+}
+.location-input:focus { border-color: var(--accent); }
+.location-input::placeholder { color: var(--text3); }
+
+/* ── SECTION LABELS ── */
+.section-label {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+  color: var(--text3); letter-spacing: 1.5px; text-transform: uppercase;
+  margin-bottom: 12px; padding-top: 8px;
+}
+
+/* ── VERDICT HERO ── */
+.verdict {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 24px; margin-bottom: 12px;
+  position: relative;
+  animation: enter 0.4s var(--ease-out) 0.05s both;
+}
+@keyframes enter { from { opacity:0; transform:translateY(8px) } to { opacity:1; transform:translateY(0) } }
+.verdict-top { display: flex; align-items: flex-start; justify-content: space-between; }
+.verdict-score-block { display: flex; align-items: baseline; gap: 8px; }
+.verdict-score {
+  font-family: var(--font-mono); font-size: 64px; font-weight: 500;
+  line-height: 1; letter-spacing: -4px;
+}
+.verdict-max {
+  font-family: var(--font-mono); font-size: 14px; color: var(--text3);
+  align-self: flex-end; margin-bottom: 8px;
+}
+.verdict-badge {
+  font-family: var(--font-display); font-size: 12px; font-weight: 600;
+  padding: 6px 14px; border-radius: 20px; letter-spacing: 0.5px;
+}
+.badge-go { background: var(--fresh-dim); border: 1px solid rgba(66,201,122,0.2); color: var(--fresh); }
+.badge-good { background: var(--accent-dim); border: 1px solid rgba(91,196,224,0.2); color: var(--accent); }
+.badge-ok { background: var(--warn-dim); border: 1px solid rgba(224,150,10,0.2); color: var(--warn); }
+.badge-skip { background: var(--danger-dim); border: 1px solid rgba(232,61,61,0.2); color: var(--danger); }
+.verdict-resort {
+  font-family: var(--font-display); font-size: 20px; font-weight: 700;
+  color: var(--white); margin-top: 16px; letter-spacing: -0.3px;
+}
+.verdict-sub {
+  font-family: var(--font-display); font-size: 13px; color: var(--text2);
+  margin-top: 4px; line-height: 1.5;
+}
+.verdict-cta {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; padding: 12px; margin-top: 16px;
+  background: var(--accent); color: var(--bg);
+  font-family: var(--font-display); font-size: 13px; font-weight: 600;
+  border: none; border-radius: var(--r-sm); cursor: pointer;
+  transition: all 0.15s; letter-spacing: 0.3px;
+}
+.verdict-cta:hover { opacity: 0.88; transform: translateY(-1px); }
+.verdict-cta svg { width: 14px; height: 14px; }
+
+/* ── STATS ROW ── */
+.stats-row {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px;
+  margin-bottom: 20px;
+}
+.stat-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 12px 10px; text-align: center;
+  transition: border-color 0.15s;
+}
+.stat-card:hover { border-color: var(--border2); }
+.stat-num {
+  font-family: var(--font-mono); font-size: 22px; font-weight: 500;
+  color: var(--white); line-height: 1;
+}
+.stat-unit { font-size: 12px; color: var(--text2); font-weight: 400; }
+.stat-label {
+  font-family: var(--font-mono); font-size: 9px; color: var(--text3);
+  margin-top: 4px; letter-spacing: 0.5px;
+}
+
+/* ── RANK CARDS ── */
+.rank-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); margin-bottom: 8px;
+  overflow: hidden; cursor: pointer;
+  transition: border-color 0.2s var(--ease-std), transform 0.2s var(--ease-std);
+}
+.rank-card:hover { border-color: var(--border2); }
+.rank-card:active { transform: scale(0.995); }
+.rank-card.expanded { border-color: var(--accent); }
+.rank-header {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 16px;
+}
+.rank-position {
+  font-family: var(--font-mono); font-size: 10px; color: var(--text3);
+  min-width: 18px;
+}
+.rank-score {
+  font-family: var(--font-mono); font-size: 24px; font-weight: 500;
+  min-width: 36px; line-height: 1;
+}
+.rank-info { flex: 1; min-width: 0; }
+.rank-name {
+  font-family: var(--font-display); font-size: 15px; font-weight: 600;
+  color: var(--white); letter-spacing: -0.2px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rank-meta { font-size: 12px; color: var(--text2); margin-top: 1px; }
+.rank-chip {
+  font-family: var(--font-mono); font-size: 9px; font-weight: 500;
+  padding: 3px 8px; border-radius: 4px; letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+.chip-epic { background: var(--fresh-dim); border: 1px solid rgba(66,201,122,0.2); color: var(--fresh); }
+.chip-prime { background: var(--accent-dim); border: 1px solid rgba(91,196,224,0.2); color: var(--accent); }
+.chip-good { background: var(--warn-dim); border: 1px solid rgba(224,150,10,0.15); color: var(--warn); }
+.chip-limited { background: var(--danger-dim); border: 1px solid rgba(232,61,61,0.15); color: var(--danger); }
+.chip-closed { background: rgba(62,68,82,0.2); border: 1px solid rgba(62,68,82,0.3); color: var(--text3); }
+.rank-arrow {
+  color: var(--text3); font-size: 10px; transition: transform 0.25s var(--ease-std);
+  flex-shrink: 0;
+}
+.rank-card.expanded .rank-arrow { transform: rotate(180deg); }
+
+/* ── EXPANDED DETAIL ── */
+.rank-body {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.35s var(--ease-std);
+}
+.rank-body-inner {
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--border);
+}
+.detail-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;
+  margin: 12px 0;
+}
+.d-stat {
+  background: var(--card2); border-radius: var(--r-sm); padding: 10px;
+}
+.d-stat-label {
+  font-family: var(--font-mono); font-size: 9px; color: var(--text3);
+  letter-spacing: 0.5px; margin-bottom: 4px;
+}
+.d-stat-val {
+  font-family: var(--font-mono); font-size: 18px; font-weight: 500; color: var(--white);
+}
+
+/* ── MAP ── */
+.map-wrap {
+  margin: 12px 0; border-radius: var(--r-sm); overflow: hidden;
+  border: 1px solid var(--border);
+}
+.map-el { height: 200px; }
+.leaflet-container { background: var(--bg) !important; }
+
+.drive-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 10px 0;
+}
+.drive-cell {
+  background: var(--card2); border-radius: var(--r-sm); padding: 10px;
+}
+.drive-label { font-family: var(--font-mono); font-size: 9px; color: var(--text3); margin-bottom: 3px; }
+.drive-val { font-family: var(--font-mono); font-size: 20px; font-weight: 500; color: var(--white); }
+.drive-note { font-size: 10px; color: var(--text2); margin-top: 2px; }
+
+/* ── CHAIN ALERT ── */
+.chain-box {
+  display: flex; gap: 10px; padding: 12px;
+  background: var(--warn-dim); border: 1px solid rgba(224,150,10,0.15);
+  border-radius: var(--r-sm); margin: 8px 0;
+}
+.chain-icon { flex-shrink: 0; margin-top: 1px; }
+.chain-title { font-size: 12px; font-weight: 600; color: var(--warn); }
+.chain-meta { font-size: 11px; color: var(--text2); margin-top: 3px; line-height: 1.5; }
+.chain-src { font-size: 10px; color: var(--text3); margin-top: 4px; }
+.chain-src a { color: var(--accent); text-decoration: none; }
+.chain-src a:hover { text-decoration: underline; }
+
+.detail-cta {
+  display: block; width: 100%; padding: 11px; margin-top: 10px;
+  background: var(--accent); color: var(--bg);
+  font-family: var(--font-display); font-size: 12px; font-weight: 600;
+  border: none; border-radius: var(--r-sm); cursor: pointer;
+  transition: opacity 0.15s; text-align: center;
+}
+.detail-cta:hover { opacity: 0.85; }
+
+/* ── DIVIDER ── */
+.sep { height: 1px; background: var(--border); margin: 20px 0; }
+
+/* ── EMAIL ── */
+.email-block {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 24px; margin-top: 28px;
+  text-align: center;
+}
+.email-eye {
+  font-family: var(--font-mono); font-size: 9px; color: var(--accent);
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;
+}
+.email-title {
+  font-family: var(--font-display); font-size: 17px; font-weight: 700;
+  color: var(--white); margin-bottom: 14px; letter-spacing: -0.3px;
+}
+.email-form { display: flex; gap: 6px; }
+.email-field {
+  flex: 1; padding: 11px 14px; background: var(--card2);
+  border: 1px solid var(--border); color: var(--text);
+  font-family: var(--font-mono); font-size: 12px;
+  border-radius: var(--r-sm); outline: none;
+}
+.email-field::placeholder { color: var(--text3); }
+.email-field:focus { border-color: var(--accent); }
+.email-submit {
+  padding: 11px 18px; background: var(--accent); color: var(--bg);
+  font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+  letter-spacing: 0.5px; border: none; border-radius: var(--r-sm);
+  cursor: pointer; white-space: nowrap;
+}
+.email-fine { font-size: 10px; color: var(--text3); margin-top: 10px; }
+
+/* ── EMPTY STATE ── */
+.empty {
+  text-align: center; padding: 40px 20px;
+  animation: enter 0.5s var(--ease-out) 0.1s both;
+}
+.empty-glyph { font-size: 56px; margin-bottom: 16px; opacity: 0.5; }
+.empty-h { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--white); margin-bottom: 6px; letter-spacing: -0.3px; }
+.empty-p { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 20px; max-width: 300px; margin-left: auto; margin-right: auto; }
+.empty-count { font-family: var(--font-mono); font-size: 13px; color: var(--accent); margin-bottom: 20px; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
+  display: flex; justify-content: space-around;
+  height: calc(60px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: color-mix(in srgb, var(--surface) 92%, transparent);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+  transition: background 0.3s, border-color 0.3s;
+}
+.nav-item {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 2px;
+  padding: 6px 20px; color: var(--text3);
+  cursor: pointer; text-decoration: none;
+  transition: color 0.15s; position: relative;
+}
+.nav-item.active { color: var(--accent); }
+.nav-item.active::before {
+  content: ''; position: absolute; top: 0;
+  width: 24px; height: 2px; background: var(--accent); border-radius: 0 0 2px 2px;
+}
+.nav-icon svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.nav-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.5px; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 380px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .detail-stats { grid-template-columns: 1fr 1fr; }
+}
+@media (min-width: 768px) {
+  .container { max-width: 520px; }
+}
+</style>
+</head>
+<body>
+
+<header class="top-bar">
+  <div class="logo">SLAB<span class="logo-accent">HQ</span></div>
+  <div class="top-actions">
+    <button class="top-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme">&#9789;</button>
+    <button class="lang-btn" id="langBtn" onclick="cycleLang()">EN</button>
+  </div>
+</header>
+
+<div class="container">
+  <!-- DATE/TIME -->
+  <div class="header-meta">
+    <div>
+      <span class="header-date" id="hDate">Saturday, April 12</span>
+      <span class="demo-badge"><span class="demo-dot"></span>DEMO</span>
+    </div>
+    <div class="header-time" id="hTime">10:32 AM</div>
+  </div>
+
+  <!-- LOCATION -->
+  <div class="location-row">
+    <span class="location-icon">&#9906;</span>
+    <input class="location-input" placeholder="Your location (e.g. San Francisco)" value="San Francisco, CA" />
+  </div>
+
+  <div class="section-label">This Weekend &middot; Ranked for You</div>
+
+  <!-- VERDICT -->
+  <div class="verdict">
+    <div class="verdict-top">
+      <div class="verdict-score-block">
+        <div class="verdict-score" style="color:var(--fresh)">92</div>
+        <div class="verdict-max">/100</div>
+      </div>
+      <div class="verdict-badge badge-go">GO</div>
+    </div>
+    <div class="verdict-resort">Mammoth Mountain</div>
+    <div class="verdict-sub">18" fresh overnight &middot; Light powder &middot; 5h 20m drive &middot; Chain control on SR-203</div>
+    <button class="verdict-cta">
+      See Full Trip Details
+      <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+
+  <!-- CONDITION STATS -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num">8<span class="stat-unit">&deg;</span></div>
+      <div class="stat-label">SUMMIT</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">18<span class="stat-unit">"</span></div>
+      <div class="stat-label">FRESH</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">12<span class="stat-unit">mph</span></div>
+      <div class="stat-label">WIND</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num">55<span class="stat-unit">%</span></div>
+      <div class="stat-label">VIS</div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <div class="section-label">All Resorts</div>
+
+  <!-- #2 Palisades -->
+  <div class="rank-card" onclick="toggleCard(this)">
+    <div class="rank-header">
+      <div class="rank-position">#2</div>
+      <div class="rank-score" style="color:var(--accent)">78</div>
+      <div class="rank-info">
+        <div class="rank-name">Palisades Tahoe</div>
+        <div class="rank-meta">14" fresh &middot; 3h 30m &middot; Chains req'd</div>
+      </div>
+      <div class="rank-chip chip-prime">PRIME</div>
+      <div class="rank-arrow">&#9662;</div>
+    </div>
+    <div class="rank-body">
+      <div class="rank-body-inner">
+        <div class="detail-stats">
+          <div class="d-stat"><div class="d-stat-label">FRESH</div><div class="d-stat-val">14"</div></div>
+          <div class="d-stat"><div class="d-stat-label">BASE</div><div class="d-stat-val">118"</div></div>
+          <div class="d-stat"><div class="d-stat-label">LIFTS</div><div class="d-stat-val">24/29</div></div>
+        </div>
+        <div class="map-wrap"><div class="map-el" id="map-pal"></div></div>
+        <div class="drive-row">
+          <div class="drive-cell">
+            <div class="drive-label">DISTANCE</div>
+            <div class="drive-val">196<span class="stat-unit"> mi</span></div>
+          </div>
+          <div class="drive-cell">
+            <div class="drive-label">EST. DRIVE</div>
+            <div class="drive-val" style="color:var(--warn)">3h 48m</div>
+            <div class="drive-note">+30 min chain stops</div>
+          </div>
+        </div>
+        <div class="chain-box">
+          <div class="chain-icon">&#9888;</div>
+          <div>
+            <div class="chain-title">Chain Control R2 &mdash; I-80 Eastbound</div>
+            <div class="chain-meta">Active since 4:20 AM. All vehicles must carry chains.<br>Expected to lift by 2:00 PM as temps rise above 34&deg;F.</div>
+            <div class="chain-src">
+              <a href="https://quickmap.dot.ca.gov" target="_blank">Caltrans QuickMap &#8599;</a>
+              &middot; Updated 9:45 AM
+            </div>
+          </div>
+        </div>
+        <button class="detail-cta">Full Trip Details &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- #3 Snowbird -->
+  <div class="rank-card" onclick="toggleCard(this)">
+    <div class="rank-header">
+      <div class="rank-position">#3</div>
+      <div class="rank-score" style="color:var(--accent)">72</div>
+      <div class="rank-info">
+        <div class="rank-name">Snowbird</div>
+        <div class="rank-meta">22" fresh &middot; &#9992; SLC 1h40m + 35min</div>
+      </div>
+      <div class="rank-chip chip-epic">EPIC</div>
+      <div class="rank-arrow">&#9662;</div>
+    </div>
+    <div class="rank-body">
+      <div class="rank-body-inner">
+        <div class="detail-stats">
+          <div class="d-stat"><div class="d-stat-label">FRESH</div><div class="d-stat-val">22"</div></div>
+          <div class="d-stat"><div class="d-stat-label">BASE</div><div class="d-stat-val">142"</div></div>
+          <div class="d-stat"><div class="d-stat-label">LIFTS</div><div class="d-stat-val">25/41</div></div>
+        </div>
+        <div class="drive-row">
+          <div class="drive-cell">
+            <div class="drive-label">FLIGHT</div>
+            <div class="drive-val">1h 40m</div>
+            <div class="drive-note">SFO &rarr; SLC + 35 min drive</div>
+          </div>
+          <div class="drive-cell">
+            <div class="drive-label">DRIVE</div>
+            <div class="drive-val" style="color:var(--danger)">10h 30m</div>
+            <div class="drive-note">Not recommended</div>
+          </div>
+        </div>
+        <div class="chain-box">
+          <div class="chain-icon">&#9888;</div>
+          <div>
+            <div class="chain-title">Chain Law &mdash; Little Cottonwood Cyn</div>
+            <div class="chain-meta">R2 in effect since 11 PM last night. UDOT avalanche mitigation completed. Road open.<br>Expected: all day during storm cycle.</div>
+            <div class="chain-src"><a href="https://udot.utah.gov" target="_blank">UDOT &#8599;</a> &middot; Updated 8:30 AM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #4 Brighton -->
+  <div class="rank-card" onclick="toggleCard(this)">
+    <div class="rank-header">
+      <div class="rank-position">#4</div>
+      <div class="rank-score" style="color:var(--accent)">70</div>
+      <div class="rank-info">
+        <div class="rank-name">Brighton Resort</div>
+        <div class="rank-meta">16" fresh &middot; &#9992; SLC 1h40m + 40min</div>
+      </div>
+      <div class="rank-chip chip-prime">PRIME</div>
+      <div class="rank-arrow">&#9662;</div>
+    </div>
+    <div class="rank-body"><div class="rank-body-inner">
+      <div class="detail-stats">
+        <div class="d-stat"><div class="d-stat-label">FRESH</div><div class="d-stat-val">16"</div></div>
+        <div class="d-stat"><div class="d-stat-label">BASE</div><div class="d-stat-val">128"</div></div>
+        <div class="d-stat"><div class="d-stat-label">LIFTS</div><div class="d-stat-val">8/8</div></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- #5 Solitude -->
+  <div class="rank-card" onclick="toggleCard(this)">
+    <div class="rank-header">
+      <div class="rank-position">#5</div>
+      <div class="rank-score" style="color:var(--warn)">68</div>
+      <div class="rank-info">
+        <div class="rank-name">Solitude Mountain</div>
+        <div class="rank-meta">15" fresh &middot; &#9992; SLC 1h40m + 45min</div>
+      </div>
+      <div class="rank-chip chip-prime">PRIME</div>
+      <div class="rank-arrow">&#9662;</div>
+    </div>
+    <div class="rank-body"><div class="rank-body-inner">
+      <div class="detail-stats">
+        <div class="d-stat"><div class="d-stat-label">FRESH</div><div class="d-stat-val">15"</div></div>
+        <div class="d-stat"><div class="d-stat-label">BASE</div><div class="d-stat-val">122"</div></div>
+        <div class="d-stat"><div class="d-stat-label">LIFTS</div><div class="d-stat-val">8/10</div></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- Sierra — CLOSED -->
+  <div class="rank-card" style="opacity:0.4; cursor:default; pointer-events:none;">
+    <div class="rank-header">
+      <div class="rank-position">&mdash;</div>
+      <div class="rank-score" style="color:var(--text3)">&mdash;</div>
+      <div class="rank-info">
+        <div class="rank-name" style="color:var(--text3)">Sierra at Tahoe</div>
+        <div class="rank-meta">Closed for 2025/26 season</div>
+      </div>
+      <div class="rank-chip chip-closed">CLOSED</div>
+    </div>
+  </div>
+
+  <!-- EMAIL -->
+  <div class="email-block">
+    <div class="email-eye">Powder Alerts</div>
+    <div class="email-title">Never miss an epic day</div>
+    <div class="email-form">
+      <input class="email-field" type="email" placeholder="your@email.com" />
+      <button class="email-submit">SUBSCRIBE</button>
+    </div>
+    <div class="email-fine">Condition alerts for your top resorts &middot; Zero spam</div>
+  </div>
+
+  <!-- EMPTY STATE DEMO -->
+  <div style="margin-top:40px; border-top: 1px solid var(--border); padding-top: 24px;">
+    <div class="section-label">Off-Season Preview</div>
+    <div class="empty">
+      <div class="empty-glyph">&#9968;</div>
+      <div class="empty-h">The mountains are resting</div>
+      <div class="empty-p">Season typically opens mid-November. We'll notify you when the first snow hits.</div>
+      <div class="empty-count">~218 days until season opens</div>
+      <div class="email-form" style="max-width:320px;margin:0 auto;">
+        <input class="email-field" type="email" placeholder="your@email.com" />
+        <button class="email-submit">NOTIFY ME</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <a class="nav-item active" href="#home">
+    <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 001 1h3a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1h3a1 1 0 001-1V10"/></svg></div>
+    <div class="nav-label">Home</div>
+  </a>
+  <a class="nav-item" href="#trip">
+    <div class="nav-icon"><svg viewBox="0 0 24 24"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2z"/></svg></div>
+    <div class="nav-label">Trip</div>
+  </a>
+  <a class="nav-item" href="#profile">
+    <div class="nav-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 10-16 0"/></svg></div>
+    <div class="nav-label">Profile</div>
+  </a>
+</nav>
+
+<script>
+function toggleTheme() {
+  const h = document.documentElement;
+  const next = h.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  h.setAttribute('data-theme', next);
+  document.getElementById('themeBtn').innerHTML = next === 'dark' ? '&#9789;' : '&#9788;';
+}
+
+const langs = ['EN', '中文', '日本語'];
+let li = 0;
+function cycleLang() {
+  li = (li + 1) % langs.length;
+  document.getElementById('langBtn').textContent = langs[li];
+}
+
+function toggleCard(card) {
+  if (card.style.pointerEvents === 'none') return;
+  const body = card.querySelector('.rank-body');
+  const open = card.classList.contains('expanded');
+  document.querySelectorAll('.rank-card.expanded').forEach(c => {
+    if (c !== card) { c.classList.remove('expanded'); c.querySelector('.rank-body').style.maxHeight = '0'; }
+  });
+  if (open) { card.classList.remove('expanded'); body.style.maxHeight = '0'; }
+  else {
+    card.classList.add('expanded');
+    body.style.maxHeight = body.scrollHeight + 'px';
+    const m = body.querySelector('[id^="map-"]');
+    if (m && !m._leaflet_id) setTimeout(() => buildMap(m), 120);
+  }
+}
+
+function buildMap(el) {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const map = L.map(el, { center: [38.5, -120.5], zoom: 7, zoomControl: false, attributionControl: false });
+  L.tileLayer(dark
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    { subdomains: 'abcd', maxZoom: 18 }).addTo(map);
+  const route = [[37.7749,-122.4194],[38.1,-121.2],[39.1965,-120.2356]];
+  L.polyline(route,{color:'#5bc4e0',weight:3,opacity:0.8}).addTo(map);
+  L.circleMarker([37.7749,-122.4194],{radius:6,fillColor:'#e83d3d',color:'#fff',weight:2,fillOpacity:1}).addTo(map).bindPopup('San Francisco');
+  L.circleMarker([39.1965,-120.2356],{radius:7,fillColor:'#5bc4e0',color:'#fff',weight:2,fillOpacity:1}).addTo(map).bindPopup('Palisades Tahoe');
+  L.polyline([[39.05,-120.35],[39.15,-120.28]],{color:'#e0960a',weight:5,opacity:0.9,dashArray:'8,6'}).addTo(map).bindPopup('<b>&#9939; Chain Control R2</b><br>I-80 EB &middot; Since 4:20 AM');
+  L.circleMarker([39.1,-120.31],{radius:8,fillColor:'#e0960a',color:'#fff',weight:2,fillOpacity:0.9}).addTo(map);
+  map.fitBounds([[37.7,-122.5],[39.3,-120.1]],{padding:[20,20]});
+}
+
+function tick() {
+  const n = new Date();
+  document.getElementById('hDate').textContent = n.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  document.getElementById('hTime').textContent = n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+}
+tick(); setInterval(tick, 1000);
+</script>
+</body>
+</html>

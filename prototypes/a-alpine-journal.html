@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>SlabHQ — Direction A: Alpine Journal</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* ── DIRECTION A: ALPINE JOURNAL ──
+   DM Serif Display + IBM Plex Mono
+   Warm, refined, literary — premium lodge field notebook
+*/
+
+:root {
+  --font-display: 'DM Serif Display', serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --ease-std: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --r: 12px;
+  --r-sm: 8px;
+}
+
+[data-theme="dark"] {
+  --bg: #0c0b0a;
+  --surface: #151412;
+  --card: #1c1a18;
+  --card2: #232120;
+  --border: #2e2b28;
+  --border2: #3a3632;
+  --accent: #c4956a;
+  --accent2: #d4a87a;
+  --fresh: #6abf7b;
+  --warn: #d4a03a;
+  --danger: #c95050;
+  --sky: #6aafc4;
+  --text: #e8e0d6;
+  --text2: #9a8e82;
+  --text3: #5a5048;
+  --white: #f5efe8;
+  --score-epic: #6abf7b;
+  --score-good: #6aafc4;
+  --score-ok: #d4a03a;
+  --score-skip: #c95050;
+}
+
+[data-theme="light"] {
+  --bg: #f7f3ee;
+  --surface: #ede8e2;
+  --card: #ffffff;
+  --card2: #f5f1ec;
+  --border: #ddd6cc;
+  --border2: #c8c0b5;
+  --accent: #8b5e3c;
+  --accent2: #a06d48;
+  --fresh: #2d8a3e;
+  --warn: #a07828;
+  --danger: #b83a3a;
+  --sky: #3a7f9a;
+  --text: #2a2420;
+  --text2: #6a6058;
+  --text3: #9a9088;
+  --white: #1a1614;
+  --score-epic: #2d8a3e;
+  --score-good: #3a7f9a;
+  --score-ok: #a07828;
+  --score-skip: #b83a3a;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.3s var(--ease-std), color 0.3s var(--ease-std);
+}
+
+/* ── TOP BAR ── */
+.top-bar {
+  position: sticky; top: 0; z-index: 400;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; height: 52px;
+  background: var(--bg); border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  transition: background 0.3s, border-color 0.3s;
+}
+.logo { font-family: var(--font-display); font-size: 22px; color: var(--white); }
+.logo-accent { color: var(--accent); }
+.top-actions { display: flex; align-items: center; gap: 8px; }
+.theme-toggle, .lang-toggle {
+  background: var(--card); border: 1px solid var(--border); color: var(--text2);
+  font-family: var(--font-mono); font-size: 11px;
+  padding: 6px 12px; border-radius: 20px; cursor: pointer;
+  transition: all 0.15s;
+}
+.theme-toggle:hover, .lang-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── SECTIONS ── */
+.section { padding: 24px 20px 40px; max-width: 480px; margin: 0 auto; }
+.section-label {
+  font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+  color: var(--text3); letter-spacing: 2px; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* ── DATE/TIME HEADER ── */
+.datetime-bar {
+  display: flex; align-items: baseline; gap: 12px;
+  padding: 20px 20px 0; max-width: 480px; margin: 0 auto;
+}
+.datetime-date { font-family: var(--font-display); font-size: 28px; color: var(--white); }
+.datetime-time { font-family: var(--font-mono); font-size: 12px; color: var(--text3); }
+.datetime-demo {
+  font-family: var(--font-mono); font-size: 9px; color: var(--warn);
+  background: rgba(212,160,58,0.1); border: 1px solid rgba(212,160,58,0.2);
+  padding: 2px 8px; border-radius: 4px; margin-left: auto;
+}
+
+/* ── LOCATION INPUT ── */
+.location-bar {
+  margin: 16px 0 24px;
+  display: flex; gap: 8px;
+}
+.location-input {
+  flex: 1; background: var(--card); border: 1px solid var(--border);
+  color: var(--text); font-family: var(--font-mono); font-size: 12px;
+  padding: 12px 16px; border-radius: var(--r-sm); outline: none;
+  transition: border-color 0.15s;
+}
+.location-input:focus { border-color: var(--accent); }
+.location-input::placeholder { color: var(--text3); }
+
+/* ── VERDICT HERO ── */
+.verdict-hero {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 28px 24px; margin-bottom: 16px;
+  position: relative; overflow: hidden;
+  animation: reveal-up 0.5s var(--ease-out) 0.1s both;
+}
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.verdict-hero::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--accent), transparent 80%);
+}
+.verdict-eyebrow {
+  font-family: var(--font-mono); font-size: 10px; color: var(--text3);
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px;
+}
+.verdict-score-row { display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px; }
+.verdict-score {
+  font-family: var(--font-mono); font-size: 72px; font-weight: 500;
+  line-height: 1; letter-spacing: -3px;
+}
+.verdict-call { font-family: var(--font-display); font-size: 32px; color: var(--white); }
+.verdict-resort { font-family: var(--font-display); font-size: 18px; color: var(--white); margin-bottom: 4px; }
+.verdict-sub { font-size: 12px; color: var(--text2); line-height: 1.6; }
+
+/* ── CONDITION STRIP ── */
+.condition-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 24px; }
+.stat-tile {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 12px;
+  transition: border-color 0.15s;
+}
+.stat-tile:hover { border-color: var(--accent); }
+.stat-value { font-family: var(--font-mono); font-size: 20px; font-weight: 500; color: var(--white); }
+.stat-unit { font-size: 11px; color: var(--text2); }
+.stat-label { font-size: 9px; color: var(--text3); letter-spacing: 0.5px; margin-top: 2px; }
+
+/* ── RANKED CARDS ── */
+.rank-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); margin-bottom: 10px;
+  overflow: hidden; cursor: pointer;
+  transition: all 0.2s var(--ease-std);
+}
+.rank-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+.rank-card.expanded { border-color: var(--accent); }
+.rank-header { display: flex; align-items: center; gap: 14px; padding: 16px; }
+.rank-num {
+  font-family: var(--font-mono); font-size: 11px; color: var(--text3);
+  min-width: 20px;
+}
+.rank-score {
+  font-family: var(--font-mono); font-size: 28px; font-weight: 500;
+  min-width: 44px; line-height: 1;
+}
+.rank-info { flex: 1; }
+.rank-name { font-family: var(--font-display); font-size: 17px; color: var(--white); }
+.rank-meta { font-size: 11px; color: var(--text2); margin-top: 2px; }
+.rank-status {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.5px;
+  padding: 4px 10px; border-radius: 4px;
+}
+.status-epic { background: rgba(106,191,124,0.1); border: 1px solid rgba(106,191,124,0.25); color: var(--fresh); }
+.status-prime { background: rgba(106,175,196,0.1); border: 1px solid rgba(106,175,196,0.25); color: var(--sky); }
+.status-good { background: rgba(212,160,58,0.1); border: 1px solid rgba(212,160,58,0.2); color: var(--warn); }
+.status-limited { background: rgba(201,80,80,0.1); border: 1px solid rgba(201,80,80,0.2); color: var(--danger); }
+.status-closed { background: rgba(90,80,72,0.1); border: 1px solid rgba(90,80,72,0.3); color: var(--text3); }
+.rank-chevron { color: var(--text3); font-size: 14px; transition: transform 0.2s; }
+.rank-card.expanded .rank-chevron { transform: rotate(180deg); }
+
+/* ── EXPANDED DETAIL ── */
+.rank-detail {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.35s var(--ease-std);
+}
+.rank-detail-inner { padding: 0 16px 16px; border-top: 1px solid var(--border); }
+.detail-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin: 12px 0; }
+.detail-item {
+  background: var(--card2); border-radius: var(--r-sm); padding: 10px;
+}
+.detail-item-label { font-size: 9px; color: var(--text3); letter-spacing: 0.5px; margin-bottom: 4px; }
+.detail-item-value { font-family: var(--font-mono); font-size: 16px; font-weight: 500; color: var(--white); }
+
+/* ── MAP ── */
+.map-section { margin: 16px 0; }
+.map-container {
+  height: 220px; border-radius: var(--r); overflow: hidden;
+  border: 1px solid var(--border);
+}
+.leaflet-container { background: var(--bg) !important; }
+
+/* ── CHAIN CONTROL ANNOTATION ── */
+.chain-alert {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 12px; margin-top: 10px;
+  background: rgba(212,160,58,0.06); border: 1px solid rgba(212,160,58,0.15);
+  border-radius: var(--r-sm);
+}
+.chain-alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+.chain-alert-title { font-size: 11px; font-weight: 500; color: var(--warn); }
+.chain-alert-meta { font-size: 10px; color: var(--text2); margin-top: 2px; line-height: 1.5; }
+.chain-alert-source { font-size: 9px; color: var(--text3); margin-top: 4px; }
+.chain-alert-source a { color: var(--accent); text-decoration: none; }
+
+/* ── DRIVE STATS ── */
+.drive-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+.drive-stat {
+  background: var(--card2); border-radius: var(--r-sm); padding: 12px;
+}
+.drive-stat-label { font-size: 9px; color: var(--text3); margin-bottom: 4px; }
+.drive-stat-value { font-family: var(--font-mono); font-size: 22px; font-weight: 500; color: var(--white); }
+.drive-stat-note { font-size: 9px; color: var(--text2); margin-top: 2px; }
+
+/* ── CTA BUTTON ── */
+.cta-btn {
+  display: block; width: 100%; padding: 14px;
+  background: var(--accent); color: var(--bg);
+  font-family: var(--font-mono); font-size: 11px; font-weight: 500;
+  letter-spacing: 1px; text-transform: uppercase; text-align: center;
+  border: none; border-radius: var(--r-sm); cursor: pointer;
+  transition: all 0.15s; margin-top: 12px;
+}
+.cta-btn:hover { opacity: 0.85; transform: translateY(-1px); }
+
+/* ── EMAIL SUB ── */
+.email-card {
+  background: var(--card); border: 1px dashed var(--border2);
+  border-radius: var(--r); padding: 24px; margin-top: 32px; text-align: center;
+}
+.email-eyebrow {
+  font-family: var(--font-mono); font-size: 9px; color: var(--accent);
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+}
+.email-heading { font-family: var(--font-display); font-size: 18px; color: var(--white); margin-bottom: 16px; }
+.email-row { display: flex; gap: 8px; }
+.email-input {
+  flex: 1; padding: 12px 16px; background: var(--card2); border: 1px solid var(--border);
+  color: var(--text); font-family: var(--font-mono); font-size: 12px;
+  border-radius: var(--r-sm); outline: none;
+}
+.email-input::placeholder { color: var(--text3); }
+.email-btn {
+  padding: 12px 20px; background: var(--accent); color: var(--bg);
+  font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+  letter-spacing: 1px; border: none; border-radius: var(--r-sm); cursor: pointer;
+  white-space: nowrap;
+}
+.email-note { font-size: 10px; color: var(--text3); margin-top: 10px; }
+
+/* ── EMPTY/SEASONAL STATE ── */
+.empty-state {
+  text-align: center; padding: 48px 24px;
+  animation: reveal-up 0.5s var(--ease-out) 0.1s both;
+}
+.empty-icon { font-size: 64px; margin-bottom: 16px; opacity: 0.6; }
+.empty-title { font-family: var(--font-display); font-size: 24px; color: var(--white); margin-bottom: 8px; }
+.empty-sub { font-size: 13px; color: var(--text2); line-height: 1.6; margin-bottom: 24px; max-width: 320px; margin-left: auto; margin-right: auto; }
+.empty-countdown { font-family: var(--font-mono); font-size: 14px; color: var(--accent); margin-bottom: 24px; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
+  display: flex; align-items: center; justify-content: space-around;
+  height: calc(56px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--surface); border-top: 1px solid var(--border);
+  backdrop-filter: blur(20px);
+  transition: background 0.3s, border-color 0.3s;
+}
+.nav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 8px 16px; color: var(--text3); cursor: pointer;
+  transition: color 0.15s; text-decoration: none; position: relative;
+}
+.nav-item.active { color: var(--accent); }
+.nav-item.active::after {
+  content: ''; position: absolute; top: 0; left: 25%; right: 25%;
+  height: 2px; background: var(--accent); border-radius: 1px;
+}
+.nav-icon { font-size: 20px; }
+.nav-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.5px; }
+
+/* ── SECTION DIVIDER ── */
+.divider {
+  height: 1px; background: var(--border); margin: 8px 0 24px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 380px) {
+  .condition-strip { grid-template-columns: repeat(2, 1fr); }
+  .detail-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── BODY PADDING FOR BOTTOM NAV ── */
+body { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px) + 20px); }
+
+/* ── SECTION HEADING ── */
+.section-heading {
+  font-family: var(--font-display); font-size: 22px; color: var(--white);
+  margin-bottom: 16px;
+}
+</style>
+</head>
+<body>
+
+<header class="top-bar">
+  <div class="logo">Slab<span class="logo-accent">HQ</span></div>
+  <div class="top-actions">
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <span id="themeIcon">moon</span>
+    </button>
+    <button class="lang-toggle" id="langBtn" onclick="toggleLang()">EN</button>
+  </div>
+</header>
+
+<div class="section" id="home">
+  <div class="datetime-bar" style="padding:0; margin-bottom: 4px;">
+    <div class="datetime-date" id="dateDisplay">Saturday, April 12</div>
+    <div class="datetime-demo">DEMO DATA</div>
+  </div>
+  <div style="font-family:var(--font-mono);font-size:11px;color:var(--text3);margin-bottom:16px" id="timeDisplay">10:32 AM PST</div>
+
+  <div class="location-bar">
+    <input class="location-input" placeholder="Where are you? (e.g. San Francisco, CA)" value="San Francisco, CA" />
+  </div>
+
+  <div class="section-label">This Weekend &middot; Ranked For You</div>
+
+  <!-- VERDICT HERO — #1 -->
+  <div class="verdict-hero">
+    <div class="verdict-eyebrow">Best Match</div>
+    <div class="verdict-score-row">
+      <div class="verdict-score" style="color:var(--score-epic)">92</div>
+      <div class="verdict-call">Go.</div>
+    </div>
+    <div class="verdict-resort">Mammoth Mountain</div>
+    <div class="verdict-sub">18" fresh overnight &middot; Light powder &middot; 5h 20m drive &middot; Chain control SR-203</div>
+    <button class="cta-btn">See Full Trip Details</button>
+  </div>
+
+  <!-- CONDITION STRIP -->
+  <div class="condition-strip">
+    <div class="stat-tile">
+      <div class="stat-value">8<span class="stat-unit">&deg;F</span></div>
+      <div class="stat-label">Summit</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-value">18<span class="stat-unit">"</span></div>
+      <div class="stat-label">Fresh Snow</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-value">12<span class="stat-unit">mph</span></div>
+      <div class="stat-label">Wind</div>
+    </div>
+    <div class="stat-tile">
+      <div class="stat-value">55<span class="stat-unit">%</span></div>
+      <div class="stat-label">Visibility</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <div class="section-label">All Resorts</div>
+
+  <!-- #2 Palisades -->
+  <div class="rank-card" onclick="toggleCard(this)">
+    <div class="rank-header">
+      <div class="rank-num">#2</div>
+      <div class="rank-score" style="color:var(--score-good)">78</div>
+      <div class="rank-info">
+        <div class="rank-name">Palisades Tahoe</div>
+        <div class="rank-meta">14" fresh &middot; 3h 30m &middot; Chain control</div>
+      </div>
+      <div class="rank-status status-prime">PRIME</div>
+      <div class="rank-chevron">&#9662;</div>
+    </div>
+    <div class="rank-detail">
+      <div class="rank-detail-inner">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-item-label">Fresh</div>
+            <div class="detail-item-value">14"</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-item-label">Base</div>
+            <div class="detail-item-value">118"</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-item-label">Lifts</div>
+            <div class="detail-item-value">24/29</div>
+          </div>
+        </div>
+        <!-- MAP -->
+        <div class="map-section">
+          <div class="map-container" id="map-palisades"></div>
+          <div class="drive-stats">
+            <div class="drive-stat">
+              <div class="drive-stat-label">Distance</div>
+              <div class="drive-stat-value">196<span class="stat-unit"> mi</span></div>
+            </div>
+            <div class="drive-stat">
+              <div class="drive-stat-label">Est. Drive</div>
+              <div class="drive-stat-value" style="color:var(--warn)">3h 48m</div>
+              <div class="drive-stat-note">+30min for chain stops</div>
+            </div>
+          </div>
+          <div class="chain-alert">
+            <div class="chain-alert-icon">&#9939;</div>
+            <div>
+              <div class="chain-alert-title">Chain Control R2 &mdash; I-80 Eastbound</div>
+              <div class="chain-alert-meta">Active since 4:20 AM today. All vehicles must carry chains. Expected to lift by 2:00 PM as temps rise above 34&deg;F.</div>
+              <div class="chain-alert-source">Source: <a href="https://quickmap.dot.ca.gov" target="_blank">Caltrans QuickMap</a> &middot; Updated 9:45 AM</div>
+            </div>
+          </div>
+        </div>
+        <button class="cta-btn">Full Trip Details &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- #3 Snowbird -->
+  <div class="rank-card" onclick="toggleCard(this)">
+    <div class="rank-header">
+      <div class="rank-num">#3</div>
+      <div class="rank-score" style="color:var(--score-good)">72</div>
+      <div class="rank-info">
+        <div class="rank-name">Snowbird</div>
+        <div class="rank-meta">22" fresh &middot; &#9992; SLC 1h 40m + 35 min</div>
+      </div>
+      <div class="rank-status status-epic">EPIC</div>
+      <div class="rank-chevron">&#9662;</div>
+    </div>
+    <div class="rank-detail">
+      <div class="rank-detail-inner">
+        <div class="detail-grid">
+          <div class="detail-item">
+            <div class="detail-item-label">Fresh</div>
+            <div class="detail-item-value">22"</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-item-label">Base</div>
+            <div class="detail-item-value">142"</div>
+          </div>
+          <div class="detail-item">
+            <div class="detail-item-label">Lifts</div>
+            <div class="detail-item-value">25/41</div>
+          </div>
+        </div>
+        <div class="drive-stats">
+          <div class="drive-stat">
+            <div class="drive-stat-label">Flight</div>
+            <div class="drive-stat-value">1h 40m</div>
+            <div class="drive-stat-note">SFO &rarr; SLC + 35 min drive</div>
+          </div>
+          <div class="drive-stat">
+            <div class="drive-stat-label">Drive</div>
+            <div class="drive-stat-value" style="color:var(--danger)">10h 30m</div>
+            <div class="drive-stat-note">Not recommended</div>
+          </div>
+        </div>
+        <div class="chain-alert">
+          <div class="chain-alert-icon">&#9939;</div>
+          <div>
+            <div class="chain-alert-title">Chain Law &mdash; Little Cottonwood Canyon</div>
+            <div class="chain-alert-meta">R2 in effect since 11:00 PM last night. UDOT avalanche mitigation completed. Road open. Expected: all day during storm cycle.</div>
+            <div class="chain-alert-source">Source: <a href="https://udot.utah.gov" target="_blank">UDOT</a> &middot; Updated 8:30 AM</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- #4 Brighton — compact row -->
+  <div class="rank-card" onclick="toggleCard(this)">
+    <div class="rank-header">
+      <div class="rank-num">#4</div>
+      <div class="rank-score" style="color:var(--score-good)">70</div>
+      <div class="rank-info">
+        <div class="rank-name">Brighton Resort</div>
+        <div class="rank-meta">16" fresh &middot; &#9992; SLC 1h 40m + 40 min</div>
+      </div>
+      <div class="rank-status status-prime">PRIME</div>
+      <div class="rank-chevron">&#9662;</div>
+    </div>
+    <div class="rank-detail"><div class="rank-detail-inner">
+      <div class="detail-grid">
+        <div class="detail-item"><div class="detail-item-label">Fresh</div><div class="detail-item-value">16"</div></div>
+        <div class="detail-item"><div class="detail-item-label">Base</div><div class="detail-item-value">128"</div></div>
+        <div class="detail-item"><div class="detail-item-label">Lifts</div><div class="detail-item-value">8/8</div></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- Sierra — CLOSED -->
+  <div class="rank-card" style="opacity:0.5;cursor:default">
+    <div class="rank-header">
+      <div class="rank-num">&mdash;</div>
+      <div class="rank-score" style="color:var(--text3)">&mdash;</div>
+      <div class="rank-info">
+        <div class="rank-name" style="color:var(--text3)">Sierra at Tahoe</div>
+        <div class="rank-meta" style="color:var(--text3)">Closed for 2025/26 season</div>
+      </div>
+      <div class="rank-status status-closed">CLOSED</div>
+    </div>
+  </div>
+
+  <!-- EMAIL -->
+  <div class="email-card">
+    <div class="email-eyebrow">Powder Alerts</div>
+    <div class="email-heading">Never miss an epic day</div>
+    <div class="email-row">
+      <input class="email-input" type="email" placeholder="your@email.com" />
+      <button class="email-btn">SUBSCRIBE</button>
+    </div>
+    <div class="email-note">Condition alerts for your top resorts &middot; Zero spam</div>
+  </div>
+
+  <!-- SUMMER EMPTY STATE (hidden by default, shown here for demo) -->
+  <div style="margin-top:48px; border-top: 1px solid var(--border); padding-top: 32px;">
+    <div class="section-label">Off-Season Preview</div>
+    <div class="empty-state">
+      <div class="empty-icon">&#127956;</div>
+      <div class="empty-title">The mountains are resting</div>
+      <div class="empty-sub">Season typically starts mid-November. Subscribe below to get notified when the first snow hits your favorite resorts.</div>
+      <div class="empty-countdown">~218 days until season opens</div>
+      <div class="email-row" style="max-width:320px;margin:0 auto">
+        <input class="email-input" type="email" placeholder="your@email.com" />
+        <button class="email-btn">NOTIFY ME</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <a class="nav-item active" href="#home">
+    <div class="nav-icon">&#9924;</div>
+    <div class="nav-label">Home</div>
+  </a>
+  <a class="nav-item" href="#trip">
+    <div class="nav-icon">&#128507;</div>
+    <div class="nav-label">Trip</div>
+  </a>
+  <a class="nav-item" href="#profile">
+    <div class="nav-icon">&#128100;</div>
+    <div class="nav-label">Profile</div>
+  </a>
+</nav>
+
+<script>
+// Theme toggle
+function toggleTheme() {
+  const html = document.documentElement;
+  const current = html.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  html.setAttribute('data-theme', next);
+  document.getElementById('themeIcon').textContent = next === 'dark' ? 'moon' : 'sun';
+  // Reinit maps with new tile layer if needed
+}
+
+// Lang toggle
+const langs = ['EN', '中文', '日本語'];
+let langIdx = 0;
+function toggleLang() {
+  langIdx = (langIdx + 1) % langs.length;
+  document.getElementById('langBtn').textContent = langs[langIdx];
+}
+
+// Card expand/collapse
+function toggleCard(card) {
+  const detail = card.querySelector('.rank-detail');
+  const isExpanded = card.classList.contains('expanded');
+
+  // Close all others
+  document.querySelectorAll('.rank-card.expanded').forEach(c => {
+    if (c !== card) {
+      c.classList.remove('expanded');
+      c.querySelector('.rank-detail').style.maxHeight = '0';
+    }
+  });
+
+  if (isExpanded) {
+    card.classList.remove('expanded');
+    detail.style.maxHeight = '0';
+  } else {
+    card.classList.add('expanded');
+    detail.style.maxHeight = detail.scrollHeight + 'px';
+    // Init map if present
+    const mapEl = detail.querySelector('[id^="map-"]');
+    if (mapEl && !mapEl._leaflet_id) {
+      setTimeout(() => initDetailMap(mapEl), 100);
+    }
+  }
+}
+
+// Map init
+function initDetailMap(el) {
+  const map = L.map(el, { center: [38.5, -120.5], zoom: 7, zoomControl: false, attributionControl: false });
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  L.tileLayer(isDark
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    { subdomains: 'abcd', maxZoom: 18 }
+  ).addTo(map);
+
+  // Route line
+  const route = [
+    [37.7749, -122.4194], // SF
+    [38.1, -121.2],       // midpoint
+    [39.1965, -120.2356]  // Palisades
+  ];
+  L.polyline(route, { color: '#5bc4e0', weight: 3, opacity: 0.8 }).addTo(map);
+
+  // Origin
+  L.circleMarker([37.7749, -122.4194], {
+    radius: 6, fillColor: '#c4956a', color: '#fff', weight: 2, fillOpacity: 1
+  }).addTo(map).bindPopup('San Francisco');
+
+  // Destination
+  L.circleMarker([39.1965, -120.2356], {
+    radius: 7, fillColor: '#6aafc4', color: '#fff', weight: 2, fillOpacity: 1
+  }).addTo(map).bindPopup('Palisades Tahoe');
+
+  // Chain control zone — highlighted segment
+  L.polyline(
+    [[39.05, -120.35], [39.15, -120.28]],
+    { color: '#d4a03a', weight: 5, opacity: 0.9, dashArray: '8,6' }
+  ).addTo(map).bindPopup('<b>Chain Control R2</b><br>I-80 Eastbound<br>Since 4:20 AM');
+
+  // Chain control marker
+  L.circleMarker([39.1, -120.31], {
+    radius: 8, fillColor: '#d4a03a', color: '#fff', weight: 2, fillOpacity: 0.9
+  }).addTo(map).bindPopup('<b>⛓ Chain Control</b><br>R2 — All vehicles<br>Expected lift: 2:00 PM');
+
+  map.fitBounds([[37.7, -122.5], [39.3, -120.1]], { padding: [20, 20] });
+}
+
+// Clock
+function updateTime() {
+  const now = new Date();
+  document.getElementById('dateDisplay').textContent = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  document.getElementById('timeDisplay').textContent = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) + ' PST';
+}
+updateTime();
+setInterval(updateTime, 1000);
+</script>
+</body>
+</html>

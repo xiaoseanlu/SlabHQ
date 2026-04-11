@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>SlabHQ — Direction C: Modern Outdoor</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;500;600;700;800&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* ── DIRECTION C: MODERN OUTDOOR ──
+   Nunito Sans + Source Code Pro
+   Approachable, active, clean — Strava meets Allbirds
+*/
+
+:root {
+  --font-display: 'Nunito Sans', sans-serif;
+  --font-mono: 'Source Code Pro', monospace;
+  --ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --ease-std: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --r: 14px;
+  --r-sm: 10px;
+  --r-xs: 6px;
+}
+
+[data-theme="dark"] {
+  --bg: #0d1117;
+  --surface: #131922;
+  --card: #1a2130;
+  --card2: #1f2838;
+  --border: #283040;
+  --border2: #344050;
+  --accent: #38bdf8;
+  --accent-soft: rgba(56,189,248,0.1);
+  --fresh: #34d399;
+  --fresh-soft: rgba(52,211,153,0.1);
+  --warn: #fbbf24;
+  --warn-soft: rgba(251,191,36,0.08);
+  --danger: #f87171;
+  --danger-soft: rgba(248,113,113,0.08);
+  --text: #c9d6e5;
+  --text2: #728396;
+  --text3: #455468;
+  --white: #edf2f7;
+}
+
+[data-theme="light"] {
+  --bg: #f0f4f8;
+  --surface: #e4eaf0;
+  --card: #ffffff;
+  --card2: #f6f9fc;
+  --border: #d4dde8;
+  --border2: #bcc8d6;
+  --accent: #0284c7;
+  --accent-soft: rgba(2,132,199,0.08);
+  --fresh: #059669;
+  --fresh-soft: rgba(5,150,105,0.08);
+  --warn: #d97706;
+  --warn-soft: rgba(217,119,6,0.06);
+  --danger: #dc2626;
+  --danger-soft: rgba(220,38,38,0.06);
+  --text: #1e293b;
+  --text2: #64748b;
+  --text3: #94a3b8;
+  --white: #0f172a;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font-display); font-size: 14px; line-height: 1.5;
+  min-height: 100dvh; -webkit-font-smoothing: antialiased;
+  padding-bottom: calc(68px + env(safe-area-inset-bottom, 0px) + 16px);
+  transition: background 0.3s, color 0.3s;
+}
+
+/* ── TOP BAR ── */
+.top-bar {
+  position: sticky; top: 0; z-index: 400;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 20px; height: 56px;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+}
+.logo { font-size: 20px; font-weight: 800; color: var(--white); letter-spacing: -0.5px; }
+.logo span { color: var(--accent); font-weight: 600; }
+.top-right { display: flex; gap: 8px; align-items: center; }
+.pill-btn {
+  display: flex; align-items: center; gap: 4px;
+  padding: 7px 12px; background: var(--card); border: 1px solid var(--border);
+  border-radius: 20px; color: var(--text2); font-size: 12px; cursor: pointer;
+  transition: all 0.15s; font-family: var(--font-display);
+}
+.pill-btn:hover { border-color: var(--accent); color: var(--accent); }
+.pill-btn svg { width: 14px; height: 14px; }
+
+/* ── CONTAINER ── */
+.wrap { max-width: 480px; margin: 0 auto; padding: 0 16px; }
+
+/* ── GREETING ── */
+.greeting {
+  padding: 24px 0 8px;
+}
+.greeting-hello {
+  font-size: 15px; color: var(--text2); font-weight: 500;
+}
+.greeting-date {
+  font-size: 26px; font-weight: 800; color: var(--white);
+  letter-spacing: -0.5px; margin-top: 2px;
+}
+.greeting-time {
+  font-family: var(--font-mono); font-size: 12px; color: var(--text3); margin-top: 4px;
+}
+.demo-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--font-mono); font-size: 10px; color: var(--warn);
+  background: var(--warn-soft); padding: 3px 10px; border-radius: 12px;
+  margin-top: 8px;
+}
+.demo-pill::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--warn);
+  animation: blink 2s infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── LOCATION ── */
+.loc-card {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 12px 16px; margin: 16px 0 24px;
+}
+.loc-pin { color: var(--accent); font-size: 18px; flex-shrink: 0; }
+.loc-input {
+  flex: 1; background: none; border: none; color: var(--text);
+  font-family: var(--font-display); font-size: 14px; font-weight: 600;
+  outline: none;
+}
+.loc-input::placeholder { color: var(--text3); font-weight: 400; }
+.loc-edit { color: var(--text3); font-size: 12px; cursor: pointer; }
+
+/* ── SECTION LABEL ── */
+.sec-label {
+  font-family: var(--font-mono); font-size: 10px; color: var(--text3);
+  letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 12px;
+}
+
+/* ── HERO CARD ── */
+.hero-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 24px; margin-bottom: 12px;
+  position: relative; overflow: hidden;
+  animation: slideUp 0.45s var(--ease-out) both;
+}
+@keyframes slideUp { from { opacity:0; transform:translateY(12px) } to { opacity:1; transform:translateY(0) } }
+.hero-card::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  border-radius: var(--r) var(--r) 0 0;
+}
+.hero-card.tier-go::after { background: linear-gradient(90deg, var(--fresh), var(--accent)); }
+.hero-card.tier-good::after { background: linear-gradient(90deg, var(--accent), var(--accent)); }
+.hero-card.tier-ok::after { background: linear-gradient(90deg, var(--warn), var(--warn)); }
+.hero-card.tier-skip::after { background: linear-gradient(90deg, var(--danger), var(--danger)); }
+
+.hero-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+.hero-score {
+  font-family: var(--font-mono); font-size: 56px; font-weight: 500;
+  line-height: 1; letter-spacing: -3px;
+}
+.hero-verdict {
+  font-size: 13px; font-weight: 700; padding: 6px 16px;
+  border-radius: 20px;
+}
+.v-go { background: var(--fresh-soft); color: var(--fresh); }
+.v-good { background: var(--accent-soft); color: var(--accent); }
+.v-ok { background: var(--warn-soft); color: var(--warn); }
+.v-skip { background: var(--danger-soft); color: var(--danger); }
+
+.hero-resort { font-size: 22px; font-weight: 800; color: var(--white); letter-spacing: -0.3px; }
+.hero-meta { font-size: 13px; color: var(--text2); margin-top: 4px; line-height: 1.6; }
+
+.hero-cta {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; padding: 14px; margin-top: 18px;
+  background: var(--accent); color: #fff;
+  font-family: var(--font-display); font-size: 14px; font-weight: 700;
+  border: none; border-radius: var(--r-sm); cursor: pointer;
+  transition: all 0.15s;
+}
+.hero-cta:hover { opacity: 0.9; transform: translateY(-1px); }
+
+/* ── QUICK STATS ── */
+.quick-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;
+  margin-bottom: 24px;
+}
+.qs {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 14px 10px; text-align: center;
+}
+.qs-val { font-family: var(--font-mono); font-size: 20px; font-weight: 500; color: var(--white); }
+.qs-unit { font-size: 11px; color: var(--text2); }
+.qs-label { font-size: 10px; color: var(--text3); margin-top: 3px; }
+
+/* ── RESORT CARDS ── */
+.resort-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); margin-bottom: 8px;
+  overflow: hidden; cursor: pointer;
+  transition: all 0.2s var(--ease-std);
+}
+.resort-card:hover { border-color: var(--border2); }
+.resort-card:active { transform: scale(0.99); }
+.resort-card.open { border-color: var(--accent); }
+.rc-header { display: flex; align-items: center; gap: 12px; padding: 14px 16px; }
+.rc-rank { font-family: var(--font-mono); font-size: 11px; color: var(--text3); min-width: 20px; }
+.rc-score { font-family: var(--font-mono); font-size: 26px; font-weight: 500; min-width: 40px; line-height: 1; }
+.rc-info { flex: 1; min-width: 0; }
+.rc-name { font-size: 15px; font-weight: 700; color: var(--white); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.rc-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+.rc-badge {
+  font-family: var(--font-mono); font-size: 9px; font-weight: 500;
+  padding: 4px 10px; border-radius: 12px; letter-spacing: 0.5px; flex-shrink: 0;
+}
+.b-epic { background: var(--fresh-soft); color: var(--fresh); }
+.b-prime { background: var(--accent-soft); color: var(--accent); }
+.b-good { background: var(--warn-soft); color: var(--warn); }
+.b-limited { background: var(--danger-soft); color: var(--danger); }
+.b-closed { background: rgba(69,84,104,0.15); color: var(--text3); }
+.rc-chev { color: var(--text3); font-size: 11px; transition: transform 0.25s; flex-shrink: 0; }
+.resort-card.open .rc-chev { transform: rotate(180deg); }
+
+/* ── EXPANDED BODY ── */
+.rc-body { max-height: 0; overflow: hidden; transition: max-height 0.35s var(--ease-std); }
+.rc-body-inner { padding: 0 16px 16px; border-top: 1px solid var(--border); }
+
+.rc-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; margin: 12px 0; }
+.rc-stat { background: var(--card2); border-radius: var(--r-xs); padding: 10px; }
+.rc-stat-label { font-family: var(--font-mono); font-size: 9px; color: var(--text3); margin-bottom: 3px; }
+.rc-stat-val { font-family: var(--font-mono); font-size: 18px; font-weight: 500; color: var(--white); }
+
+/* ── MAP ── */
+.map-frame { border-radius: var(--r-sm); overflow: hidden; border: 1px solid var(--border); margin: 10px 0; }
+.map-el { height: 200px; }
+.leaflet-container { background: var(--bg) !important; }
+
+.drive-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin: 8px 0; }
+.dg-cell { background: var(--card2); border-radius: var(--r-xs); padding: 10px; }
+.dg-label { font-family: var(--font-mono); font-size: 9px; color: var(--text3); margin-bottom: 3px; }
+.dg-val { font-family: var(--font-mono); font-size: 20px; font-weight: 500; color: var(--white); }
+.dg-note { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+/* ── CHAIN ALERT ── */
+.chain {
+  display: flex; gap: 10px; padding: 12px;
+  background: var(--warn-soft); border: 1px solid rgba(251,191,36,0.15);
+  border-radius: var(--r-sm); margin: 8px 0;
+}
+.chain-ic { font-size: 16px; flex-shrink: 0; }
+.chain-h { font-size: 12px; font-weight: 700; color: var(--warn); }
+.chain-p { font-size: 11px; color: var(--text2); margin-top: 3px; line-height: 1.5; }
+.chain-s { font-size: 10px; color: var(--text3); margin-top: 4px; }
+.chain-s a { color: var(--accent); text-decoration: none; }
+
+.rc-cta {
+  display: block; width: 100%; padding: 12px; margin-top: 10px;
+  background: var(--accent); color: #fff;
+  font-family: var(--font-display); font-size: 13px; font-weight: 700;
+  border: none; border-radius: var(--r-sm); cursor: pointer; text-align: center;
+}
+
+/* ── DIVIDER ── */
+.div { height: 1px; background: var(--border); margin: 20px 0; }
+
+/* ── EMAIL ── */
+.email-card {
+  background: linear-gradient(135deg, var(--card), var(--card2));
+  border: 1px solid var(--border);
+  border-radius: var(--r); padding: 28px 20px; margin-top: 28px; text-align: center;
+}
+.email-eye {
+  font-family: var(--font-mono); font-size: 10px; color: var(--accent);
+  letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px;
+}
+.email-h { font-size: 19px; font-weight: 800; color: var(--white); margin-bottom: 4px; letter-spacing: -0.3px; }
+.email-sub { font-size: 13px; color: var(--text2); margin-bottom: 16px; }
+.email-row { display: flex; gap: 8px; }
+.email-in {
+  flex: 1; padding: 12px 16px; background: var(--card);
+  border: 1px solid var(--border); color: var(--text);
+  font-family: var(--font-display); font-size: 13px;
+  border-radius: var(--r-sm); outline: none;
+}
+.email-in::placeholder { color: var(--text3); }
+.email-in:focus { border-color: var(--accent); }
+.email-go {
+  padding: 12px 20px; background: var(--accent); color: #fff;
+  font-family: var(--font-display); font-size: 13px; font-weight: 700;
+  border: none; border-radius: var(--r-sm); cursor: pointer; white-space: nowrap;
+}
+.email-note { font-size: 11px; color: var(--text3); margin-top: 10px; }
+
+/* ── EMPTY STATE ── */
+.empty { text-align: center; padding: 44px 20px; animation: slideUp 0.5s var(--ease-out) both; }
+.empty-icon { font-size: 60px; margin-bottom: 16px; }
+.empty-h { font-size: 24px; font-weight: 800; color: var(--white); margin-bottom: 8px; }
+.empty-p { font-size: 14px; color: var(--text2); line-height: 1.6; max-width: 300px; margin: 0 auto 20px; }
+.empty-timer { font-family: var(--font-mono); font-size: 14px; color: var(--accent); margin-bottom: 20px; }
+
+/* ── BOTTOM NAV ── */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
+  display: flex; justify-content: space-around;
+  height: calc(64px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  border-top: 1px solid var(--border);
+  backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+}
+.ni {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 3px; padding: 8px 20px;
+  color: var(--text3); cursor: pointer; text-decoration: none;
+  transition: color 0.15s; position: relative;
+}
+.ni.on { color: var(--accent); }
+.ni.on::before {
+  content: ''; position: absolute; top: 0; width: 28px; height: 3px;
+  background: var(--accent); border-radius: 0 0 3px 3px;
+}
+.ni-icon { font-size: 22px; }
+.ni-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.5px; }
+
+@media (max-width: 380px) {
+  .quick-stats { grid-template-columns: repeat(2, 1fr); }
+  .rc-stats { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header class="top-bar">
+  <div class="logo">slab<span>HQ</span></div>
+  <div class="top-right">
+    <button class="pill-btn" onclick="toggleTheme()" id="thBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+    </button>
+    <button class="pill-btn" onclick="cycleLang()" id="lBtn" style="font-family:var(--font-mono);font-size:11px;">EN</button>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- GREETING -->
+  <div class="greeting">
+    <div class="greeting-hello">Good morning</div>
+    <div class="greeting-date" id="gDate">Saturday, April 12</div>
+    <div class="greeting-time" id="gTime">10:32 AM PST</div>
+    <div class="demo-pill">Demo Data</div>
+  </div>
+
+  <!-- LOCATION -->
+  <div class="loc-card">
+    <div class="loc-pin">&#128205;</div>
+    <input class="loc-input" value="San Francisco, CA" placeholder="Where are you?" />
+    <div class="loc-edit">Edit</div>
+  </div>
+
+  <div class="sec-label">This Weekend &middot; Best For You</div>
+
+  <!-- HERO -->
+  <div class="hero-card tier-go">
+    <div class="hero-top">
+      <div class="hero-score" style="color:var(--fresh)">92</div>
+      <div class="hero-verdict v-go">GO!</div>
+    </div>
+    <div class="hero-resort">Mammoth Mountain</div>
+    <div class="hero-meta">18" fresh overnight &middot; Light powder &middot; 5h 20m drive<br>Chain control active on SR-203</div>
+    <button class="hero-cta">See Full Trip Details &rarr;</button>
+  </div>
+
+  <!-- QUICK STATS -->
+  <div class="quick-stats">
+    <div class="qs"><div class="qs-val">8<span class="qs-unit">&deg;</span></div><div class="qs-label">Summit</div></div>
+    <div class="qs"><div class="qs-val">18<span class="qs-unit">"</span></div><div class="qs-label">Fresh</div></div>
+    <div class="qs"><div class="qs-val">12<span class="qs-unit">mph</span></div><div class="qs-label">Wind</div></div>
+    <div class="qs"><div class="qs-val">55<span class="qs-unit">%</span></div><div class="qs-label">Vis</div></div>
+  </div>
+
+  <div class="div"></div>
+  <div class="sec-label">All Resorts</div>
+
+  <!-- #2 Palisades -->
+  <div class="resort-card" onclick="toggle(this)">
+    <div class="rc-header">
+      <div class="rc-rank">#2</div>
+      <div class="rc-score" style="color:var(--accent)">78</div>
+      <div class="rc-info">
+        <div class="rc-name">Palisades Tahoe</div>
+        <div class="rc-sub">14" fresh &middot; 3h 30m &middot; Chains</div>
+      </div>
+      <div class="rc-badge b-prime">PRIME</div>
+      <div class="rc-chev">&#9662;</div>
+    </div>
+    <div class="rc-body">
+      <div class="rc-body-inner">
+        <div class="rc-stats">
+          <div class="rc-stat"><div class="rc-stat-label">FRESH</div><div class="rc-stat-val">14"</div></div>
+          <div class="rc-stat"><div class="rc-stat-label">BASE</div><div class="rc-stat-val">118"</div></div>
+          <div class="rc-stat"><div class="rc-stat-label">LIFTS</div><div class="rc-stat-val">24/29</div></div>
+        </div>
+        <div class="map-frame"><div class="map-el" id="map-c-pal"></div></div>
+        <div class="drive-grid">
+          <div class="dg-cell"><div class="dg-label">DISTANCE</div><div class="dg-val">196<span class="qs-unit"> mi</span></div></div>
+          <div class="dg-cell"><div class="dg-label">EST. DRIVE</div><div class="dg-val" style="color:var(--warn)">3h 48m</div><div class="dg-note">+30 min chain stops</div></div>
+        </div>
+        <div class="chain">
+          <div class="chain-ic">&#9888;&#65039;</div>
+          <div>
+            <div class="chain-h">Chain Control R2 &mdash; I-80 East</div>
+            <div class="chain-p">Active since 4:20 AM. All vehicles must carry chains. Expected lift by 2:00 PM.</div>
+            <div class="chain-s"><a href="https://quickmap.dot.ca.gov" target="_blank">Caltrans QuickMap &#8599;</a> &middot; 9:45 AM</div>
+          </div>
+        </div>
+        <button class="rc-cta">Full Trip Details &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- #3 Snowbird -->
+  <div class="resort-card" onclick="toggle(this)">
+    <div class="rc-header">
+      <div class="rc-rank">#3</div>
+      <div class="rc-score" style="color:var(--accent)">72</div>
+      <div class="rc-info">
+        <div class="rc-name">Snowbird</div>
+        <div class="rc-sub">22" fresh &middot; &#9992; SLC 1h40m + 35min</div>
+      </div>
+      <div class="rc-badge b-epic">EPIC</div>
+      <div class="rc-chev">&#9662;</div>
+    </div>
+    <div class="rc-body"><div class="rc-body-inner">
+      <div class="rc-stats">
+        <div class="rc-stat"><div class="rc-stat-label">FRESH</div><div class="rc-stat-val">22"</div></div>
+        <div class="rc-stat"><div class="rc-stat-label">BASE</div><div class="rc-stat-val">142"</div></div>
+        <div class="rc-stat"><div class="rc-stat-label">LIFTS</div><div class="rc-stat-val">25/41</div></div>
+      </div>
+      <div class="drive-grid">
+        <div class="dg-cell"><div class="dg-label">FLIGHT</div><div class="dg-val">1h 40m</div><div class="dg-note">SFO &rarr; SLC + 35 min</div></div>
+        <div class="dg-cell"><div class="dg-label">DRIVE</div><div class="dg-val" style="color:var(--danger)">10h 30m</div><div class="dg-note">Not recommended</div></div>
+      </div>
+      <div class="chain">
+        <div class="chain-ic">&#9888;&#65039;</div>
+        <div>
+          <div class="chain-h">Chain Law &mdash; Little Cottonwood</div>
+          <div class="chain-p">R2 since 11 PM. Road open. UDOT mitigation done. Expected: all day.</div>
+          <div class="chain-s"><a href="https://udot.utah.gov" target="_blank">UDOT &#8599;</a> &middot; 8:30 AM</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- #4 Brighton -->
+  <div class="resort-card" onclick="toggle(this)">
+    <div class="rc-header">
+      <div class="rc-rank">#4</div>
+      <div class="rc-score" style="color:var(--accent)">70</div>
+      <div class="rc-info"><div class="rc-name">Brighton Resort</div><div class="rc-sub">16" &middot; &#9992; SLC + 40min &middot; Night skiing</div></div>
+      <div class="rc-badge b-prime">PRIME</div>
+      <div class="rc-chev">&#9662;</div>
+    </div>
+    <div class="rc-body"><div class="rc-body-inner">
+      <div class="rc-stats">
+        <div class="rc-stat"><div class="rc-stat-label">FRESH</div><div class="rc-stat-val">16"</div></div>
+        <div class="rc-stat"><div class="rc-stat-label">BASE</div><div class="rc-stat-val">128"</div></div>
+        <div class="rc-stat"><div class="rc-stat-label">LIFTS</div><div class="rc-stat-val">8/8</div></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- Sierra CLOSED -->
+  <div class="resort-card" style="opacity:0.4; pointer-events:none;">
+    <div class="rc-header">
+      <div class="rc-rank">&mdash;</div>
+      <div class="rc-score" style="color:var(--text3)">&mdash;</div>
+      <div class="rc-info"><div class="rc-name" style="color:var(--text3)">Sierra at Tahoe</div><div class="rc-sub">Closed 2025/26 season</div></div>
+      <div class="rc-badge b-closed">CLOSED</div>
+    </div>
+  </div>
+
+  <!-- EMAIL -->
+  <div class="email-card">
+    <div class="email-eye">Powder Alerts</div>
+    <div class="email-h">Never miss an epic day</div>
+    <div class="email-sub">Get notified when conditions peak at your top resorts</div>
+    <div class="email-row">
+      <input class="email-in" type="email" placeholder="your@email.com" />
+      <button class="email-go">Subscribe</button>
+    </div>
+    <div class="email-note">Zero spam &middot; Unsubscribe anytime</div>
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div style="margin-top:40px; border-top:1px solid var(--border); padding-top:24px;">
+    <div class="sec-label">Off-Season Preview</div>
+    <div class="empty">
+      <div class="empty-icon">&#127956;</div>
+      <div class="empty-h">The mountains are resting</div>
+      <div class="empty-p">Season opens mid-November. We'll send you a heads up when the first snow falls.</div>
+      <div class="empty-timer">~218 days until season</div>
+      <div class="email-row" style="max-width:300px;margin:0 auto;">
+        <input class="email-in" type="email" placeholder="your@email.com" />
+        <button class="email-go">Notify Me</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<nav class="bottom-nav">
+  <a class="ni on"><div class="ni-icon">&#127968;</div><div class="ni-label">Home</div></a>
+  <a class="ni"><div class="ni-icon">&#128197;</div><div class="ni-label">Trip</div></a>
+  <a class="ni"><div class="ni-icon">&#128100;</div><div class="ni-label">Profile</div></a>
+</nav>
+
+<script>
+function toggleTheme(){
+  const h=document.documentElement;
+  h.setAttribute('data-theme', h.getAttribute('data-theme')==='dark'?'light':'dark');
+}
+const ls=['EN','中文','日本語'];let lx=0;
+function cycleLang(){lx=(lx+1)%ls.length;document.getElementById('lBtn').textContent=ls[lx];}
+
+function toggle(c){
+  if(c.style.pointerEvents==='none')return;
+  const b=c.querySelector('.rc-body'),o=c.classList.contains('open');
+  document.querySelectorAll('.resort-card.open').forEach(x=>{if(x!==c){x.classList.remove('open');x.querySelector('.rc-body').style.maxHeight='0';}});
+  if(o){c.classList.remove('open');b.style.maxHeight='0';}
+  else{c.classList.add('open');b.style.maxHeight=b.scrollHeight+'px';
+    const m=b.querySelector('[id^="map-"]');
+    if(m&&!m._leaflet_id)setTimeout(()=>mkMap(m),120);
+  }
+}
+
+function mkMap(el){
+  const dk=document.documentElement.getAttribute('data-theme')==='dark';
+  const m=L.map(el,{center:[38.5,-120.5],zoom:7,zoomControl:false,attributionControl:false});
+  L.tileLayer(dk?'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png':'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:18}).addTo(m);
+  L.polyline([[37.77,-122.42],[38.1,-121.2],[39.19,-120.24]],{color:'#38bdf8',weight:3,opacity:0.8}).addTo(m);
+  L.circleMarker([37.77,-122.42],{radius:6,fillColor:'#f87171',color:'#fff',weight:2,fillOpacity:1}).addTo(m);
+  L.circleMarker([39.19,-120.24],{radius:7,fillColor:'#38bdf8',color:'#fff',weight:2,fillOpacity:1}).addTo(m);
+  L.polyline([[39.05,-120.35],[39.15,-120.28]],{color:'#fbbf24',weight:5,opacity:0.9,dashArray:'8,6'}).addTo(m).bindPopup('<b>&#9939; Chain R2</b><br>I-80 EB');
+  L.circleMarker([39.1,-120.31],{radius:8,fillColor:'#fbbf24',color:'#fff',weight:2,fillOpacity:0.9}).addTo(m);
+  m.fitBounds([[37.7,-122.5],[39.3,-120.1]],{padding:[20,20]});
+}
+
+function tk(){
+  const n=new Date(),h=n.getHours();
+  const gr=h<12?'Good morning':h<17?'Good afternoon':'Good evening';
+  document.querySelector('.greeting-hello').textContent=gr;
+  document.getElementById('gDate').textContent=n.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  document.getElementById('gTime').textContent=n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})+' PST';
+}
+tk();setInterval(tk,1000);
+</script>
+</body>
+</html>

@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>SlabHQ — Snow Trip Intelligence</title>
+<meta name="description" content="Personalized ski & snowboard trip recommendations. Ranked resorts, storm tracking, road conditions, gear advice.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* ═══════════════════════════════════════════
+   SLABHQ v5 — Alpine Journal Design System
+   DM Serif Display + IBM Plex Mono
+   Warm, refined, literary — premium field journal
+   ═══════════════════════════════════════════ */
+
+:root {
+  --font-display: 'DM Serif Display', serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+  --ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0.0, 1, 1);
+  --ease-std: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --r: 12px;
+  --r-sm: 8px;
+  --r-xs: 4px;
+}
+
+[data-theme="dark"] {
+  --bg: #0c0b0a;
+  --surface: #151412;
+  --card: #1e1c1a;
+  --card2: #232120;
+  --border: #33302c;
+  --border2: #3a3632;
+  --accent: #c4956a;
+  --accent2: #d4a87a;
+  --accent-soft: rgba(196,149,106,0.1);
+  --fresh: #6abf7b;
+  --fresh-soft: rgba(106,191,123,0.1);
+  --warn: #d4a03a;
+  --warn-soft: rgba(212,160,58,0.08);
+  --danger: #c95050;
+  --danger-soft: rgba(201,80,80,0.08);
+  --sky: #6aafc4;
+  --sky-soft: rgba(106,175,196,0.1);
+  --text: #eee6dc;
+  --text2: #a89c90;
+  --text3: #5a5048;
+  --white: #f5efe8;
+  --overlay: rgba(12,11,10,0.7);
+}
+
+[data-theme="light"] {
+  --bg: #f7f3ee;
+  --surface: #ede8e2;
+  --card: #ffffff;
+  --card2: #f5f1ec;
+  --border: #ddd6cc;
+  --border2: #c8c0b5;
+  --accent: #8b5e3c;
+  --accent2: #a06d48;
+  --accent-soft: rgba(139,94,60,0.08);
+  --fresh: #2d8a3e;
+  --fresh-soft: rgba(45,138,62,0.08);
+  --warn: #a07828;
+  --warn-soft: rgba(160,120,40,0.06);
+  --danger: #b83a3a;
+  --danger-soft: rgba(184,58,58,0.06);
+  --sky: #3a7f9a;
+  --sky-soft: rgba(58,127,154,0.08);
+  --text: #2a2420;
+  --text2: #6a6058;
+  --text3: #9a9088;
+  --white: #1a1614;
+  --overlay: rgba(247,243,238,0.7);
+}
+
+/* ── RESET ── */
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:var(--font-mono);font-size:13px;line-height:1.6;
+  min-height:100dvh;-webkit-font-smoothing:antialiased;
+  padding-bottom:calc(64px + env(safe-area-inset-bottom,0px) + 20px);
+  transition:background .3s var(--ease-std),color .3s var(--ease-std);
+}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+button{font-family:inherit;cursor:pointer}
+input{font-family:inherit}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:3px;height:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* ── SNOW PARTICLES ── */
+.snow-wrap{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.flake{position:absolute;top:-12px;color:var(--text3);opacity:0.15;animation:fall linear infinite}
+@keyframes fall{to{transform:translateY(105vh) rotate(720deg);opacity:0}}
+
+/* ═══ TOP BAR ═══ */
+.top-bar{
+  position:sticky;top:0;z-index:400;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;height:52px;
+  background:color-mix(in srgb,var(--bg) 92%,transparent);
+  border-bottom:1px solid var(--border);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  transition:background .3s,border-color .3s;
+}
+.logo{font-family:var(--font-display);font-size:22px;color:var(--white)}
+.logo-accent{color:var(--accent)}
+.top-actions{display:flex;align-items:center;gap:6px}
+.top-btn{
+  display:flex;align-items:center;justify-content:center;
+  width:34px;height:34px;background:var(--card);border:1px solid var(--border);
+  color:var(--text2);border-radius:8px;font-size:14px;
+  transition:all .15s;
+}
+.top-btn:hover{border-color:var(--accent);color:var(--accent)}
+.top-btn svg{width:16px;height:16px}
+
+/* ── LANG DROPDOWN ── */
+.lang-wrap{position:relative}
+.lang-trigger{
+  display:flex;align-items:center;gap:4px;
+  padding:6px 10px;background:var(--card);border:1px solid var(--border);
+  color:var(--text2);font-family:var(--font-mono);font-size:11px;
+  border-radius:8px;cursor:pointer;transition:all .15s;
+}
+.lang-trigger:hover{border-color:var(--accent);color:var(--accent)}
+.lang-trigger svg{width:10px;height:10px;transition:transform .2s}
+.lang-wrap.open .lang-trigger svg{transform:rotate(180deg)}
+.lang-menu{
+  position:absolute;top:calc(100% + 6px);right:0;z-index:600;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:4px;min-width:140px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.2);
+  opacity:0;transform:translateY(-4px);pointer-events:none;
+  transition:all .2s var(--ease-std);
+}
+.lang-wrap.open .lang-menu{opacity:1;transform:translateY(0);pointer-events:auto}
+.lang-option{
+  display:block;width:100%;padding:8px 12px;background:none;border:none;
+  color:var(--text2);font-family:var(--font-mono);font-size:11px;
+  text-align:left;border-radius:var(--r-xs);cursor:pointer;
+  transition:all .1s;
+}
+.lang-option:hover{background:var(--accent-soft);color:var(--accent)}
+.lang-option.active{color:var(--accent);font-weight:500}
+
+/* ═══ CONTAINER ═══ */
+.container{max-width:520px;margin:0 auto;padding:0 16px;position:relative;z-index:1}
+
+/* ═══ HEADER / DATE ═══ */
+.page-header{padding:20px 0 4px}
+.header-date{font-family:var(--font-display);font-size:26px;color:var(--white)}
+.header-meta{display:flex;align-items:center;gap:10px;margin-top:4px}
+.header-time{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px}
+.header-demo{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:9px;color:var(--warn);background:var(--warn-soft);
+  padding:3px 8px;border-radius:4px;
+}
+.header-demo::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--warn);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ═══ SECTION LABELS ═══ */
+.sec-label{
+  font-size:10px;font-weight:500;color:var(--text3);
+  letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;
+  display:flex;align-items:center;gap:6px;
+}
+.sec-divider{height:1px;background:var(--border);margin:24px 0}
+
+/* ═══ THIS WEEKEND HERO ═══ */
+/* ═══ HOME ZONES ═══ */
+.home-zone{margin:20px 0 24px}
+.zone-header{margin-bottom:14px}
+.zone-title{font-family:var(--font-display);font-size:20px;color:var(--white);display:flex;align-items:center;gap:8px}
+.zone-subtitle{font-size:11px;color:var(--text2);margin-top:3px}
+
+/* ── WEATHER OVERVIEW ── */
+.wx-overview{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);padding:16px;margin:16px 0;
+  animation:reveal .5s var(--ease-out) .05s both;
+  position:relative;overflow:hidden;
+}
+.wx-overview::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,var(--accent),transparent 80%);
+}
+.wx-eyebrow{font-size:9px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.wx-headline{font-family:var(--font-display);font-size:20px;color:var(--white);line-height:1.3;margin-bottom:8px}
+.wx-timeline{display:flex;gap:0;margin:10px 0;position:relative}
+.wx-timeline::before{content:'';position:absolute;top:11px;left:0;right:0;height:2px;background:var(--border)}
+.wx-phase{flex:1;text-align:center;position:relative;z-index:1}
+.wx-phase-dot{width:10px;height:10px;border-radius:50%;margin:6px auto;border:2px solid var(--border);background:var(--card)}
+.wx-phase-dot.active{background:var(--accent);border-color:var(--accent)}
+.wx-phase-dot.past{background:var(--text3);border-color:var(--text3)}
+.wx-phase-label{font-size:9px;color:var(--text3);letter-spacing:.5px;margin-bottom:2px}
+.wx-phase-day{font-size:11px;font-weight:500;color:var(--text)}
+.wx-summary{font-size:12px;color:var(--text2);line-height:1.6;margin-top:10px}
+.wx-summary strong{color:var(--text)}
+.wx-source{font-size:9px;color:var(--text3);margin-top:8px}
+.wx-source a{color:var(--accent)}
+
+/* ── NEXT TRIP OUTLOOK ── */
+.outlook-row{
+  display:flex;align-items:center;gap:10px;
+  padding:12px;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-sm);margin-bottom:8px;cursor:pointer;
+  transition:all .15s;
+}
+.outlook-row:hover{border-color:var(--accent)}
+.outlook-week{font-size:10px;color:var(--accent);font-weight:500;min-width:50px}
+.outlook-info{flex:1;min-width:0}
+.outlook-title{font-size:12px;font-weight:500;color:var(--white)}
+.outlook-detail{font-size:10px;color:var(--text2);margin-top:2px}
+.outlook-trend{font-size:11px;font-weight:500;min-width:40px;text-align:right}
+.outlook-region-tag{font-size:8px;letter-spacing:.5px;padding:2px 6px;border-radius:3px;margin-left:4px}
+.outlook-resort-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:10px;color:var(--text2)}
+.outlook-resort-row:hover{color:var(--accent);cursor:pointer}
+
+/* ═══ RECOMMENDATION CARDS ═══ */
+.rec-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);margin-bottom:10px;
+  overflow:hidden;
+  transition:all .2s var(--ease-std);
+  animation:reveal .4s var(--ease-out) both;
+}
+@keyframes reveal{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.rec-card:nth-child(2){animation-delay:.1s}
+.rec-card:nth-child(3){animation-delay:.15s}
+.rec-card:hover{border-color:var(--accent);transform:translateY(-1px)}
+.rec-card.expanded{border-color:var(--accent)}
+.rec-header{display:flex;align-items:center;gap:12px;padding:16px;cursor:pointer}
+.rec-category{
+  font-size:8px;letter-spacing:1.5px;text-transform:uppercase;
+  padding:3px 8px;border-radius:3px;flex-shrink:0;
+  line-height:1;display:flex;align-items:center;justify-content:center;
+}
+.cat-ca{background:var(--sky-soft);color:var(--sky);border:1px solid rgba(106,175,196,0.2)}
+.cat-us{background:var(--fresh-soft);color:var(--fresh);border:1px solid rgba(106,191,123,0.2)}
+.cat-intl{background:var(--accent-soft);color:var(--accent);border:1px solid rgba(196,149,106,0.2)}
+.rec-score{
+  font-family:var(--font-display);font-size:36px;color:var(--white);
+  line-height:1;min-width:44px;
+}
+.rec-info{flex:1;min-width:0}
+.rec-name{font-family:var(--font-display);font-size:18px;color:var(--white);line-height:1.2}
+.rec-sub{font-size:11px;color:var(--text2);margin-top:3px;line-height:1.5;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.rec-highlight{
+  display:inline-flex;align-items:center;gap:4px;font-size:10px;padding:3px 8px;border-radius:4px;
+  margin-top:6px;
+}
+.hl-go{background:var(--fresh-soft);color:var(--fresh)}
+.hl-good{background:var(--sky-soft);color:var(--sky)}
+.hl-ok{background:var(--warn-soft);color:var(--warn)}
+.rec-chevron{color:var(--text3);font-size:12px;transition:transform .25s;flex-shrink:0}
+.rec-card.expanded .rec-chevron{transform:rotate(180deg)}
+
+/* ═══ EXPANDED DETAIL ═══ */
+.rec-detail{max-height:0;overflow:hidden;transition:max-height .35s var(--ease-std)}
+.rec-card.expanded .rec-detail{max-height:none}
+.rec-detail-inner{padding:0 16px 16px;border-top:1px solid var(--border)}
+
+/* ── Storm Context ── */
+.storm-context{
+  padding:10px 12px;background:var(--sky-soft);border:1px solid rgba(106,175,196,0.15);
+  border-radius:var(--r-sm);margin:12px 0;font-size:11px;color:var(--text2);line-height:1.6;
+}
+.storm-context strong{color:var(--text)}
+.storm-context .storm-label{font-size:9px;color:var(--sky);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+
+.detail-narrative{
+  font-size:12px;color:var(--text2);line-height:1.7;
+  padding:12px 0;border-bottom:1px solid var(--border);margin-bottom:12px;
+}
+.detail-narrative strong{color:var(--text)}
+
+.detail-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
+.d-stat{background:var(--card2);border-radius:var(--r-sm);padding:10px}
+.d-stat-label{font-size:9px;color:var(--text3);letter-spacing:.5px;margin-bottom:3px;display:flex;align-items:center;gap:4px}
+.d-stat-val{font-size:16px;font-weight:600;color:var(--white)}
+.d-stat-link{color:var(--white);text-decoration:none;border-bottom:1px dashed var(--border2)}
+.d-stat-link:hover{color:var(--accent);border-color:var(--accent)}
+
+/* ── MAP ── */
+.map-wrap{border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--border);margin:10px 0}
+.map-el{height:200px}
+.leaflet-container{background:var(--bg)!important}
+.leaflet-popup-content-wrapper{background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:none}
+.leaflet-popup-tip{background:var(--card)}
+
+.drive-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
+.drive-cell{background:var(--card2);border-radius:var(--r-sm);padding:10px}
+.drive-label{font-size:9px;color:var(--text3);margin-bottom:3px;display:flex;align-items:center;gap:4px}
+.drive-val{font-size:20px;font-weight:500;color:var(--white)}
+.drive-note{font-size:10px;color:var(--text2);margin-top:2px}
+
+/* ── CHAIN CONTROL ── */
+.chain-alert{
+  display:flex;gap:10px;padding:12px;
+  background:var(--warn-soft);border:1px solid rgba(212,160,58,0.15);
+  border-radius:var(--r-sm);margin:8px 0;
+}
+.chain-icon{flex-shrink:0;margin-top:1px;color:var(--warn)}
+.chain-title{font-size:11px;font-weight:500;color:var(--warn)}
+.chain-meta{font-size:10px;color:var(--text2);margin-top:3px;line-height:1.5}
+.chain-source{font-size:9px;color:var(--text3);margin-top:4px}
+.chain-source a{color:var(--accent)}
+
+/* ── DATA SOURCE ── */
+.data-source{font-size:9px;color:var(--text3);margin-top:6px;display:flex;align-items:center;gap:4px}
+.data-source a{color:var(--accent);display:inline-flex;align-items:center;gap:2px}
+
+/* ── YOY COMPARISON ── */
+.yoy-section{margin:12px 0;padding:12px 0;border-top:1px solid var(--border)}
+.yoy-title{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.yoy-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.yoy-label{font-size:10px;color:var(--text2);min-width:80px}
+.yoy-bar{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;position:relative}
+.yoy-fill{height:100%;border-radius:2px;transition:width .8s var(--ease-out)}
+.yoy-val{font-size:10px;font-weight:500;min-width:40px;text-align:right}
+
+/* ── SEASON OUTLOOK ── */
+.season-outlook{
+  padding:12px;background:var(--card2);border-radius:var(--r-sm);
+  margin:10px 0;font-size:11px;color:var(--text2);line-height:1.6;
+}
+.season-outlook strong{color:var(--accent)}
+
+/* ── CTA BUTTON ── */
+.cta-btn{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  width:100%;padding:14px;margin-top:12px;
+  background:var(--accent);color:var(--bg);
+  font-family:var(--font-mono);font-size:11px;font-weight:500;
+  letter-spacing:1px;text-transform:uppercase;text-align:center;
+  border:none;border-radius:var(--r-sm);transition:all .15s;
+}
+.cta-btn:hover{opacity:.85;transform:translateY(-1px)}
+.cta-btn svg{width:14px;height:14px}
+.ghost-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:4px;
+  padding:12px;
+  background:none;border:1px solid var(--border);color:var(--text2);
+  font-family:var(--font-mono);font-size:10px;letter-spacing:.5px;
+  text-align:center;border-radius:var(--r-sm);transition:all .15s;
+}
+.ghost-btn:hover{border-color:var(--accent);color:var(--accent)}
+.ghost-btn svg{width:12px;height:12px}
+
+/* ═══ ALL RESORTS LIST ═══ */
+.resort-row{
+  display:flex;align-items:center;gap:10px;
+  padding:12px;border:1px solid var(--border);
+  border-radius:var(--r-sm);margin-bottom:6px;cursor:pointer;
+  transition:all .15s;
+}
+.resort-row:hover{border-color:var(--accent)}
+.resort-row.closed-resort{opacity:.4;pointer-events:none}
+
+/* Status background tint classes */
+.status-bg-epic{background:color-mix(in srgb, var(--fresh) 6%, var(--card));border-left:3px solid var(--fresh)}
+.status-bg-prime{background:color-mix(in srgb, var(--sky) 6%, var(--card));border-left:3px solid var(--sky)}
+.status-bg-good{background:color-mix(in srgb, var(--accent) 6%, var(--card));border-left:3px solid var(--accent)}
+.status-bg-limited{background:color-mix(in srgb, var(--warn) 6%, var(--card));border-left:3px solid var(--warn)}
+.status-bg-closed{background:color-mix(in srgb, var(--text3) 4%, var(--card));border-left:3px solid var(--text3);opacity:0.5}
+
+.rr-score{font-family:var(--font-display);font-size:22px;min-width:32px;color:var(--white)}
+.rr-info{flex:1;min-width:0}
+.rr-name{font-family:var(--font-display);font-size:15px;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rr-meta{font-size:10px;color:var(--text2);margin-top:1px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.rr-chip{
+  font-size:8px;letter-spacing:.5px;padding:3px 8px;border-radius:3px;
+  flex-shrink:0;
+}
+.ch-epic{background:var(--fresh-soft);color:var(--fresh)}
+.ch-prime{background:var(--sky-soft);color:var(--sky)}
+.ch-good{background:var(--accent-soft);color:var(--accent)}
+.ch-limited{background:var(--warn-soft);color:var(--warn)}
+.ch-closed{background:var(--danger-soft);color:var(--danger)}
+
+.show-more-btn{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  width:100%;padding:12px;margin-top:8px;
+  background:var(--card);border:1px solid var(--border);color:var(--text2);
+  font-family:var(--font-mono);font-size:11px;
+  border-radius:var(--r-sm);transition:all .15s;cursor:pointer;
+}
+.show-more-btn:hover{border-color:var(--accent);color:var(--accent)}
+.show-more-btn svg{width:14px;height:14px}
+
+/* ── STATUS GROUP HEADER ── */
+.status-group-header{
+  font-size:10px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;
+  padding:10px 0 6px;margin-top:8px;display:flex;align-items:center;gap:6px;
+}
+
+/* ═══ LEGEND / KEY ═══ */
+.legend-toggle{
+  display:flex;align-items:center;gap:6px;
+  padding:10px 12px;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-sm);margin-bottom:12px;cursor:pointer;
+  font-size:11px;color:var(--text2);transition:all .15s;
+}
+.legend-toggle:hover{border-color:var(--accent);color:var(--accent)}
+.legend-toggle svg{transition:transform .2s}
+.legend-toggle.open svg{transform:rotate(180deg)}
+.legend-body{
+  max-height:0;overflow:hidden;transition:max-height .3s var(--ease-std);
+}
+.legend-body.open{max-height:400px}
+.legend-content{
+  padding:12px;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-sm);margin-bottom:12px;font-size:11px;color:var(--text2);line-height:1.8;
+}
+.legend-content strong{color:var(--text)}
+.legend-content .legend-row{display:flex;align-items:center;gap:8px;padding:3px 0}
+.legend-content .legend-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0}
+
+/* ═══ EMAIL SUBSCRIPTION ═══ */
+.email-card{
+  background:var(--card);border:1px dashed var(--border2);
+  border-radius:var(--r);padding:24px;margin-top:28px;text-align:center;
+}
+.email-eyebrow{font-size:9px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.email-heading{font-family:var(--font-display);font-size:20px;color:var(--white);margin-bottom:4px}
+.email-sub{font-size:12px;color:var(--text2);margin-bottom:14px}
+.email-row{display:flex;gap:8px}
+.email-input{
+  flex:1;padding:12px 14px;background:var(--card2);border:1px solid var(--border);
+  color:var(--text);font-family:var(--font-mono);font-size:12px;
+  border-radius:var(--r-sm);outline:none;transition:border-color .15s;
+}
+.email-input::placeholder{color:var(--text3)}
+.email-input:focus{border-color:var(--accent)}
+.email-btn{
+  padding:12px 18px;background:var(--accent);color:var(--bg);
+  font-family:var(--font-mono);font-size:10px;font-weight:500;
+  letter-spacing:.5px;border:none;border-radius:var(--r-sm);
+  white-space:nowrap;transition:opacity .15s;
+}
+.email-btn:hover{opacity:.85}
+.email-success{display:none;font-size:12px;color:var(--fresh);padding:14px;display:flex;align-items:center;gap:6px;justify-content:center}
+.email-success.show{display:flex}
+.email-success{display:none}
+.email-note{font-size:10px;color:var(--text3);margin-top:10px}
+
+/* ═══ EMPTY / SEASONAL STATE ═══ */
+.empty-state{
+  text-align:center;padding:48px 20px;
+  animation:reveal .5s var(--ease-out) .1s both;
+}
+.empty-icon{font-size:64px;margin-bottom:16px;opacity:.5}
+.empty-title{font-family:var(--font-display);font-size:24px;color:var(--white);margin-bottom:8px}
+.empty-body{font-size:13px;color:var(--text2);line-height:1.7;max-width:320px;margin:0 auto 20px}
+.empty-countdown{font-size:13px;color:var(--accent);margin-bottom:20px}
+
+/* ═══ RESORT DETAIL OVERLAY ═══ */
+.detail-overlay{
+  position:fixed;inset:0;z-index:700;
+  background:var(--overlay);backdrop-filter:blur(6px);
+  opacity:0;pointer-events:none;transition:opacity .3s var(--ease-std);
+}
+.detail-overlay.open{opacity:1;pointer-events:auto}
+.detail-sheet{
+  position:fixed;bottom:0;left:0;right:0;z-index:710;
+  max-height:90dvh;overflow-y:auto;
+  background:var(--bg);border-top:1px solid var(--border);
+  border-radius:var(--r) var(--r) 0 0;
+  padding:16px 20px calc(20px + env(safe-area-inset-bottom,0px));
+  max-width:520px;margin:0 auto;
+  transform:translateY(100%);transition:transform .38s var(--ease-spring);
+}
+.detail-overlay.open .detail-sheet{transform:translateY(0)}
+.sheet-handle{
+  width:36px;height:4px;background:var(--border2);border-radius:2px;
+  margin:0 auto 16px;
+}
+.sheet-close{
+  position:absolute;top:16px;right:20px;width:32px;height:32px;
+  background:var(--card);border:1px solid var(--border);border-radius:8px;
+  color:var(--text3);font-size:16px;display:flex;align-items:center;
+  justify-content:center;cursor:pointer;transition:all .15s;
+}
+.sheet-close:hover{color:var(--text);border-color:var(--text3)}
+
+/* ═══ FORECAST STRIP ═══ */
+.forecast-strip{
+  display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;
+  padding:8px 0;margin:12px 0;-webkit-overflow-scrolling:touch;
+}
+.forecast-strip::-webkit-scrollbar{height:2px}
+.forecast-day{
+  flex-shrink:0;width:80px;scroll-snap-align:start;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:10px 8px;text-align:center;
+}
+.forecast-day.today{border-color:var(--accent);background:var(--accent-soft)}
+.fd-name{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.fd-icon{margin:4px 0;display:flex;justify-content:center}
+.fd-icon svg{width:20px;height:20px}
+.fd-temps{font-size:11px;color:var(--white);margin:4px 0}
+.fd-temps span{color:var(--text3);font-size:10px}
+.fd-wind{font-size:9px;color:var(--text2);display:flex;align-items:center;gap:2px;justify-content:center}
+.fd-snow{font-size:10px;color:var(--sky);font-weight:500;margin-top:2px}
+
+/* ── HOURLY TABLE ── */
+.hourly-wrap{margin:12px 0}
+.hourly-title{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.hourly-strip{
+  display:flex;gap:4px;overflow-x:auto;scroll-snap-type:x mandatory;
+  padding:4px 0;-webkit-overflow-scrolling:touch;
+}
+.hourly-strip::-webkit-scrollbar{height:2px}
+.hourly-cell{
+  flex-shrink:0;width:48px;scroll-snap-align:start;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-xs);padding:6px 4px;text-align:center;
+  font-size:9px;
+}
+.hc-hour{color:var(--text3);margin-bottom:2px}
+.hc-temp{color:var(--white);font-weight:500;font-size:10px}
+.hc-wind{color:var(--text2);margin-top:1px}
+.hc-snow{color:var(--sky);font-weight:500;margin-top:1px}
+
+/* ── WEEK OUTLOOK ── */
+.week-outlook{margin:12px 0}
+.week-outlook-title{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.week-row{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-xs);margin-bottom:4px;font-size:11px;
+}
+.wr-label{min-width:80px;color:var(--text2)}
+.wr-range{flex:1;color:var(--white);font-weight:500}
+.wr-trend{font-size:10px;padding:2px 6px;border-radius:3px}
+.wr-trend.up{background:var(--fresh-soft);color:var(--fresh)}
+.wr-trend.flat{background:var(--accent-soft);color:var(--accent)}
+.wr-trend.down{background:var(--danger-soft);color:var(--danger)}
+
+/* ═══ PROFILE SECTION ═══ */
+.profile-section{padding:24px 0}
+.profile-field{margin-bottom:16px;position:relative}
+.profile-field label{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px}
+.profile-input{
+  width:100%;padding:12px 14px;background:var(--card);border:1px solid var(--border);
+  color:var(--text);font-family:var(--font-mono);font-size:12px;
+  border-radius:var(--r-sm);outline:none;transition:border-color .15s;
+}
+.profile-input:focus{border-color:var(--accent)}
+.profile-input::placeholder{color:var(--text3)}
+.profile-save-btn{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:8px 16px;background:var(--accent);color:var(--bg);
+  font-family:var(--font-mono);font-size:10px;font-weight:500;
+  border:none;border-radius:var(--r-sm);margin-top:8px;transition:opacity .15s;
+}
+.profile-save-btn:hover{opacity:.85}
+
+/* ── LOCATION AUTOCOMPLETE ── */
+.loc-suggest{
+  position:absolute;top:100%;left:0;right:0;z-index:500;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:0 0 var(--r-sm) var(--r-sm);
+  max-height:200px;overflow-y:auto;
+  box-shadow:0 8px 24px rgba(0,0,0,0.2);
+  display:none;
+}
+.loc-suggest.show{display:block}
+.loc-suggest-item{
+  padding:10px 14px;font-size:11px;color:var(--text2);
+  cursor:pointer;transition:all .1s;border-bottom:1px solid var(--border);
+}
+.loc-suggest-item:last-child{border-bottom:none}
+.loc-suggest-item:hover{background:var(--accent-soft);color:var(--accent)}
+
+.skill-row{
+  display:flex;align-items:center;gap:10px;margin-bottom:12px;
+  padding:10px 12px;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-sm);
+}
+.skill-name{font-size:12px;color:var(--text);min-width:90px}
+.skill-bar{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+.skill-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width .6s var(--ease-out)}
+.skill-val{font-size:11px;font-weight:500;color:var(--accent);min-width:32px;text-align:right}
+.skill-btns{display:flex;gap:4px}
+.skill-btn{
+  width:32px;height:32px;background:var(--card2);border:1px solid var(--border);
+  color:var(--text2);border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .12s;
+}
+.skill-btn:hover{border-color:var(--accent);color:var(--accent)}
+.skill-btn svg{width:14px;height:14px}
+.level-card{
+  padding:16px;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r);margin-bottom:16px;
+}
+.level-label{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.level-name{font-family:var(--font-display);font-size:20px;color:var(--white)}
+.level-desc{font-size:12px;color:var(--text2);margin-top:4px;line-height:1.6}
+
+/* ═══ ROUTINES & RESOURCES ═══ */
+.routine-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:12px;margin-bottom:8px;
+  cursor:pointer;transition:all .15s;
+}
+.routine-card:hover{border-color:var(--accent);transform:translateX(2px)}
+.routine-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.routine-title{font-size:12px;font-weight:500;color:var(--white)}
+.routine-dur{font-size:9px;color:var(--fresh);background:var(--fresh-soft);padding:2px 7px;border-radius:3px}
+.routine-steps{list-style:none}
+.routine-steps li{font-size:10px;color:var(--text2);padding:2px 0;display:flex;gap:6px;align-items:center}
+.routine-steps li svg{flex-shrink:0;color:var(--accent)}
+.routine-body{max-height:0;overflow:hidden;transition:max-height .25s var(--ease-std)}
+.routine-card.open .routine-body{max-height:300px}
+
+.res-link{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 11px;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-sm);margin-bottom:6px;color:var(--text);transition:all .15s;
+}
+.res-link:hover{border-color:var(--accent);transform:translateX(2px);text-decoration:none}
+.res-icon{flex-shrink:0;color:var(--accent)}
+.res-icon svg{width:16px;height:16px}
+.res-title{font-size:11px;font-weight:500}
+.res-desc{font-size:9px;color:var(--text3);margin-top:1px}
+
+/* ═══ BOTTOM NAV ═══ */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:500;
+  display:flex;justify-content:space-around;
+  height:calc(60px + env(safe-area-inset-bottom,0px));
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  background:color-mix(in srgb,var(--surface) 94%,transparent);
+  border-top:1px solid var(--border);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  transition:background .3s,border-color .3s;
+}
+.nav-item{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:2px;padding:6px 20px;
+  color:var(--text3);cursor:pointer;text-decoration:none;
+  transition:color .15s;position:relative;
+}
+.nav-item.active{color:var(--accent)}
+.nav-item.active::before{
+  content:'';position:absolute;top:0;width:24px;height:2px;
+  background:var(--accent);border-radius:0 0 2px 2px;
+}
+.nav-icon{display:flex;align-items:center;justify-content:center}
+.nav-icon svg{width:20px;height:20px}
+.nav-label{font-size:9px;letter-spacing:.5px}
+
+/* ═══ TAB VISIBILITY ═══ */
+.tab-section{display:none}
+.tab-section.active-tab{display:block}
+
+/* ── FORECAST BAR CHARTS ── */
+.fc-bar-section{margin:12px 0}
+.fc-bar-legend{display:flex;gap:14px;margin-bottom:8px;font-size:9px;color:var(--text2)}
+.fc-bar-legend-item{display:flex;align-items:center;gap:4px}
+.fc-bar-legend-swatch{width:10px;height:10px;border-radius:2px}
+.fc-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:10px}
+.fc-bar-label{min-width:48px;color:var(--text2)}
+.fc-bar-track{flex:1;height:14px;background:var(--card2);border-radius:3px;overflow:hidden;position:relative}
+.fc-bar-fill{height:100%;border-radius:3px;transition:width .6s var(--ease-out);display:flex;align-items:center;padding-left:4px;font-size:8px;color:var(--white);white-space:nowrap}
+.fc-bar-val{min-width:36px;text-align:right;font-weight:500}
+.fc-bar-snow .fc-bar-fill{background:var(--sky)}
+.fc-bar-wind .fc-bar-fill{background:var(--text3)}
+.fc-temp-cold{color:var(--sky)}
+.fc-temp-warm{color:var(--warn)}
+.fc-temp-neutral{color:var(--text)}
+
+/* ── FAVORITE RESORTS ── */
+.fav-slots{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.fav-slot{
+  flex:1;min-width:120px;padding:12px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--r-sm);text-align:center;
+  font-size:11px;color:var(--text2);cursor:pointer;
+  transition:all .15s;position:relative;
+}
+.fav-slot:hover{border-color:var(--accent);color:var(--accent)}
+.fav-slot.filled{border-color:var(--accent);background:var(--accent-soft)}
+.fav-slot .fav-name{font-size:12px;font-weight:500;color:var(--white)}
+.fav-remove{
+  position:absolute;top:4px;right:4px;width:18px;height:18px;
+  background:var(--card2);border:1px solid var(--border);border-radius:50%;
+  color:var(--text3);font-size:10px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:all .12s;
+}
+.fav-remove:hover{background:var(--danger-soft);color:var(--danger);border-color:var(--danger)}
+.fav-dropdown{
+  position:absolute;top:100%;left:0;right:0;z-index:500;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:0 0 var(--r-sm) var(--r-sm);
+  max-height:200px;overflow-y:auto;
+  box-shadow:0 8px 24px rgba(0,0,0,0.2);display:none;
+}
+.fav-dropdown.show{display:block}
+.fav-search{
+  width:100%;padding:8px 10px;background:var(--card2);border:none;border-bottom:1px solid var(--border);
+  color:var(--text);font-family:var(--font-mono);font-size:11px;outline:none;
+}
+.fav-option{
+  padding:8px 10px;font-size:11px;color:var(--text2);cursor:pointer;
+  transition:all .1s;border-bottom:1px solid var(--border);
+}
+.fav-option:last-child{border-bottom:none}
+.fav-option:hover{background:var(--accent-soft);color:var(--accent)}
+
+/* ── TRIP MAP ── */
+.trip-map-wrap{border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--border);margin:12px 0}
+.trip-map-el{height:240px}
+
+/* ── YOY BARS (more prominent) ── */
+.yoy-bar{height:8px;background:var(--border);border-radius:4px}
+.yoy-fill{height:100%;border-radius:4px}
+.yoy-val{font-size:11px;font-weight:500;min-width:44px}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:380px){
+  .detail-stats{grid-template-columns:1fr 1fr}
+  .drive-row{grid-template-columns:1fr}
+  .rec-score{font-size:28px}
+}
+@media(min-width:768px){
+  .container{max-width:560px}
+}
+</style>
+</head>
+<body>
+
+<!-- SNOW PARTICLES -->
+<div class="snow-wrap" id="snowWrap"></div>
+
+<!-- TOP BAR -->
+<header class="top-bar">
+  <div class="logo">Slab<span class="logo-accent">HQ</span></div>
+  <div class="top-actions">
+    <button class="top-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme"></button>
+    <div class="lang-wrap" id="langWrap">
+      <button class="lang-trigger" onclick="toggleLangMenu()">
+        <span id="langLabel">EN</span>
+        <svg viewBox="0 0 10 6"><path d="M1 1l4 4 4-4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+      <div class="lang-menu">
+        <button class="lang-option active" onclick="setLang('en')">EN &mdash; English</button>
+        <button class="lang-option" onclick="setLang('zh')">中文 &mdash; Chinese</button>
+        <button class="lang-option" onclick="setLang('ja')">日本語 &mdash; Japanese</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<div class="container">
+
+  <!-- ═══ HOME SECTION ═══ -->
+  <section id="home" class="tab-section active-tab">
+    <div class="page-header">
+      <div class="header-date" id="dateDisplay"></div>
+      <div class="header-meta">
+        <div class="header-time" id="timeDisplay"></div>
+        <div class="header-demo" data-i18n="demo_data">Demo Data</div>
+      </div>
+    </div>
+
+    <!-- 1. WEATHER OVERVIEW — storm timeline -->
+    <div id="weatherOverview"></div>
+
+    <!-- 2. GO THIS WEEKEND — top 3 expanded picks -->
+    <div class="home-zone">
+      <div class="zone-header">
+        <div class="zone-title" id="weekendTitle"></div>
+        <div class="zone-subtitle" id="weekendDateRange"></div>
+      </div>
+      <div id="topPicks"></div>
+    </div>
+
+    <div class="sec-divider"></div>
+
+    <!-- 3. PLAN NEXT TRIP — 3-week outlook -->
+    <div class="home-zone">
+      <div class="zone-header">
+        <div class="zone-title" id="nextTripTitle"></div>
+        <div class="zone-subtitle">Best windows in the next 3 weeks</div>
+      </div>
+      <div id="nextTripContent"></div>
+    </div>
+
+    <div class="sec-divider"></div>
+
+    <!-- 4. ALL RESORTS -->
+    <div class="sec-label" data-i18n="all_resorts">All Ikon Pass Resorts</div>
+    <div id="legendWrap"></div>
+    <div id="allResorts"></div>
+    <div id="showMoreWrap"></div>
+  </section>
+
+  <!-- ═══ TRIP SECTION ═══ -->
+  <section id="trip" class="tab-section">
+    <div style="padding-top:24px">
+      <div class="sec-label" data-i18n="trip_plan">Trip Planner</div>
+      <div id="tripContent"></div>
+    </div>
+  </section>
+
+  <!-- ═══ PROFILE SECTION ═══ -->
+  <section id="profile" class="tab-section profile-section">
+    <div class="sec-label" data-i18n="my_profile">My Profile</div>
+
+    <!-- Location & Email -->
+    <div id="profileSettings"></div>
+
+    <div class="sec-label" style="margin-top:20px" data-i18n="my_level">My Level</div>
+    <div class="level-card" id="levelCard"></div>
+
+    <div class="sec-label" style="margin-top:20px" data-i18n="my_skills">My Skills</div>
+    <div id="skillSliders"></div>
+
+    <div class="sec-label" style="margin-top:24px" data-i18n="practice">Practice Routines</div>
+    <div id="routineList"></div>
+
+    <div class="sec-label" style="margin-top:24px" data-i18n="resources">Resources</div>
+    <div id="resourceList"></div>
+
+    <!-- EMAIL in Profile -->
+    <div class="email-card" style="margin-top:24px">
+      <div class="email-eyebrow" data-i18n="powder_alerts">Powder Alerts</div>
+      <div class="email-heading" data-i18n="never_miss">Never miss an epic day</div>
+      <div class="email-sub" data-i18n="notify_text">We'll notify you when conditions peak at your favorite resorts</div>
+      <form id="emailForm" onsubmit="submitEmail(event)">
+        <div class="email-row">
+          <input class="email-input" type="email" name="email" placeholder="your@email.com" required />
+          <button class="email-btn" type="submit" data-i18n="subscribe">Subscribe</button>
+        </div>
+      </form>
+      <div class="email-success" id="emailSuccess"></div>
+      <div class="email-note"><span data-i18n="condition_alerts">Condition alerts</span> &middot; <span data-i18n="storm_forecasts">Storm forecasts</span> &middot; <span data-i18n="zero_spam">Zero spam</span></div>
+    </div>
+  </section>
+
+</div>
+
+<!-- RESORT DETAIL OVERLAY -->
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail(event)">
+  <div class="detail-sheet" id="detailSheet">
+    <div class="sheet-handle"></div>
+    <button class="sheet-close" onclick="closeDetail()"></button>
+    <div id="detailContent"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav" id="bottomNav">
+  <a class="nav-item active" data-tab="home" onclick="switchTab('home')">
+    <div class="nav-icon"></div>
+    <div class="nav-label" data-i18n="home">Home</div>
+  </a>
+  <a class="nav-item" data-tab="trip" onclick="switchTab('trip')">
+    <div class="nav-icon"></div>
+    <div class="nav-label" data-i18n="trip">Trip</div>
+  </a>
+  <a class="nav-item" data-tab="profile" onclick="switchTab('profile')">
+    <div class="nav-icon"></div>
+    <div class="nav-label" data-i18n="profile">Profile</div>
+  </a>
+</nav>
+
+<script>
+// ═══════════════════════════════════════════
+//  SLABHQ v5 — Full JavaScript
+// ═══════════════════════════════════════════
+
+// ── ICON SYSTEM — NO EMOJI ──
+function icon(name, size=16) {
+  const s = `width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"`;
+  const icons = {
+    snow: `<svg ${s}><path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M19.07 4.93L4.93 19.07"/><circle cx="12" cy="12" r="2"/></svg>`,
+    calendar: `<svg ${s}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
+    user: `<svg ${s}><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`,
+    pin: `<svg ${s}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+    'map-pin': `<svg ${s}><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+    chain: `<svg ${s}><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>`,
+    check: `<svg ${s}><polyline points="20 6 9 17 4 12"/></svg>`,
+    mountain: `<svg ${s}><path d="M8 21l4-10 4 10"/><path d="M2 21h20"/><path d="M15 11l3 10"/><path d="M9 11L6 21"/></svg>`,
+    bolt: `<svg ${s}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
+    sun: `<svg ${s}><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`,
+    moon: `<svg ${s}><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>`,
+    wind: `<svg ${s}><path d="M9.59 4.59A2 2 0 1111 8H2m10.59 11.41A2 2 0 1014 16H2m15.73-8.27A2.5 2.5 0 1119.5 12H2"/></svg>`,
+    thermometer: `<svg ${s}><path d="M14 14.76V3.5a2.5 2.5 0 00-5 0v11.26a4.5 4.5 0 105 0z"/></svg>`,
+    eye: `<svg ${s}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
+    clock: `<svg ${s}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
+    'chevron-down': `<svg ${s}><polyline points="6 9 12 15 18 9"/></svg>`,
+    'chevron-up': `<svg ${s}><polyline points="18 15 12 9 6 15"/></svg>`,
+    'arrow-right': `<svg ${s}><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>`,
+    'external-link': `<svg ${s}><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>`,
+    minus: `<svg ${s}><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+    plus: `<svg ${s}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+    search: `<svg ${s}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`,
+    'x-close': `<svg ${s}><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+    'alert-triangle': `<svg ${s}><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+    'cloud-snow': `<svg ${s}><path d="M20 17.58A5 5 0 0018 8h-1.26A8 8 0 104 16.25"/><line x1="8" y1="16" x2="8.01" y2="16"/><line x1="8" y1="20" x2="8.01" y2="20"/><line x1="12" y1="18" x2="12.01" y2="18"/><line x1="12" y1="22" x2="12.01" y2="22"/><line x1="16" y1="16" x2="16.01" y2="16"/><line x1="16" y1="20" x2="16.01" y2="20"/></svg>`,
+    star: `<svg ${s}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+    // Weather condition icons
+    'w-sunny': `<svg ${s}><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`,
+    'w-cloudy': `<svg ${s}><path d="M18 10h-1.26A8 8 0 104 16h14a4 4 0 000-8z"/></svg>`,
+    'w-snow': `<svg ${s}><path d="M20 17.58A5 5 0 0018 8h-1.26A8 8 0 104 16.25"/><line x1="8" y1="16" x2="8.01" y2="16"/><line x1="8" y1="20" x2="8.01" y2="20"/><line x1="12" y1="18" x2="12.01" y2="18"/><line x1="12" y1="22" x2="12.01" y2="22"/><line x1="16" y1="16" x2="16.01" y2="16"/><line x1="16" y1="20" x2="16.01" y2="20"/></svg>`,
+    'w-heavy-snow': `<svg ${s}><path d="M20 17.58A5 5 0 0018 8h-1.26A8 8 0 104 16.25"/><path d="M8 16v6M12 18v6M16 16v6"/></svg>`,
+    'w-partly-cloudy': `<svg ${s}><path d="M12 2v2M4.93 4.93l1.41 1.41M20 12h2M17.66 17.66l1.41 1.41M2 12h2M6.34 17.66l-1.41 1.41M17.07 4.93l1.41-1.41"/><circle cx="12" cy="10" r="4"/><path d="M16 16h2a3 3 0 000-6h-.5A5 5 0 008 12.5V13a3 3 0 003 3h5z"/></svg>`,
+    plane: `<svg ${s}><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>`,
+    info: `<svg ${s}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`,
+  };
+  return icons[name] || `<svg ${s}><circle cx="12" cy="12" r="1"/></svg>`;
+}
+
+// ── RESORT DATA (Ikon Pass) ──
+const RESORTS=[
+  // === CALIFORNIA ===
+  {id:'mammoth',name:'Mammoth Mountain',loc:'Mammoth Lakes, CA',region:'ca',lat:37.6308,lng:-119.0326,elev:11053,acres:3500,ikonDays:'Unlimited',open:'8:30 AM',close:'4:00 PM',fresh:18,base:124,quality:'Light Powder',trails:163,trailsOpen:142,lifts:26,liftsOpen:21,status:'EPIC',links:{official:'https://www.mammothmountain.com',snow:'https://www.mammothmountain.com/on-the-mountain/snow-and-weather-report',ig:'https://www.instagram.com/mammothmountain/'},airport:'MMH 8 min. LAX 5.5h.',ann:'18" overnight. Gondola 7:30 AM on powder days. Chain control SR-203.',yoy:{thisYear:340,lastYear:290,avg:310},nextSeason:'Mid-Nov 2026',liftList:[{n:'Village Gondola',t:'Gondola',s:'on'},{n:'Chair 1 — Broadway',t:'6-Pack',s:'on'},{n:'Chair 23 — Cloud Nine',t:'Quad',s:'on'},{n:'Chair 14',t:'Quad',s:'hold'}]},
+  {id:'palisades',name:'Palisades Tahoe',loc:'Olympic Valley, CA',region:'ca',lat:39.1965,lng:-120.2356,elev:9050,acres:6000,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:14,base:118,quality:'Packed Powder',trails:170,trailsOpen:145,lifts:29,liftsOpen:24,status:'PRIME',links:{official:'https://www.palisadestahoe.com',snow:'https://www.palisadestahoe.com/mountain-information/mountain-report',ig:'https://www.instagram.com/palisadestahoe/'},airport:'RNO 45 min. SFO 3.5h.',ann:'Great conditions. All major lifts. Parking reservations required weekends.',yoy:{thisYear:310,lastYear:275,avg:295},nextSeason:'Mid-Nov 2026',liftList:[{n:'Funitel',t:'Funitel',s:'on'},{n:'KT-22',t:'Double',s:'on'},{n:'Siberia Express',t:'Quad',s:'on'},{n:'Headwall',t:'Double',s:'hold'}]},
+  {id:'june',name:'June Mountain',loc:'June Lake, CA',region:'ca',lat:37.7772,lng:-119.0786,elev:10135,acres:1500,ikonDays:'5 days',open:'9:00 AM',close:'4:00 PM',fresh:14,base:110,quality:'Powder',trails:35,trailsOpen:28,lifts:8,liftsOpen:7,status:'GOOD',links:{official:'https://www.junemountain.com',snow:'https://www.junemountain.com/mountain/snow-weather-report',ig:'https://www.instagram.com/junemountain/'},airport:'MMH 30 min.',ann:'14" fresh. Very low crowds. Same road as Mammoth.',yoy:{thisYear:280,lastYear:250,avg:260},nextSeason:'Dec 2026',liftList:[{n:'Chair 1',t:'Quad',s:'on'},{n:'Chair 7 Rainbow',t:'Quad',s:'on'}]},
+  {id:'bigbear',name:'Big Bear Mountain',loc:'Big Bear Lake, CA',region:'ca',lat:34.2154,lng:-116.8909,elev:8805,acres:500,ikonDays:'5 days',open:'8:30 AM',close:'4:00 PM',fresh:2,base:42,quality:'Machine Groomed',trails:55,trailsOpen:40,lifts:16,liftsOpen:11,status:'LIMITED',links:{official:'https://www.bigbearmountainresort.com',snow:'https://www.bigbearmountainresort.com/mountain/mountain-report',ig:'https://www.instagram.com/bigbearmtn/'},airport:'ONT 1.5h. LAX 2.5h.',ann:'Limited natural snow. Snowmaking active.',yoy:{thisYear:120,lastYear:95,avg:110},nextSeason:'Nov 2026',liftList:[{n:'Chair 1 Mineshaft',t:'Quad',s:'on'},{n:'Chair 8 Express',t:'HS Quad',s:'on'}]},
+  {id:'sierra',name:'Sierra at Tahoe',loc:'Twin Bridges, CA',region:'ca',lat:38.7966,lng:-120.0802,elev:8852,acres:2000,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:46,trailsOpen:0,lifts:12,liftsOpen:0,status:'CLOSED',links:{official:'https://sierraattahoe.com',snow:'https://sierraattahoe.com/weather-snow-report/',ig:'https://www.instagram.com/sierraattahoe/'},airport:'SMF 60 min.',ann:'Closed for 2025/26 season. Returns 2026/27.',yoy:{thisYear:0,lastYear:220,avg:240},nextSeason:'Nov 2026',liftList:[]},
+
+  // === WEST US ===
+  {id:'snowbird',name:'Snowbird',loc:'Little Cottonwood Canyon, UT',region:'us',lat:40.5833,lng:-111.6551,elev:11000,acres:2500,ikonDays:'7 days',open:'9:00 AM',close:'4:00 PM',fresh:22,base:142,quality:'Champagne Powder',trails:112,trailsOpen:84,lifts:41,liftsOpen:25,status:'EPIC',links:{official:'https://www.snowbird.com',snow:'https://www.snowbird.com/mountain/snow-report/',ig:'https://www.instagram.com/snowbird/'},airport:'SLC 35 min.',ann:'22" in 24h. Tram running. Chain law Little Cottonwood.',yoy:{thisYear:420,lastYear:380,avg:400},nextSeason:'Mid-Nov 2026',liftList:[{n:'Aerial Tram',t:'Tram',s:'on'},{n:'Peruvian Express',t:'Quad',s:'on'},{n:'Little Cloud',t:'Quad',s:'on'},{n:'Baldy Express',t:'Quad',s:'hold'}]},
+  {id:'brighton',name:'Brighton Resort',loc:'Big Cottonwood Canyon, UT',region:'us',lat:40.5975,lng:-111.5833,elev:10500,acres:1050,ikonDays:'5 days',open:'9:00 AM',close:'9:00 PM',fresh:16,base:128,quality:'Dry Powder',trails:66,trailsOpen:62,lifts:8,liftsOpen:8,status:'PRIME',links:{official:'https://www.brightonresort.com',snow:'https://www.brightonresort.com/mountain/snow-report',ig:'https://www.instagram.com/brightonresort/'},airport:'SLC 40 min. Night skiing until 9 PM.',ann:'Night skiing! All 8 lifts. 16" fresh.',yoy:{thisYear:380,lastYear:340,avg:360},nextSeason:'Mid-Nov 2026',liftList:[{n:'Crest',t:'Quad',s:'on'},{n:'Majestic',t:'Quad',s:'on'},{n:'Millicent',t:'Triple',s:'on'}]},
+  {id:'solitude',name:'Solitude Mountain',loc:'Big Cottonwood Canyon, UT',region:'us',lat:40.6203,lng:-111.5919,elev:10035,acres:1200,ikonDays:'5 days',open:'9:00 AM',close:'4:00 PM',fresh:15,base:122,quality:'Dry Powder',trails:77,trailsOpen:56,lifts:10,liftsOpen:8,status:'PRIME',links:{official:'https://www.solitudemountain.com',snow:'https://www.solitudemountain.com/mountain/conditions',ig:'https://www.instagram.com/solitudemtn/'},airport:'SLC 45 min.',ann:'Uncrowded. Honeycomb Canyon open.',yoy:{thisYear:360,lastYear:320,avg:340},nextSeason:'Mid-Nov 2026',liftList:[{n:'Apex Express',t:'Quad',s:'on'},{n:'Sunrise',t:'Quad',s:'on'}]},
+  {id:'deervalley',name:'Deer Valley',loc:'Park City, UT',region:'us',lat:40.6374,lng:-111.478,elev:9570,acres:2026,ikonDays:'Unlimited',open:'9:00 AM',close:'4:15 PM',fresh:12,base:108,quality:'Packed Powder',trails:103,trailsOpen:88,lifts:21,liftsOpen:18,status:'PRIME',links:{official:'https://www.deervalley.com',snow:'https://www.deervalley.com/mountain/snow-report',ig:'https://www.instagram.com/deervalley/'},airport:'SLC 40 min.',ann:'Grooming impeccable. Limited daily tickets. Ski-only resort.',yoy:{thisYear:310,lastYear:280,avg:300},nextSeason:'Dec 2026',liftList:[{n:'Jordanelle Gondola',t:'Gondola',s:'on'},{n:'Sterling Express',t:'Quad',s:'on'},{n:'Wasatch Express',t:'Quad',s:'on'}]},
+  {id:'alta',name:'Alta',loc:'Little Cottonwood, UT',region:'us',lat:40.5884,lng:-111.6386,elev:10550,acres:2614,ikonDays:'7 days',open:'9:15 AM',close:'4:30 PM',fresh:20,base:138,quality:'Champagne Powder',trails:116,trailsOpen:98,lifts:12,liftsOpen:10,status:'EPIC',links:{official:'https://www.alta.com',snow:'https://www.alta.com/conditions',ig:'https://www.instagram.com/altaskiarea/'},airport:'SLC 35 min.',ann:'20" overnight. Ski-only. Supreme & Collins open. Chain law active.',yoy:{thisYear:430,lastYear:390,avg:410},nextSeason:'Mid-Nov 2026',liftList:[{n:'Collins',t:'Quad',s:'on'},{n:'Supreme',t:'Quad',s:'on'},{n:'Wildcat',t:'Triple',s:'on'}]},
+  {id:'jacksonhole',name:'Jackson Hole',loc:'Teton Village, WY',region:'us',lat:43.5877,lng:-110.828,elev:10450,acres:2500,ikonDays:'7 days',open:'9:00 AM',close:'4:00 PM',fresh:16,base:110,quality:'Packed Powder',trails:133,trailsOpen:110,lifts:13,liftsOpen:11,status:'EPIC',links:{official:'https://www.jacksonhole.com',snow:'https://www.jacksonhole.com/mountain/snow-report',ig:'https://www.instagram.com/jacksonhole/'},airport:'JAC 15 min.',ann:'Corbet\'s Couloir open. Tram running. 16" in 24h.',yoy:{thisYear:380,lastYear:340,avg:360},nextSeason:'Dec 2026',liftList:[{n:'Aerial Tram',t:'Tram',s:'on'},{n:'Bridger Gondola',t:'Gondola',s:'on'},{n:'Sweetwater',t:'Quad',s:'on'}]},
+  {id:'bigsky',name:'Big Sky',loc:'Big Sky, MT',region:'us',lat:45.2833,lng:-111.4014,elev:11166,acres:5800,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:10,base:96,quality:'Packed Powder',trails:310,trailsOpen:260,lifts:36,liftsOpen:30,status:'PRIME',links:{official:'https://bigskyresort.com',snow:'https://bigskyresort.com/mountain/snow-report',ig:'https://www.instagram.com/bigskyresort/'},airport:'BZN 50 min.',ann:'Biggest skiing in America. Lone Peak Tram open. Low crowds midweek.',yoy:{thisYear:290,lastYear:260,avg:280},nextSeason:'Late Nov 2026',liftList:[{n:'Lone Peak Tram',t:'Tram',s:'on'},{n:'Ramcharger 8',t:'8-Pack',s:'on'},{n:'Swift Current',t:'6-Pack',s:'on'}]},
+  {id:'steamboat',name:'Steamboat',loc:'Steamboat Springs, CO',region:'us',lat:40.4572,lng:-106.8045,elev:10568,acres:2965,ikonDays:'Unlimited',open:'8:30 AM',close:'4:00 PM',fresh:8,base:82,quality:'Packed Powder',trails:169,trailsOpen:140,lifts:18,liftsOpen:15,status:'GOOD',links:{official:'https://www.steamboat.com',snow:'https://www.steamboat.com/the-mountain/mountain-report',ig:'https://www.instagram.com/steamboatresort/'},airport:'HDN 30 min. DEN 3h.',ann:'Champagne Powder trademark. Tree skiing excellent.',yoy:{thisYear:280,lastYear:260,avg:275},nextSeason:'Late Nov 2026',liftList:[{n:'Wild Blue Gondola',t:'Gondola',s:'on'},{n:'Sunshine Express',t:'Quad',s:'on'},{n:'Storm Peak Express',t:'Quad',s:'on'}]},
+  {id:'winterpark',name:'Winter Park',loc:'Winter Park, CO',region:'us',lat:39.8841,lng:-105.7625,elev:12060,acres:3081,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:6,base:78,quality:'Spring Snow',trails:166,trailsOpen:130,lifts:25,liftsOpen:20,status:'GOOD',links:{official:'https://www.winterparkresort.com',snow:'https://www.winterparkresort.com/the-mountain/mountain-report',ig:'https://www.instagram.com/winterparkresort/'},airport:'DEN 1.5h.',ann:'Mary Jane bumps legendary. Panoramic Express open.',yoy:{thisYear:270,lastYear:250,avg:265},nextSeason:'Mid-Nov 2026',liftList:[{n:'Gondola',t:'Gondola',s:'on'},{n:'Panoramic Express',t:'6-Pack',s:'on'},{n:'Mary Jane',t:'Quad',s:'on'}]},
+  {id:'copper',name:'Copper Mountain',loc:'Frisco, CO',region:'us',lat:39.5022,lng:-106.1497,elev:12313,acres:2490,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:5,base:72,quality:'Spring Snow',trails:150,trailsOpen:115,lifts:23,liftsOpen:18,status:'GOOD',links:{official:'https://www.coppercolorado.com',snow:'https://www.coppercolorado.com/the-mountain/conditions/snow-report',ig:'https://www.instagram.com/coppercolorado/'},airport:'DEN 1.5h.',ann:'Naturally divided terrain. Woodward park is world-class.',yoy:{thisYear:240,lastYear:220,avg:235},nextSeason:'Nov 2026',liftList:[{n:'American Eagle',t:'6-Pack',s:'on'},{n:'Super Bee',t:'6-Pack',s:'on'},{n:'Alpine',t:'Quad',s:'on'}]},
+  {id:'eldora',name:'Eldora',loc:'Nederland, CO',region:'us',lat:39.9375,lng:-105.5831,elev:10800,acres:680,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:4,base:52,quality:'Machine Groomed',trails:61,trailsOpen:45,lifts:10,liftsOpen:8,status:'GOOD',links:{official:'https://www.eldora.com',snow:'https://www.eldora.com/mountain/conditions',ig:'https://www.instagram.com/eldoramountain/'},airport:'DEN 1.5h. Boulder 25 min.',ann:'Close to Boulder/Denver. Snowmaking helps. Good learning terrain.',yoy:{thisYear:180,lastYear:160,avg:170},nextSeason:'Nov 2026',liftList:[{n:'Challenge',t:'Quad',s:'on'},{n:'Indian Peaks Express',t:'Quad',s:'on'}]},
+  {id:'aspensnowmass',name:'Aspen Snowmass',loc:'Aspen, CO',region:'us',lat:39.2084,lng:-106.9499,elev:12510,acres:5527,ikonDays:'7 days',open:'9:00 AM',close:'3:30 PM',fresh:7,base:74,quality:'Spring Snow',trails:362,trailsOpen:290,lifts:41,liftsOpen:32,status:'GOOD',links:{official:'https://www.aspensnowmass.com',snow:'https://www.aspensnowmass.com/our-mountains/snow-report',ig:'https://www.instagram.com/aspensnowmass/'},airport:'ASE 10 min. DEN 4h.',ann:'4 mountains. Spring skiing events. Ajax, Highlands, Buttermilk, Snowmass.',yoy:{thisYear:260,lastYear:240,avg:250},nextSeason:'Late Nov 2026',liftList:[{n:'Silver Queen Gondola',t:'Gondola',s:'on'},{n:'Ajax Express',t:'6-Pack',s:'on'},{n:'Big Burn',t:'Quad',s:'on'}]},
+  {id:'abasin',name:'Arapahoe Basin',loc:'Keystone, CO',region:'us',lat:39.6425,lng:-105.8719,elev:13050,acres:1428,ikonDays:'7 days',open:'9:00 AM',close:'4:00 PM',fresh:6,base:68,quality:'Spring Snow',trails:147,trailsOpen:110,lifts:9,liftsOpen:7,status:'GOOD',links:{official:'https://www.arapahoebasin.com',snow:'https://www.arapahoebasin.com/snow-report/',ig:'https://www.instagram.com/aaboreal/'},airport:'DEN 1.5h.',ann:'Often last CO resort to close. High alpine terrain. Beach party vibes.',yoy:{thisYear:250,lastYear:230,avg:240},nextSeason:'Oct 2026',liftList:[{n:'Black Mountain Express',t:'Quad',s:'on'},{n:'Pallavicini',t:'Double',s:'on'}]},
+  {id:'taos',name:'Taos Ski Valley',loc:'Taos, NM',region:'us',lat:36.5966,lng:-105.4543,elev:12481,acres:1294,ikonDays:'7 days',open:'9:00 AM',close:'4:00 PM',fresh:3,base:54,quality:'Packed Powder',trails:110,trailsOpen:75,lifts:14,liftsOpen:10,status:'GOOD',links:{official:'https://www.skitaos.com',snow:'https://www.skitaos.com/mountain/conditions',ig:'https://www.instagram.com/skitaos/'},airport:'SAF 2.5h. ABQ 3h.',ann:'Steep expert terrain. Kachina Peak open on powder days.',yoy:{thisYear:200,lastYear:180,avg:190},nextSeason:'Late Nov 2026',liftList:[{n:'Kachina Peak Lift',t:'Quad',s:'on'},{n:'Lift 1',t:'Quad',s:'on'},{n:'Lift 4',t:'Triple',s:'on'}]},
+  {id:'sunvalley',name:'Sun Valley',loc:'Ketchum, ID',region:'us',lat:43.6977,lng:-114.3514,elev:9150,acres:2154,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:4,base:62,quality:'Spring Snow',trails:121,trailsOpen:90,lifts:13,liftsOpen:10,status:'GOOD',links:{official:'https://www.sunvalley.com',snow:'https://www.sunvalley.com/mountain/snow-report',ig:'https://www.instagram.com/sunvalley/'},airport:'SUN 15 min.',ann:'World-class grooming. Legendary Baldy Mountain. Low crowds.',yoy:{thisYear:220,lastYear:200,avg:210},nextSeason:'Late Nov 2026',liftList:[{n:'River Run Gondola',t:'Gondola',s:'on'},{n:'Christmas',t:'Quad',s:'on'},{n:'Lookout Express',t:'Quad',s:'on'}]},
+  {id:'crystalmt',name:'Crystal Mountain',loc:'Enumclaw, WA',region:'us',lat:46.9349,lng:-121.5045,elev:7012,acres:2600,ikonDays:'5 days',open:'9:00 AM',close:'4:00 PM',fresh:10,base:96,quality:'Packed Powder',trails:57,trailsOpen:48,lifts:11,liftsOpen:9,status:'PRIME',links:{official:'https://www.crystalmountainresort.com',snow:'https://www.crystalmountainresort.com/mountain/conditions',ig:'https://www.instagram.com/crystalmountain/'},airport:'SEA 2h.',ann:'Mt. Rainier views. Northwest powder. Gondola open.',yoy:{thisYear:340,lastYear:300,avg:320},nextSeason:'Mid-Nov 2026',liftList:[{n:'Mt. Rainier Gondola',t:'Gondola',s:'on'},{n:'Green Valley',t:'Quad',s:'on'},{n:'Chinook Express',t:'Quad',s:'on'}]},
+  {id:'bachelor',name:'Mt. Bachelor',loc:'Bend, OR',region:'us',lat:43.9792,lng:-121.689,elev:9065,acres:4318,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:8,base:88,quality:'Packed Powder',trails:121,trailsOpen:95,lifts:12,liftsOpen:10,status:'GOOD',links:{official:'https://www.mtbachelor.com',snow:'https://www.mtbachelor.com/mountain/conditions',ig:'https://www.instagram.com/mtbachelor/'},airport:'RDM 30 min.',ann:'360-degree skiing around a volcano. Summit open on calm days.',yoy:{thisYear:300,lastYear:280,avg:290},nextSeason:'Late Nov 2026',liftList:[{n:'Pine Marten Express',t:'Quad',s:'on'},{n:'Summit Express',t:'Quad',s:'on'},{n:'Northwest Express',t:'Quad',s:'on'}]},
+
+  // === EAST US ===
+  {id:'killington',name:'Killington',loc:'Killington, VT',region:'us',lat:43.6045,lng:-72.8201,elev:4241,acres:1509,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:3,base:36,quality:'Spring Snow',trails:155,trailsOpen:80,lifts:22,liftsOpen:14,status:'GOOD',links:{official:'https://www.killington.com',snow:'https://www.killington.com/mountain/conditions',ig:'https://www.instagram.com/killingtonmtn/'},airport:'BTV 2h. BDL 2.5h.',ann:'The Beast of the East. Last to close in the East. Spring skiing mode.',yoy:{thisYear:180,lastYear:160,avg:170},nextSeason:'Oct 2026',liftList:[{n:'K-1 Express Gondola',t:'Gondola',s:'on'},{n:'Superstar Express',t:'Quad',s:'on'},{n:'Snowdon',t:'6-Pack',s:'on'}]},
+  {id:'sugarbush',name:'Sugarbush',loc:'Warren, VT',region:'us',lat:44.1358,lng:-72.8954,elev:4083,acres:578,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:2,base:30,quality:'Spring Snow',trails:111,trailsOpen:55,lifts:16,liftsOpen:10,status:'LIMITED',links:{official:'https://www.sugarbush.com',snow:'https://www.sugarbush.com/conditions',ig:'https://www.instagram.com/sugaboreal/'},airport:'BTV 1h.',ann:'Two peaks connected by shuttle. Spring corn skiing on warm days.',yoy:{thisYear:160,lastYear:140,avg:155},nextSeason:'Nov 2026',liftList:[{n:'Super Bravo Express',t:'Quad',s:'on'},{n:'Valley House Quad',t:'Quad',s:'on'},{n:'Heaven\'s Gate Triple',t:'Triple',s:'on'}]},
+  {id:'stratton',name:'Stratton',loc:'Stratton, VT',region:'us',lat:43.1134,lng:-72.9079,elev:3875,acres:670,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:2,base:28,quality:'Machine Groomed',trails:99,trailsOpen:50,lifts:11,liftsOpen:7,status:'LIMITED',links:{official:'https://www.stratton.com',snow:'https://www.stratton.com/mountain/conditions',ig:'https://www.instagram.com/strattonresort/'},airport:'ALB 2h.',ann:'Birthplace of Burton Snowboards. Good park. Spring operations.',yoy:{thisYear:150,lastYear:130,avg:145},nextSeason:'Nov 2026',liftList:[{n:'Gondola',t:'Gondola',s:'on'},{n:'American Express',t:'6-Pack',s:'on'}]},
+  {id:'loon',name:'Loon Mountain',loc:'Lincoln, NH',region:'us',lat:44.0369,lng:-71.6218,elev:3050,acres:370,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:1,base:24,quality:'Machine Groomed',trails:61,trailsOpen:30,lifts:10,liftsOpen:6,status:'LIMITED',links:{official:'https://www.loonmtn.com',snow:'https://www.loonmtn.com/mountain/conditions',ig:'https://www.instagram.com/laboreal/'},airport:'MHT 1.5h. BOS 2h.',ann:'White Mountains. Family friendly. Spring conditions.',yoy:{thisYear:130,lastYear:115,avg:125},nextSeason:'Nov 2026',liftList:[{n:'Kancamagus Express',t:'Quad',s:'on'},{n:'Lincoln Express',t:'Quad',s:'on'}]},
+  {id:'sugarloaf',name:'Sugarloaf',loc:'Carrabassett Valley, ME',region:'us',lat:45.0314,lng:-70.3131,elev:4237,acres:1230,ikonDays:'Unlimited',open:'9:00 AM',close:'3:50 PM',fresh:4,base:40,quality:'Packed Powder',trails:162,trailsOpen:75,lifts:13,liftsOpen:8,status:'GOOD',links:{official:'https://www.sugarloaf.com',snow:'https://www.sugarloaf.com/conditions-and-cams',ig:'https://www.instagram.com/sugarloafmtn/'},airport:'PWM 2.5h. BOS 4h.',ann:'Only lift-served skiing above treeline in the East. Snowfields open.',yoy:{thisYear:190,lastYear:170,avg:180},nextSeason:'Nov 2026',liftList:[{n:'SuperQuad',t:'Quad',s:'on'},{n:'King Pine Quad',t:'Quad',s:'on'},{n:'Whiffletree',t:'Double',s:'on'}]},
+
+  // === INTERNATIONAL ===
+  {id:'niseko',name:'Niseko United',loc:'Hokkaido, Japan',region:'intl',lat:42.8628,lng:140.6988,elev:4291,acres:2191,ikonDays:'5 days',open:'8:30 AM',close:'8:30 PM',fresh:24,base:180,quality:'Japow \u2014 Legendary Dry Powder',trails:80,trailsOpen:72,lifts:30,liftsOpen:28,status:'EPIC',links:{official:'https://www.niseko.ne.jp/en/',snow:'https://www.niseko.ne.jp/en/conditions/',ig:'https://www.instagram.com/nisekotourism/'},airport:'CTS (New Chitose) 2.5h drive. NRT 95 min flight + 2.5h.',ann:'Japow season peaking. 24" overnight. Night skiing until 8:30 PM. Legendary tree runs.',yoy:{thisYear:520,lastYear:480,avg:500},nextSeason:'Dec 2026',liftList:[{n:'Hirafu Gondola',t:'Gondola',s:'on'},{n:'King Hooded Quad',t:'Quad',s:'on'}]},
+  {id:'revelstoke',name:'Revelstoke Mountain',loc:'British Columbia, Canada',region:'intl',lat:50.9577,lng:-118.1649,elev:7300,acres:3121,ikonDays:'5 days',open:'8:30 AM',close:'3:30 PM',fresh:20,base:160,quality:'Deep Powder',trails:75,trailsOpen:65,lifts:7,liftsOpen:6,status:'EPIC',links:{official:'https://www.revelstokemountainresort.com',snow:'https://www.revelstokemountainresort.com/conditions/snow-report',ig:'https://www.instagram.com/revaboreal/'},airport:'YLW (Kelowna) 2.5h drive. YVR 5h.',ann:'Massive 20" dump. North America\'s biggest vertical. Expert terrain wide open.',yoy:{thisYear:440,lastYear:400,avg:420},nextSeason:'Late Nov 2026',liftList:[{n:'Revelation Gondola',t:'Gondola',s:'on'},{n:'Stoke Chair',t:'Quad',s:'on'}]},
+  {id:'tremblant',name:'Tremblant',loc:'Mont-Tremblant, QC',region:'intl',lat:46.2146,lng:-74.5855,elev:2871,acres:755,ikonDays:'Unlimited',open:'9:00 AM',close:'3:30 PM',fresh:1,base:22,quality:'Machine Groomed',trails:102,trailsOpen:42,lifts:14,liftsOpen:8,status:'LIMITED',links:{official:'https://www.tremblant.ca',snow:'https://www.tremblant.ca/mountain/conditions',ig:'https://www.instagram.com/monttremblant/'},airport:'YUL 1.5h.',ann:'Spring conditions. Village is charming. Late season limited terrain.',yoy:{thisYear:140,lastYear:120,avg:135},nextSeason:'Nov 2026',liftList:[{n:'Cabriolet',t:'Gondola',s:'on'},{n:'Flying Mile Express',t:'Quad',s:'on'},{n:'TGV',t:'Quad',s:'on'}]},
+  {id:'bluemountain',name:'Blue Mountain',loc:'Collingwood, ON',region:'intl',lat:44.5018,lng:-80.3161,elev:1483,acres:364,ikonDays:'5 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:43,trailsOpen:0,lifts:17,liftsOpen:0,status:'CLOSED',links:{official:'https://www.bluemountain.ca',snow:'https://www.bluemountain.ca/conditions',ig:'https://www.instagram.com/bluaboreal/'},airport:'YYZ 1.5h.',ann:'Season ended early April. Returns November.',yoy:{thisYear:100,lastYear:90,avg:95},nextSeason:'Nov 2026',liftList:[]},
+  {id:'chamonix',name:'Chamonix Mont-Blanc',loc:'Chamonix, France',region:'intl',lat:45.9237,lng:6.8694,elev:12605,acres:2500,ikonDays:'7 days',open:'8:30 AM',close:'4:30 PM',fresh:10,base:95,quality:'Spring Snow',trails:80,trailsOpen:55,lifts:49,liftsOpen:30,status:'PRIME',links:{official:'https://www.chamonix.com',snow:'https://www.chamonix.com/snow-and-weather-report',ig:'https://www.instagram.com/chamonixmontblanc/'},airport:'GVA 1.5h.',ann:'Grands Montets still open. Vallee Blanche spring conditions. High alpine.',yoy:{thisYear:320,lastYear:290,avg:310},nextSeason:'Dec 2026',liftList:[{n:'Aiguille du Midi',t:'Cable Car',s:'on'},{n:'Grands Montets Gondola',t:'Gondola',s:'on'},{n:'Brevent Gondola',t:'Gondola',s:'on'}]},
+  {id:'zermatt',name:'Zermatt',loc:'Zermatt, Switzerland',region:'intl',lat:46.0207,lng:7.7491,elev:12739,acres:1420,ikonDays:'7 days',open:'8:30 AM',close:'4:15 PM',fresh:6,base:80,quality:'Spring Snow',trails:145,trailsOpen:100,lifts:52,liftsOpen:35,status:'GOOD',links:{official:'https://www.zermatt.ch',snow:'https://www.zermatt.ch/en/snow-report',ig:'https://www.instagram.com/zaboreal/'},airport:'GVA 3.5h. ZRH 3.5h.',ann:'Year-round glacier skiing. Matterhorn Glacier Paradise open. Spring cruising.',yoy:{thisYear:280,lastYear:260,avg:270},nextSeason:'Year-round',liftList:[{n:'Matterhorn Glacier Paradise',t:'Cable Car',s:'on'},{n:'Sunnegga Express',t:'Funicular',s:'on'},{n:'Gornergrat Railway',t:'Cog Rail',s:'on'}]},
+  {id:'vallenevado',name:'Valle Nevado',loc:'Santiago, Chile',region:'intl',lat:-33.3614,lng:-70.2478,elev:12045,acres:2225,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:40,trailsOpen:0,lifts:14,liftsOpen:0,status:'CLOSED',links:{official:'https://www.vallenevado.com',snow:'https://www.vallenevado.com/en/snow-report/',ig:'https://www.instagram.com/vallenevado/'},airport:'SCL 1.5h.',ann:'Southern hemisphere. Season runs June-October. Off-season now.',yoy:{thisYear:0,lastYear:180,avg:170},nextSeason:'Jun 2026',liftList:[]},
+  {id:'thredbo',name:'Thredbo',loc:'Kosciuszko NP, Australia',region:'intl',lat:-36.5054,lng:148.3069,elev:6726,acres:1235,ikonDays:'5 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:50,trailsOpen:0,lifts:14,liftsOpen:0,status:'CLOSED',links:{official:'https://www.thredbo.com.au',snow:'https://www.thredbo.com.au/snow-report/',ig:'https://www.instagram.com/thredboresort/'},airport:'SYD 5h. CBR 3h.',ann:'Southern hemisphere. Season runs June-October. Off-season now.',yoy:{thisYear:0,lastYear:120,avg:110},nextSeason:'Jun 2026',liftList:[]}
+];
+
+// ── ORIGINS ──
+const ORIGINS={
+  'los angeles':{lat:34.0522,lng:-118.2437,name:'Los Angeles, CA'},'la':{lat:34.0522,lng:-118.2437,name:'Los Angeles, CA'},
+  'san francisco':{lat:37.7749,lng:-122.4194,name:'San Francisco, CA'},'sf':{lat:37.7749,lng:-122.4194,name:'San Francisco, CA'},
+  'las vegas':{lat:36.1699,lng:-115.1398,name:'Las Vegas, NV'},'san diego':{lat:32.7157,lng:-117.1611,name:'San Diego, CA'},
+  'sacramento':{lat:38.5816,lng:-121.4944,name:'Sacramento, CA'},'salt lake city':{lat:40.7608,lng:-111.891,name:'Salt Lake City, UT'},
+  'slc':{lat:40.7608,lng:-111.891,name:'Salt Lake City, UT'},'reno':{lat:39.5296,lng:-119.8138,name:'Reno, NV'},
+  'fresno':{lat:36.7378,lng:-119.7871,name:'Fresno, CA'},'oakland':{lat:37.8044,lng:-122.2712,name:'Oakland, CA'},
+  'portland':{lat:45.5152,lng:-122.6784,name:'Portland, OR'},'seattle':{lat:47.6062,lng:-122.3321,name:'Seattle, WA'},
+  'denver':{lat:39.7392,lng:-104.9903,name:'Denver, CO'},'phoenix':{lat:33.4484,lng:-112.074,name:'Phoenix, AZ'},
+  'tokyo':{lat:35.6762,lng:139.6503,name:'Tokyo, Japan'},'vancouver':{lat:49.2827,lng:-123.1207,name:'Vancouver, BC'},
+  'new york':{lat:40.7128,lng:-74.006,name:'New York, NY'},'nyc':{lat:40.7128,lng:-74.006,name:'New York, NY'},
+  'chicago':{lat:41.8781,lng:-87.6298,name:'Chicago, IL'},
+  'boston':{lat:42.3601,lng:-71.0589,name:'Boston, MA'},
+  'miami':{lat:25.7617,lng:-80.1918,name:'Miami, FL'},
+  'atlanta':{lat:33.749,lng:-84.388,name:'Atlanta, GA'},
+  'dallas':{lat:32.7767,lng:-96.797,name:'Dallas, TX'},
+  'houston':{lat:29.7604,lng:-95.3698,name:'Houston, TX'},
+  'minneapolis':{lat:44.9778,lng:-93.265,name:'Minneapolis, MN'},
+  'detroit':{lat:42.3314,lng:-83.0458,name:'Detroit, MI'},
+  'philadelphia':{lat:39.9526,lng:-75.1652,name:'Philadelphia, PA'},'philly':{lat:39.9526,lng:-75.1652,name:'Philadelphia, PA'},
+  'washington dc':{lat:38.9072,lng:-77.0369,name:'Washington, DC'},'dc':{lat:38.9072,lng:-77.0369,name:'Washington, DC'},
+  'charlotte':{lat:35.2271,lng:-80.8431,name:'Charlotte, NC'},
+};
+function getOrigin(s){const k=s.toLowerCase().trim();for(const[key,v]of Object.entries(ORIGINS)){if(k.includes(key))return v}return ORIGINS['san francisco']}
+
+function distMiles(a,b){const R=3959,dL=(b.lat-a.lat)*Math.PI/180,dN=(b.lng-a.lng)*Math.PI/180;const x=Math.sin(dL/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dN/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))}
+
+// ── SKILLS ──
+const SKILL_CATS=[{id:'carving',label:'Carving'},{id:'park',label:'Park / Pipe'},{id:'powder',label:'Powder'},{id:'switch',label:'Switch Riding'},{id:'jumps',label:'Jumps & Air'},{id:'backcountry',label:'Backcountry'}];
+let skillVals=JSON.parse(localStorage.getItem('sbSkills')||'null')||{carving:55,park:30,powder:45,switch:30,jumps:35,backcountry:20};
+
+function calcLevel(v){const avg=Object.values(v).reduce((a,b)=>a+b,0)/Object.values(v).length;if(avg>=80)return{label:'Expert / Freestyle',desc:'Double blacks, big park, backcountry. Full mountain mastery.',key:'expert'};if(avg>=65)return{label:'Advanced',desc:'Confident on blacks, switch riding, mid-size park features.',key:'advanced'};if(avg>=48)return{label:'Intermediate',desc:'Solid on blues, exploring blacks. Learning to carve.',key:'intermediate'};if(avg>=30)return{label:'Novice',desc:'Comfortable on greens, beginning blues. Linking turns.',key:'novice'};return{label:'Beginner',desc:'Learning to link turns. Focus on balance and greens.',key:'beginner'}}
+
+const ROUTINES={
+  beginner:[{title:'First Steps',dur:'2 days',steps:['Skating \u2014 one foot in bindings on flat','Falling leaf: sideslip heel and toe','J-turns: heel first, then toe','Link 3 turns on gentle green','Film yourself \u2014 watch upper body']}],
+  novice:[{title:'Blue Run Progression',dur:'30 min',steps:['2 warm-up runs on easy green','Pick one blue: focus on rhythm','Short-radius turns between markers','Controlled speed check at bottom']}],
+  intermediate:[{title:'Morning Carve Warm-Up',dur:'30 min',steps:['3 groomed blues \u2014 full toe/heel carves','2 runs switch on easy blue','High-speed traverse on edge','Ollie + nollie practice on flat']},{title:'Park Introduction',dur:'45 min',steps:['Walk all features before hitting','Smallest box: straight through','50-50 on medium box','Smallest jump: straight air, land centered']}],
+  advanced:[{title:'Switch Progression',dur:'60 min',steps:['30-min switch-only on blue','Heelside switch turns','Switch 180 into small features','Cab 180: switch takeoff to forward']},{title:'Powder Day Protocol',dur:'All day',steps:['Set bindings +1.5-2" back','Dolphin turns in shin-deep snow','Treeline stashes after first groomer','Stay with a partner always']}],
+  expert:[{title:'Expert Morning Protocol',dur:'2h',steps:['Beacon check before leaving car','Scope overnight snow on south blacks','Side-country 9-11 AM \u2014 partner only','Push edge limits on steep groomed']},{title:'Backcountry Readiness',dur:'Pre-trip',steps:['Beacon drill: 3-min search','Review avalanche forecast','Know aspect + slope angle','Carry: beacon, probe, shovel, blanket','Never solo \u2014 2+ people minimum']}]
+};
+const RESOURCES={
+  beginner:[{icon:'external-link',title:'Snowboard Beginner Tutorial',url:'https://www.youtube.com/results?search_query=snowboard+beginner+2024',desc:'Shred School, SnowboardProCamp'}],
+  novice:[{icon:'external-link',title:'Linking Blue Run Turns',url:'https://www.youtube.com/results?search_query=snowboard+blue+run+technique',desc:'Intermediate series'}],
+  intermediate:[{icon:'external-link',title:'Advanced Carving',url:'https://www.youtube.com/results?search_query=snowboard+advanced+carving',desc:'GS turns and angulation'},{icon:'external-link',title:'Park 101',url:'https://www.youtube.com/results?search_query=snowboard+park+beginner+boxes',desc:'Boxes & rails safely'}],
+  advanced:[{icon:'external-link',title:'Switch Riding Mastery',url:'https://www.youtube.com/results?search_query=snowboard+switch+advanced',desc:'Full switch technique'},{icon:'star',title:'Snowboard Addiction',url:'https://www.snowboardaddiction.com',desc:'Best online school for freestyle'}],
+  expert:[{icon:'external-link',title:'Big Air Progression',url:'https://www.youtube.com/results?search_query=snowboard+540+tutorial',desc:'360-720 progression'},{icon:'star',title:'AIARE Avalanche Course',url:'https://avtraining.org/aiare-level-1/',desc:'Essential for backcountry'}]
+};
+
+// ── i18n ──
+const T={
+  en:{top_picks:'Top Picks This Weekend',this_weekend:'This Weekend',all_resorts:'All Ikon Pass Resorts',trip_plan:'Trip Planner',my_profile:'My Profile',my_level:'My Level',my_skills:'My Skills',practice:'Practice Routines',resources:'Resources',subscribe:'Subscribe',fresh:'Fresh',base:'Base',lifts:'Lifts',trails:'Trails',distance:'Distance',drive:'Est. Drive',flight:'Flight',open:'Opens',close_t:'Closes',chain_ctrl:'Chain Control',view_detail:'View Full Details',season_total:'Season Total',last_year:'Last Year',average:'5yr Average',next_season:'Next Season Opens',off_season_title:'The mountains are resting',off_season_body:'Season typically opens mid-November. Subscribe to get notified when the first snow falls at your favorite resorts.',days_until:'days until season opens',show_all:'Show all',show_less:'Show less',resorts:'resorts',storm_context:'Storm Context',location:'Location',email:'Email',saved_resort:'Favorite Resort',profile_saved:'Profile saved',seven_day:'7-Day Forecast',hourly_today:'Today Hourly',three_week:'3-Week Outlook',storm_briefing:'Storm Briefing',weather_update:'Weather Update',clear_skies:'Clear skies across the mountains',plan_next:'Plan Your Next Trip',best_windows:'Best windows in the next 3 weeks',week:'Week',snow_chance:'snow chance',expected:'expected',best_bet:'Best bet',score_explain:'What do these scores mean?',score_label:'Score',composite_ranking:'Composite ranking',snow_conditions:'Snow conditions',weather:'Weather',travel_distance:'Travel distance',crowd_factor:'Crowd factor',skill_match:'Skill match',status_labels:'Status Labels',epic:'EPIC',prime:'PRIME',good:'GOOD',limited:'LIMITED',closed:'CLOSED',epic_desc:'15"+ fresh powder day',prime_desc:'8-15" solid conditions',good_desc:'3-8" decent snow',limited_desc:'Minimal natural snow',closed_desc:'Not operating',save_profile:'Save Profile',favorite_resorts:'Favorite Resorts',add_resort:'+ Add resort',powder_alerts:'Powder Alerts',never_miss:'Never miss an epic day',notify_text:'We\'ll notify you when conditions peak at your favorite resorts',condition_alerts:'Condition alerts',storm_forecasts:'Storm forecasts',zero_spam:'Zero spam',subscribed:'You\'re in. We\'ll be in touch when it snows.',selected_resort:'Selected Resort',itinerary:'Sample Powder Day Itinerary',packing:'Packing Checklist',quality:'Quality',snowfall_in:'Snowfall (in)',wind_mph:'Wind (mph)',more_snow:'More snow',drying:'Drying',steady:'Steady',lift_status:'Lifts Status',yoy_inches:'Year over Year (inches)',this_year:'This Year',demo_forecast:'Demo forecast data',demo_subscribe:'subscribe for real alerts',forecast_data:'Forecast data',snow_report:'Snow Report',official_site:'Official Site',instagram:'Instagram',home:'Home',trip:'Trip',profile:'Profile',demo_data:'Demo Data',updated_today:'Updated Today',started:'Started',peaks:'Peaks',clears:'Clears',powder_day:'Powder Day'},
+  zh:{top_picks:'本周末推荐',this_weekend:'本周末',all_resorts:'所有IKON滑雪场',trip_plan:'行程规划',my_profile:'我的资料',my_level:'我的等级',my_skills:'我的技能',practice:'练习计划',resources:'资源',subscribe:'订阅',fresh:'新雪',base:'基础雪',lifts:'缆车',trails:'雪道',distance:'距离',drive:'预计车程',flight:'航班',open:'开放',close_t:'关闭',chain_ctrl:'链条控制',view_detail:'查看详情',season_total:'本季总量',last_year:'去年',average:'5年均值',next_season:'下季开放',off_season_title:'山在休息',off_season_body:'雪季通常在11月中旬开始。订阅以获得首雪通知。',days_until:'天后开季',show_all:'显示全部',show_less:'收起',resorts:'滑雪场',storm_context:'风暴信息',location:'位置',email:'邮箱',saved_resort:'收藏滑雪场',profile_saved:'已保存',seven_day:'7天预报',hourly_today:'今日逐时',three_week:'3周展望',storm_briefing:'风暴简报',weather_update:'天气更新',clear_skies:'山区天气晴朗',plan_next:'规划下次行程',best_windows:'未来3周最佳窗口',week:'第',snow_chance:'降雪概率',expected:'预计',best_bet:'最佳推荐',score_explain:'这些分数是什么意思？',score_label:'分数',composite_ranking:'综合排名',snow_conditions:'雪况',weather:'天气',travel_distance:'路程',crowd_factor:'人流量',skill_match:'技能匹配',status_labels:'状态标签',epic:'极佳',prime:'优秀',good:'良好',limited:'有限',closed:'关闭',epic_desc:'15寸以上新粉雪日',prime_desc:'8-15寸良好雪况',good_desc:'3-8寸尚可降雪',limited_desc:'自然降雪极少',closed_desc:'未运营',save_profile:'保存资料',favorite_resorts:'收藏滑雪场',add_resort:'+ 添加滑雪场',powder_alerts:'粉雪提醒',never_miss:'不错过每个好雪天',notify_text:'当你最爱的滑雪场条件最佳时我们会通知你',condition_alerts:'雪况提醒',storm_forecasts:'暴风雪预报',zero_spam:'无垃圾邮件',subscribed:'已订阅，有雪时我们会通知你。',selected_resort:'已选滑雪场',itinerary:'粉雪日行程示例',packing:'装备清单',quality:'雪质',snowfall_in:'降雪量（英寸）',wind_mph:'风速（mph）',more_snow:'更多降雪',drying:'转晴',steady:'稳定',lift_status:'缆车状态',yoy_inches:'年度对比（英寸）',this_year:'今年',demo_forecast:'演示预报数据',demo_subscribe:'订阅获取真实提醒',forecast_data:'预报数据',snow_report:'雪况报告',official_site:'官方网站',instagram:'Instagram',home:'首页',trip:'行程',profile:'资料',demo_data:'演示数据',updated_today:'今日更新',started:'开始',peaks:'高峰',clears:'放晴',powder_day:'粉雪日'},
+  ja:{top_picks:'今週末のおすすめ',this_weekend:'今週末',all_resorts:'全IKONリゾート',trip_plan:'旅行プランナー',my_profile:'マイプロフィール',my_level:'レベル',my_skills:'スキル',practice:'練習ルーティン',resources:'リソース',subscribe:'登録',fresh:'新雪',base:'ベース',lifts:'リフト',trails:'コース',distance:'距離',drive:'運転時間',flight:'フライト',open:'オープン',close_t:'クローズ',chain_ctrl:'チェーン規制',view_detail:'詳細を見る',season_total:'シーズン合計',last_year:'昨年',average:'5年平均',next_season:'次シーズン',off_season_title:'山は休んでいます',off_season_body:'シーズンは通常11月中旬に始まります。',days_until:'日後にシーズン開始',show_all:'全て表示',show_less:'折りたたむ',resorts:'リゾート',storm_context:'嵐の状況',location:'場所',email:'メール',saved_resort:'お気に入り',profile_saved:'保存済み',seven_day:'7日予報',hourly_today:'今日の時間別',three_week:'3週間の見通し',storm_briefing:'嵐情報',weather_update:'天気更新',clear_skies:'山岳地帯は晴天',plan_next:'次の旅行を計画',best_windows:'今後3週間のベストタイミング',week:'第',snow_chance:'降雪確率',expected:'予想',best_bet:'おすすめ',score_explain:'スコアの意味は？',score_label:'スコア',composite_ranking:'総合評価',snow_conditions:'雪の状態',weather:'天気',travel_distance:'移動距離',crowd_factor:'混雑度',skill_match:'スキルマッチ',status_labels:'ステータス',epic:'最高',prime:'優良',good:'良好',limited:'限定的',closed:'クローズ',epic_desc:'15インチ以上の新雪パウダーデイ',prime_desc:'8-15インチの良好なコンディション',good_desc:'3-8インチのまずまずの雪',limited_desc:'自然降雪が少ない',closed_desc:'営業していない',save_profile:'プロフィール保存',favorite_resorts:'お気に入りリゾート',add_resort:'+ リゾート追加',powder_alerts:'パウダーアラート',never_miss:'最高の日を見逃さない',notify_text:'お気に入りリゾートのコンディションがピークの時にお知らせします',condition_alerts:'コンディション通知',storm_forecasts:'嵐の予報',zero_spam:'スパムなし',subscribed:'登録完了。雪が降ったらお知らせします。',selected_resort:'選択中のリゾート',itinerary:'パウダーデイのスケジュール例',packing:'持ち物チェックリスト',quality:'雪質',snowfall_in:'降雪量（インチ）',wind_mph:'風速（mph）',more_snow:'雪増加',drying:'乾燥',steady:'安定',lift_status:'リフト状況',yoy_inches:'前年比（インチ）',this_year:'今年',demo_forecast:'デモ予報データ',demo_subscribe:'リアルアラートを購読',forecast_data:'予報データ',snow_report:'積雪レポート',official_site:'公式サイト',instagram:'Instagram',home:'ホーム',trip:'旅行',profile:'プロフィール',demo_data:'デモデータ',updated_today:'本日更新',started:'開始',peaks:'ピーク',clears:'晴れ',powder_day:'パウダーデイ'}
+};
+let lang=localStorage.getItem('sbLang')||'en';
+function t(k){return(T[lang]&&T[lang][k])||T.en[k]||k}
+function setLang(l){
+  lang=l;localStorage.setItem('sbLang',l);
+  document.querySelectorAll('.lang-option').forEach(o=>o.classList.toggle('active',o.textContent.startsWith(l==='en'?'EN':l==='zh'?'\u4E2D\u6587':'\u65E5\u672C\u8A9E')));
+  document.getElementById('langLabel').textContent=l==='en'?'EN':l==='zh'?'\u4E2D\u6587':'\u65E5\u672C\u8A9E';
+  document.querySelectorAll('[data-i18n]').forEach(el=>{const v=t(el.dataset.i18n);if(v)el.textContent=v});
+  // Update nav labels
+  const navItems=document.querySelectorAll('.nav-item');
+  if(navItems[0])navItems[0].querySelector('.nav-label').textContent=t('home');
+  if(navItems[1])navItems[1].querySelector('.nav-label').textContent=t('trip');
+  if(navItems[2])navItems[2].querySelector('.nav-label').textContent=t('profile');
+  closeLangMenu();
+  destroyMaps();
+  renderAll();
+}
+
+// ── STATE ──
+let activeResort=localStorage.getItem('sbResort')||'mammoth';
+let userLocation=localStorage.getItem('sbOrigin')||'San Francisco, CA';
+let currentTab='home';
+let showAllResorts=false;
+
+// ── SCORING (Fixed granular travel score) ──
+function scoreResort(r,origin){
+  if(r.status==='CLOSED')return 0;
+  const dist=distMiles(origin,{lat:r.lat,lng:r.lng});
+  const snowScore=Math.min(r.fresh*2.5+r.base*0.08,40);
+  const weatherScore=r.fresh>0?18:12;
+  let travelScore;
+  if(r.region==='intl'){travelScore=dist>5000?8:10}
+  else if(dist<50) travelScore=25;
+  else if(dist<500) travelScore=Math.round(25-dist/500*20); // linear: 25 at 0mi -> 5 at 500mi
+  else travelScore=3;
+  // Skill match bonus
+  const lv=calcLevel(skillVals);
+  let skillBonus=0;
+  if(lv.key==='beginner'&&r.id==='bigbear')skillBonus=5;
+  if(lv.key==='expert'&&(r.id==='snowbird'||r.id==='revelstoke'))skillBonus=5;
+  if(lv.key==='intermediate'&&r.id==='brighton')skillBonus=3;
+  const crowdScore=dist>500?8:r.fresh>10?6:10;
+  // Favorite resort bonus
+  const favs=JSON.parse(localStorage.getItem('sbFavorites')||'[]');
+  const favoriteBonus=favs.includes(r.id)?8:0;
+  return Math.round(Math.min(snowScore+weatherScore+travelScore+crowdScore+skillBonus+favoriteBonus,100));
+}
+
+function getTravelInfo(origin,r){
+  const dist=Math.round(distMiles(origin,{lat:r.lat,lng:r.lng}));
+  const hours=dist/48;const h=Math.floor(hours);const m=Math.round((hours-h)*60);
+  const driveStr=`${h}h ${m}m`;
+  let flightStr=null;
+  if(r.region==='us'&&dist>400)flightStr='SLC ~1h 40m + drive';
+  if(r.id==='niseko')flightStr='NRT ~10h + 2.5h drive';
+  if(r.id==='revelstoke')flightStr='YLW ~2.5h + 2.5h drive';
+  if(r.id==='chamonix'||r.id==='zermatt')flightStr='GVA ~11h + drive';
+  if(r.id==='vallenevado')flightStr='SCL ~12h + 1.5h drive';
+  if(r.id==='thredbo')flightStr='SYD ~15h + 5h drive';
+  if(r.id==='tremblant')flightStr='YUL ~5h + 1.5h drive';
+  const chainResorts=['palisades','mammoth','june','snowbird','brighton','solitude','alta'];
+  const hasChain=chainResorts.includes(r.id);
+  return{dist,driveStr,flightStr,hasChain,driveHours:hours}
+}
+
+// ── STORM CONTEXT (per resort) ──
+function getStormContext(r){
+  const now=new Date();const dow=now.getDay();
+  if(r.fresh<3) return null;
+  const stormStart=dow<=4?'Thursday':'last night';
+  const stormPeak=dow<=5?'Saturday':'today';
+  const clearDay=dow<=5?'Sunday':'tomorrow';
+  const bestWindow=dow<=5?'Sunday morning':'tomorrow morning';
+  return{stormStart,stormPeak,clearDay,bestWindow};
+}
+
+// ── GENERATE DEMO FORECAST DATA ──
+function generateForecast(r){
+  const days=[];
+  const now=new Date();
+  const conditions=['w-snow','w-heavy-snow','w-partly-cloudy','w-cloudy','w-sunny','w-snow','w-partly-cloudy'];
+  const baseTemp=r.elev>10000?18:r.elev>8000?24:30;
+  for(let i=0;i<7;i++){
+    const d=new Date(now);d.setDate(d.getDate()+i);
+    const dayName=i===0?'Today':i===1?'Tomorrow':d.toLocaleDateString('en-US',{weekday:'short'});
+    const high=baseTemp+Math.round(Math.random()*10-3);
+    const low=high-Math.round(8+Math.random()*6);
+    const windBase=r.elev>10000?15:10;
+    const wind=windBase+Math.round(Math.random()*12);
+    const snowfall=i<3?Math.round(r.fresh/(i+1)*0.6+Math.random()*4):Math.round(Math.random()*3);
+    days.push({dayName,date:d,high,low,wind,snowfall,condition:conditions[i]});
+  }
+  return days;
+}
+
+function generateHourly(r){
+  const hours=[];
+  const baseTemp=r.elev>10000?16:r.elev>8000?22:28;
+  for(let h=0;h<24;h++){
+    const temp=baseTemp+Math.round(Math.sin((h-14)*Math.PI/12)*6+Math.random()*3);
+    const wind=8+Math.round(Math.random()*15);
+    const snow=h>=2&&h<=10?Math.round(Math.random()*2*10)/10:0;
+    hours.push({hour:h,temp,wind,snow});
+  }
+  return hours;
+}
+
+function generateWeekOutlook(r){
+  const baseFall=r.fresh>10?r.fresh:6;
+  return [
+    {label:'This Week',low:Math.round(baseFall*0.8),high:Math.round(baseFall*1.4),trend:'up'},
+    {label:'Next Week',low:Math.round(baseFall*0.3),high:Math.round(baseFall*0.7),trend:'flat'},
+    {label:'Week 3',low:Math.round(baseFall*0.5),high:Math.round(baseFall*1.1),trend:'up'}
+  ];
+}
+
+// ── WEEKEND DATE RANGE ──
+function getWeekendRange(){
+  const now=new Date();
+  const dow=now.getDay();
+  const sat=new Date(now);sat.setDate(now.getDate()+(6-dow));
+  const sun=new Date(sat);sun.setDate(sat.getDate()+1);
+  return sat.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' \u2013 '+sun.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+// ── TAB SWITCHING ──
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active-tab'));
+  document.getElementById(tab).classList.add('active-tab');
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelector(`.nav-item[data-tab="${tab}"]`).classList.add('active');
+  if(tab==='home'){renderTopPicks();renderAllResorts();}
+  if(tab==='trip')renderTrip();
+  if(tab==='profile')renderProfile();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── RENDER: WEATHER OVERVIEW ──
+function renderWeatherOverview(){
+  const now=new Date();const dow=now.getDay();
+  const origin=getOrigin(userLocation);
+  const topResort=RESORTS.filter(r=>r.status!=='CLOSED').sort((a,b)=>scoreResort(b,origin)-scoreResort(a,origin))[0];
+  if(!topResort||topResort.fresh<3){
+    document.getElementById('weatherOverview').innerHTML=`
+      <div class="wx-overview">
+        <div class="wx-eyebrow">${icon('sun',12)} ${t('weather_update')}</div>
+        <div class="wx-headline">${t('clear_skies')}</div>
+        <div class="wx-summary">No significant snowfall in the forecast. ${topResort?topResort.name+' has a '+topResort.base+'" packed base for groomer days.':'All resorts quiet.'} Check back — spring storms can surprise.</div>
+      </div>`;
+    return;
+  }
+  const stormStart=dow<=4?'Thursday':'Friday';
+  const stormPeak=dow<=5?'Saturday':'Today';
+  const clearDay=dow<=5?'Sunday':'Tomorrow';
+  const phases=[
+    {label:t('started'),day:stormStart,state:'past'},
+    {label:t('peaks'),day:stormPeak,state:dow<=5?'active':'past'},
+    {label:t('clears'),day:clearDay,state:dow<=5?'':'active'},
+    {label:t('powder_day'),day:dow<=5?'Sunday AM':'Tomorrow AM',state:''}
+  ];
+  document.getElementById('weatherOverview').innerHTML=`
+    <div class="wx-overview">
+      <div class="wx-eyebrow">${icon('cloud-snow',12)} ${t('storm_briefing')} · ${t('updated_today')}</div>
+      <div class="wx-headline">${topResort.fresh}" storm hitting ${topResort.name}</div>
+      <div class="wx-timeline">
+        ${phases.map(p=>`<div class="wx-phase">
+          <div class="wx-phase-label">${p.label}</div>
+          <div class="wx-phase-dot ${p.state}"></div>
+          <div class="wx-phase-day">${p.day}</div>
+        </div>`).join('')}
+      </div>
+      <div class="wx-summary">Pacific front since <strong>${stormStart}</strong>, dropping ${topResort.fresh}" of ${topResort.quality.toLowerCase()}. Peaks <strong>${stormPeak}</strong> with 4-6" more, clears <strong>${clearDay}</strong>. Best window: <strong>${clearDay} morning</strong> for fresh tracks.</div>
+      <div class="wx-source">${icon('external-link',10)} <a href="${topResort.links.snow}" target="_blank">${topResort.name} Snow Report</a></div>
+    </div>`;
+}
+
+// ── RENDER: NEXT TRIP (3-week outlook with 3 resorts per week) ──
+function renderNextTrip(){
+  const now=new Date();
+  const origin=getOrigin(userLocation);
+  document.getElementById('nextTripTitle').innerHTML=`${icon('calendar',18)} ${t('plan_next')}`;
+  document.querySelector('#nextTripTitle + .zone-subtitle')||void 0;
+  // Update the subtitle below the title
+  const ntSub=document.getElementById('nextTripTitle').parentElement.querySelector('.zone-subtitle');
+  if(ntSub)ntSub.textContent=t('best_windows');
+  const weeks=[];
+  for(let w=1;w<=3;w++){
+    const weekStart=new Date(now);weekStart.setDate(weekStart.getDate()+w*7);
+    const weekEnd=new Date(weekStart);weekEnd.setDate(weekEnd.getDate()+6);
+    const loc=lang==='zh'?'zh-CN':lang==='ja'?'ja-JP':'en-US';
+    const startStr=weekStart.toLocaleDateString(loc,{month:'short',day:'numeric'});
+    const endStr=weekEnd.toLocaleDateString(loc,{month:'short',day:'numeric'});
+    const snowChance=w===1?75:w===2?45:30;
+    const expectedSnow=w===1?'8-14"':w===2?'4-8"':w===3?'2-6"':'\u2014';
+    const trend=w===1?'up':w===2?'steady':'down';
+    const trendIcon=trend==='up'?icon('chevron-up',12):trend==='down'?icon('chevron-down',12):'\u2192';
+    const trendColor=trend==='up'?'var(--fresh)':trend==='down'?'var(--warn)':'var(--text2)';
+    // Get top 3 resorts for this week
+    const scored=RESORTS.filter(r=>r.status!=='CLOSED').map(r=>({...r,score:scoreResort(r,origin)})).sort((a,b)=>b.score-a.score);
+    const top3=scored.slice(w===1?0:w===2?1:2, w===1?3:w===2?4:5);
+    weeks.push({weekLabel:`${t('week')}${lang==='en'?' ':''}${w}`,dateRange:`${startStr} \u2013 ${endStr}`,snowChance,expectedSnow,trend,trendIcon,trendColor,top3});
+  }
+  document.getElementById('nextTripContent').innerHTML=weeks.map(w=>`
+    <div class="outlook-row" style="flex-wrap:wrap">
+      <div class="outlook-week">${w.weekLabel}</div>
+      <div class="outlook-info">
+        <div class="outlook-title">${w.dateRange}</div>
+        <div class="outlook-detail">${w.snowChance}% ${t('snow_chance')} &middot; ${w.expectedSnow} ${t('expected')}</div>
+        <div style="margin-top:6px">
+          ${w.top3.map(r=>{
+            const regionTag=r.region==='ca'?'CA':r.region==='us'?'US':'INTL';
+            const tagClass=r.region==='ca'?'cat-ca':r.region==='us'?'cat-us':'cat-intl';
+            return `<div class="outlook-resort-row" onclick="scrollToResort('${r.id}');event.stopPropagation()">
+              <span class="outlook-region-tag ${tagClass}">${regionTag}</span>
+              <strong style="color:var(--white)">${r.name}</strong>
+              <span>&middot; Score ${r.score}</span>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+      <div class="outlook-trend" style="color:${w.trendColor}">${w.trendIcon} ${w.expectedSnow}</div>
+    </div>`).join('')+`
+    <div class="wx-source" style="margin-top:6px">${icon('alert-triangle',10)} ${t('demo_forecast')} — ${t('demo_subscribe')}</div>`;
+}
+
+function scrollToResort(id){
+  // Show all resorts first so we can find it
+  showAllResorts=true;
+  renderAllResorts();
+  setTimeout(()=>{
+    const el=document.querySelector(`.resort-row[data-resort-id="${id}"]`);
+    if(el){el.scrollIntoView({behavior:'smooth',block:'center'});el.style.borderColor='var(--accent)';setTimeout(()=>{el.style.borderColor=''},2000);}
+    else openDetail(id);
+  },100);
+}
+
+// ── RENDER: TOP 3 (expanded by default, with storm context, clickable stats) ──
+function renderTopPicks(){
+  const origin=getOrigin(userLocation);
+  const scored=RESORTS.filter(r=>r.status!=='CLOSED').map(r=>({...r,score:scoreResort(r,origin),travel:getTravelInfo(origin,r)}));
+  const caTop=scored.filter(r=>r.region==='ca').sort((a,b)=>b.score-a.score)[0];
+  const usTop=scored.filter(r=>r.region==='us').sort((a,b)=>b.score-a.score)[0];
+  const intlTop=scored.filter(r=>r.region==='intl').sort((a,b)=>b.score-a.score)[0];
+  const picks=[caTop,usTop,intlTop].filter(Boolean);
+
+  document.getElementById('weekendTitle').innerHTML=`${icon('cloud-snow',20)} ${t('this_weekend')}`;
+  document.getElementById('weekendDateRange').textContent=getWeekendRange();
+
+  document.getElementById('topPicks').innerHTML=picks.map((r,i)=>{
+    const catLabel=r.region==='ca'?'CA':r.region==='us'?'US':'INTL';
+    const catClass=r.region==='ca'?'cat-ca':r.region==='us'?'cat-us':'cat-intl';
+    const travelLine=r.travel.flightStr?`${icon('plane',12)} ${r.travel.flightStr}`:r.travel.driveStr+' drive';
+    const hlClass=r.score>=80?'hl-go':r.score>=65?'hl-good':'hl-ok';
+    const hlText=r.score>=80?'Epic conditions':r.score>=65?'Great conditions':'Worth considering';
+    const storm=getStormContext(r);
+    const stormHTML=storm?`<div class="storm-context">
+      <div class="storm-label">${icon('cloud-snow',12)} ${t('storm_context')}</div>
+      <strong>Storm started:</strong> ${storm.stormStart} &middot; <strong>Peaks:</strong> ${storm.stormPeak} &middot; <strong>Clears:</strong> ${storm.clearDay}<br>
+      <strong>Best day window:</strong> ${storm.bestWindow}
+    </div>`:'';
+    return`<div class="rec-card expanded" data-resort="${r.id}">
+      <div class="rec-header" onclick="toggleRec(this.parentElement)">
+        <div class="rec-category ${catClass}">${catLabel}</div>
+        <div class="rec-score">${r.score}</div>
+        <div class="rec-info">
+          <div class="rec-name">${r.name}</div>
+          <div class="rec-sub">${icon('cloud-snow',12)} ${r.fresh}" fresh &middot; ${travelLine}${r.travel.hasChain?' &middot; '+icon('chain',12):''}${r.id==='brighton'?' &middot; Night skiing':''}</div>
+          <div class="rec-highlight ${hlClass}">${icon('star',10)} ${hlText}</div>
+        </div>
+        <div class="rec-chevron">${icon('chevron-up',14)}</div>
+      </div>
+      <div class="rec-detail" style="max-height:none"><div class="rec-detail-inner">
+        ${stormHTML}
+        <div class="detail-narrative">${getResortNarrative(r)}</div>
+        <div class="detail-stats">
+          <div class="d-stat"><div class="d-stat-label">${icon('cloud-snow',12)} ${t('fresh')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${r.fresh}"</a></div></div>
+          <div class="d-stat"><div class="d-stat-label">${icon('mountain',12)} ${t('base')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${r.base}"</a></div></div>
+          <div class="d-stat"><div class="d-stat-label">${icon('bolt',12)} ${t('lifts')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${r.liftsOpen}/${r.lifts}</a></div></div>
+        </div>
+        ${r.travel.dist<800?`<div class="map-wrap"><div class="map-el" id="map-${r.id}"></div></div>`:''}
+        <div class="drive-row">
+          <div class="drive-cell"><div class="drive-label">${icon('pin',12)} ${t('distance')}</div><div class="drive-val">${r.travel.dist}<span style="font-size:11px;color:var(--text2)"> mi</span></div></div>
+          <div class="drive-cell"><div class="drive-label">${r.travel.flightStr?icon('plane',12):icon('clock',12)} ${r.travel.flightStr?t('flight'):t('drive')}</div><div class="drive-val" style="color:${r.travel.driveHours>8?'var(--danger)':r.travel.hasChain?'var(--warn)':'var(--fresh)'}">${r.travel.flightStr||r.travel.driveStr}</div>${r.travel.hasChain?'<div class="drive-note">+30 min for chains</div>':''}</div>
+        </div>
+        ${r.travel.hasChain?getChainAlertHTML(r):''}
+        <div class="data-source">${icon('external-link',10)} Source: <a href="${r.links.snow}" target="_blank">${r.name} Snow Report ${icon('external-link',10)}</a></div>
+        <button class="cta-btn" onclick="event.stopPropagation();openDetail('${r.id}')">${icon('eye',14)} ${t('view_detail')}</button>
+      </div></div>
+    </div>`}).join('');
+
+  // Init maps for expanded cards
+  setTimeout(()=>{
+    picks.forEach(r=>{
+      if(r.travel.dist<800){
+        const m=document.getElementById('map-'+r.id);
+        if(m&&!m._leaflet_id)initResortMap(m);
+      }
+    });
+  },300);
+}
+
+function getResortNarrative(r){
+  if(r.region==='intl'){
+    if(r.id==='niseko')return`<strong>Niseko is in peak Japow season.</strong> 24" of legendary dry powder overnight. Night skiing until 8:30 PM means you can ride all day and evening. The tree runs are wide open. If you've been dreaming about Japan, this is the week.`;
+    if(r.id==='revelstoke')return`<strong>Revelstoke just got hammered.</strong> 20" of deep BC powder on North America's biggest vertical drop (5,620 ft). Expert terrain is fully open. This is big-mountain riding at its finest \u2014 not for the faint of heart.`;
+    if(r.id==='chamonix')return`<strong>Chamonix spring conditions.</strong> High alpine still has solid coverage. Grands Montets and Vallee Blanche offer world-class spring skiing with stunning Mont-Blanc views.`;
+    if(r.id==='zermatt')return`<strong>Zermatt glacier skiing.</strong> Year-round operations on the Matterhorn Glacier Paradise. Spring cruising with incredible Alpine scenery.`;
+  }
+  if(r.fresh>=15)return`<strong>${r.fresh}" of fresh ${r.quality.toLowerCase()}</strong> makes this a powder day. ${r.liftsOpen}/${r.lifts} lifts spinning. ${r.ann}`;
+  if(r.fresh>=8)return`Solid <strong>${r.fresh}" overnight</strong>. ${r.quality} conditions across the mountain. ${r.trailsOpen}/${r.trails} trails open. ${r.ann}`;
+  return`${r.quality} conditions with a ${r.base}" base. ${r.trailsOpen}/${r.trails} trails open. ${r.ann}`;
+}
+
+function getChainAlertHTML(r){
+  const alerts={
+    mammoth:{road:'SR-203 to Mammoth Lakes',src:'Caltrans',url:'https://quickmap.dot.ca.gov',since:'4:00 AM',expected:'Ongoing during storm'},
+    palisades:{road:'I-80 Eastbound to Tahoe',src:'Caltrans',url:'https://quickmap.dot.ca.gov',since:'4:20 AM',expected:'Lift by 2:00 PM'},
+    june:{road:'US-395 to June Lake',src:'Caltrans',url:'https://roads.dot.ca.gov',since:'3:00 AM',expected:'Ongoing'},
+    snowbird:{road:'Little Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'11:00 PM last night',expected:'All day during storm'},
+    brighton:{road:'Big Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'10:00 PM last night',expected:'4WD recommended'},
+    solitude:{road:'Big Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'10:00 PM last night',expected:'4WD recommended'},
+    alta:{road:'Little Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'11:00 PM last night',expected:'All day during storm'},
+  };
+  const a=alerts[r.id];if(!a)return'';
+  return`<div class="chain-alert"><div class="chain-icon">${icon('alert-triangle',16)}</div><div><div class="chain-title">${icon('chain',12)} ${t('chain_ctrl')} R2 \u2014 ${a.road}</div><div class="chain-meta">Active since ${a.since}. All vehicles must carry chains.<br>Expected: ${a.expected}.</div><div class="chain-source"><a href="${a.url}" target="_blank">${a.src} ${icon('external-link',10)}</a> &middot; Updated ${new Date().getHours()>6?'this morning':'last night'}</div></div></div>`;
+}
+
+// ── RENDER: LEGEND ──
+function renderLegend(){
+  document.getElementById('legendWrap').innerHTML=`
+    <div class="legend-toggle" id="legendToggle" onclick="toggleLegend()">
+      ${icon('info',14)} ${t('score_explain')} ${icon('chevron-down',12)}
+    </div>
+    <div class="legend-body" id="legendBody">
+      <div class="legend-content">
+        <strong>${t('score_label')} (0-100)</strong> — ${t('composite_ranking')}:
+        <div style="padding-left:12px;margin:4px 0">
+          ${t('snow_conditions')} <strong>40%</strong> &middot; ${t('weather')} <strong>18%</strong> &middot; ${t('travel_distance')} <strong>25%</strong> &middot; ${t('crowd_factor')} <strong>10%</strong> &middot; ${t('skill_match')} <strong>7%</strong>
+        </div>
+        <div style="margin-top:10px"><strong>${t('status_labels')}:</strong></div>
+        <div class="legend-row"><div class="legend-dot" style="background:var(--fresh)"></div> <strong>${t('epic')}</strong> — ${t('epic_desc')}</div>
+        <div class="legend-row"><div class="legend-dot" style="background:var(--sky)"></div> <strong>${t('prime')}</strong> — ${t('prime_desc')}</div>
+        <div class="legend-row"><div class="legend-dot" style="background:var(--accent)"></div> <strong>${t('good')}</strong> — ${t('good_desc')}</div>
+        <div class="legend-row"><div class="legend-dot" style="background:var(--warn)"></div> <strong>${t('limited')}</strong> — ${t('limited_desc')}</div>
+        <div class="legend-row"><div class="legend-dot" style="background:var(--text3)"></div> <strong>${t('closed')}</strong> — ${t('closed_desc')}</div>
+      </div>
+    </div>`;
+}
+
+function toggleLegend(){
+  const toggle=document.getElementById('legendToggle');
+  const body=document.getElementById('legendBody');
+  toggle.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+// ── RENDER: ALL RESORTS (top 10 + show more, grouped by status when expanded) ──
+function renderAllResorts(){
+  const origin=getOrigin(userLocation);
+  const scored=RESORTS.map(r=>({...r,score:scoreResort(r,origin),travel:getTravelInfo(origin,r)})).sort((a,b)=>b.score-a.score);
+
+  renderLegend();
+
+  if(!showAllResorts){
+    // Show top 10 by score
+    const toShow=scored.slice(0,10);
+    document.getElementById('allResorts').innerHTML=toShow.map(r=>renderResortRow(r)).join('');
+    document.getElementById('showMoreWrap').innerHTML=`<button class="show-more-btn" onclick="showAllResorts=true;renderAllResorts()">${icon('chevron-down',14)} ${t('show_all')} ${scored.length} ${t('resorts')}</button>`;
+  } else {
+    // Group by status: EPIC, PRIME, GOOD, LIMITED, CLOSED
+    const statusOrder=['EPIC','PRIME','GOOD','LIMITED','CLOSED'];
+    const statusColors={EPIC:'var(--fresh)',PRIME:'var(--sky)',GOOD:'var(--accent)',LIMITED:'var(--warn)',CLOSED:'var(--text3)'};
+    let html='';
+    statusOrder.forEach(status=>{
+      const group=scored.filter(r=>r.status===status);
+      if(group.length===0)return;
+      html+=`<div class="status-group-header" style="color:${statusColors[status]}">${status} (${group.length})</div>`;
+      html+=group.map(r=>renderResortRow(r)).join('');
+    });
+    document.getElementById('allResorts').innerHTML=html;
+    document.getElementById('showMoreWrap').innerHTML=`<button class="show-more-btn" onclick="showAllResorts=false;renderAllResorts()">${icon('chevron-up',14)} ${t('show_less')}</button>`;
+  }
+}
+
+function renderResortRow(r){
+  const chipClass=r.status==='EPIC'?'ch-epic':r.status==='PRIME'?'ch-prime':r.status==='GOOD'?'ch-good':r.status==='LIMITED'?'ch-limited':'ch-closed';
+  const bgClass=r.status==='EPIC'?'status-bg-epic':r.status==='PRIME'?'status-bg-prime':r.status==='GOOD'?'status-bg-good':r.status==='LIMITED'?'status-bg-limited':'status-bg-closed';
+  const travelLine=r.travel.flightStr?icon('plane',10)+' '+r.travel.flightStr:r.travel.driveStr;
+  return`<div class="resort-row ${bgClass}${r.status==='CLOSED'?' closed-resort':''}" data-resort-id="${r.id}" onclick="openDetail('${r.id}')">
+    <div class="rr-score"${r.status==='CLOSED'?' style="color:var(--text3)"':''}>${r.status==='CLOSED'?'\u2014':r.score}</div>
+    <div class="rr-info"><div class="rr-name">${r.name}</div><div class="rr-meta">${icon('cloud-snow',10)} ${r.fresh}" fresh &middot; ${travelLine} &middot; Ikon: ${r.ikonDays}</div></div>
+    <div class="rr-chip ${chipClass}">${r.status}</div>
+  </div>`;
+}
+
+// ── RENDER: TRIP ──
+function renderTrip(){
+  const r=RESORTS.find(x=>x.id===activeResort)||RESORTS[0];
+  const origin=getOrigin(userLocation);
+  const ti=getTravelInfo(origin,r);
+  const score=scoreResort(r,origin);
+  document.getElementById('tripContent').innerHTML=`
+    <div class="level-card" style="margin-bottom:16px">
+      <div class="level-label">${icon('mountain',12)} ${t('selected_resort')}</div>
+      <div class="level-name">${r.name}</div>
+      <div class="level-desc">${r.loc} &middot; ${r.elev.toLocaleString()} ft &middot; Ikon: ${r.ikonDays}</div>
+    </div>
+    <div class="trip-map-wrap"><div class="trip-map-el" id="trip-map"></div></div>
+    <div class="detail-stats" style="margin:12px 0">
+      <div class="d-stat"><div class="d-stat-label">${icon('star',10)} ${t('score_label')}</div><div class="d-stat-val" style="color:${score>=80?'var(--fresh)':score>=65?'var(--sky)':'var(--warn)'}">${r.status==='CLOSED'?'\u2014':score}</div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('cloud-snow',10)} ${t('fresh')}</div><div class="d-stat-val">${r.fresh}"</div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('mountain',10)} ${t('base')}</div><div class="d-stat-val">${r.base}"</div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('pin',10)} ${t('distance')}</div><div class="d-stat-val">${ti.dist}<span style="font-size:11px;color:var(--text2)"> mi</span></div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('clock',10)} ${t('drive')}</div><div class="d-stat-val" style="font-size:13px">${ti.flightStr||ti.driveStr}</div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('bolt',10)} ${t('lifts')}</div><div class="d-stat-val">${r.liftsOpen}/${r.lifts}</div></div>
+    </div>
+    <div class="sec-label">${icon('calendar',12)} ${t('itinerary')}</div>
+    ${[['5:30 AM','Depart Early',`Beat traffic. ${ti.driveStr} to ${r.name}. Chains in trunk.`],
+       ['~'+r.open,'Arrive & Gear Up','Park early. Beacon check. Snacks in pack.'],
+       ['First Lift','Summit \u2014 Fresh Lines','Head to top lift immediately. Hit untracked lines.'],
+       ['10:30 AM','Side-Country Window','With partner only. South-facing stashes.'],
+       ['12:00 PM','Lunch Break','On-mountain or packed lunch. Rest boots.'],
+       ['1:00 PM','Park or Groomers','Afternoon = reset park features or buttery corduroy.'],
+       ['3:30 PM','Last Runs','Golden hour carving. Best snow surface of the day.'],
+       [r.close,'Apr\u00E8s-Ski','Rehydrate. Mountain bar. Plan tomorrow.']
+    ].map(([time,title,detail])=>`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)"><div style="font-size:10px;color:var(--accent);min-width:60px;display:flex;align-items:flex-start;gap:4px">${icon('clock',10)} ${time}</div><div><div style="font-size:12px;font-weight:500;color:var(--white)">${title}</div><div style="font-size:11px;color:var(--text2);margin-top:2px">${detail}</div></div></div>`).join('')}
+    <div class="sec-label" style="margin-top:24px">${icon('check',12)} ${t('packing')}</div>
+    ${[['Safety','Avalanche beacon \u00B7 Probe + shovel \u00B7 MIPS helmet \u00B7 First aid'],
+       ['Clothing','Merino base \u00B7 Fleece mid \u00B7 Waterproof shell \u00B7 Bibs \u00B7 Balaclava \u00B7 Mittens \u00D72'],
+       ['Equipment','Board + bindings (tuned) \u00B7 Boots \u00B7 Goggles (low-light lens)'],
+       ['Misc','SPF lip balm \u00B7 Hand warmers \u00D78 \u00B7 Snacks \u00B7 Water \u00B7 Offline maps \u00B7 R2 chains']
+    ].map(([cat,items])=>`<div style="margin-bottom:12px"><div style="font-size:9px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">${cat}</div><div style="font-size:11px;color:var(--text2);line-height:1.8">${items}</div></div>`).join('')}`;
+  // Init trip map
+  setTimeout(()=>{
+    const el=document.getElementById('trip-map');
+    if(el&&!el._leaflet_id)initTripMap(el,r);
+  },300);
+}
+
+function initTripMap(el,r){
+  const origin=getOrigin(userLocation);
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  const map=L.map(el,{center:[(origin.lat+r.lat)/2,(origin.lng+r.lng)/2],zoom:7,zoomControl:false,attributionControl:false});
+  L.tileLayer(dark?'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png':'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:18}).addTo(map);
+  L.circleMarker([origin.lat,origin.lng],{radius:6,fillColor:'#c4956a',color:'#fff',weight:2,fillOpacity:1}).addTo(map).bindPopup(getOrigin(userLocation).name);
+  L.circleMarker([r.lat,r.lng],{radius:7,fillColor:'#6aafc4',color:'#fff',weight:2,fillOpacity:1}).addTo(map).bindPopup(r.name);
+  const osrmUrl=`https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${r.lng},${r.lat}?overview=full&geometries=geojson`;
+  fetch(osrmUrl).then(res=>res.json()).then(data=>{
+    if(data.code==='Ok'&&data.routes&&data.routes[0]){
+      const coords=data.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
+      L.polyline(coords,{color:'#c4956a',weight:3,opacity:.8}).addTo(map);
+      map.fitBounds(L.polyline(coords).getBounds(),{padding:[20,20]});
+    } else {
+      tripFallback(map,origin,r);
+    }
+  }).catch(()=>tripFallback(map,origin,r));
+  function tripFallback(map,origin,r){
+    const mid=[(origin.lat+r.lat)/2+.15,(origin.lng+r.lng)/2-.2];
+    L.polyline([[origin.lat,origin.lng],mid,[r.lat,r.lng]],{color:'#c4956a',weight:3,opacity:.8,dashArray:'8 4'}).addTo(map);
+    map.fitBounds([[Math.min(origin.lat,r.lat)-.5,Math.min(origin.lng,r.lng)-.5],[Math.max(origin.lat,r.lat)+.5,Math.max(origin.lng,r.lng)+.5]],{padding:[20,20]});
+  }
+}
+
+// ── RENDER: PROFILE ──
+function renderProfile(){
+  // Profile settings: location, favorite resort
+  document.getElementById('profileSettings').innerHTML=`
+    <div class="profile-field" id="locField">
+      <label>${icon('pin',12)} ${t('location')}</label>
+      <input class="profile-input" id="profileLocation" value="${userLocation}" placeholder="San Francisco, CA" autocomplete="off" oninput="onLocationInput()" onfocus="onLocationInput()" />
+      <div class="loc-suggest" id="locSuggest"></div>
+    </div>
+    <div class="profile-field">
+      <label>${icon('mountain',12)} ${t('saved_resort')}</label>
+      <select class="profile-input" id="profileResort" style="appearance:auto">
+        ${RESORTS.filter(r=>r.status!=='CLOSED').map(r=>`<option value="${r.id}"${r.id===activeResort?' selected':''}>${r.name}</option>`).join('')}
+      </select>
+    </div>
+    <button class="profile-save-btn" onclick="saveProfile()">${icon('check',12)} ${t('save_profile')}</button>
+    <div class="sec-label" style="margin-top:20px">${icon('star',12)} ${t('favorite_resorts')}</div>
+    <div class="fav-slots" id="favSlots">${renderFavSlots()}</div>
+  `;
+
+  const lv=calcLevel(skillVals);
+  document.getElementById('levelCard').innerHTML=`<div class="level-label">${icon('star',12)} My Level</div><div class="level-name">${lv.label}</div><div class="level-desc">${lv.desc}</div>`;
+
+  document.getElementById('skillSliders').innerHTML=SKILL_CATS.map(c=>`
+    <div class="skill-row">
+      <div class="skill-name">${c.label}</div>
+      <div class="skill-bar"><div class="skill-fill" style="width:${skillVals[c.id]}%"></div></div>
+      <div class="skill-val">${skillVals[c.id]}%</div>
+      <div class="skill-btns">
+        <button class="skill-btn" onclick="adjustSkill('${c.id}',-5)">${icon('minus',14)}</button>
+        <button class="skill-btn" onclick="adjustSkill('${c.id}',5)">${icon('plus',14)}</button>
+      </div>
+    </div>`).join('');
+
+  const key=lv.key;
+  const routines=ROUTINES[key]||ROUTINES.intermediate;
+  document.getElementById('routineList').innerHTML=routines.map(r=>`
+    <div class="routine-card" onclick="this.classList.toggle('open')">
+      <div class="routine-head"><div class="routine-title">${r.title}</div><div class="routine-dur">${r.dur}</div></div>
+      <div class="routine-body"><ul class="routine-steps">${r.steps.map(s=>`<li>${icon('arrow-right',10)} ${s}</li>`).join('')}</ul></div>
+    </div>`).join('');
+
+  const resources=RESOURCES[key]||RESOURCES.intermediate;
+  document.getElementById('resourceList').innerHTML=resources.map(r=>`
+    <a href="${r.url}" target="_blank" class="res-link"><div class="res-icon">${icon(r.icon,16)}</div><div><div class="res-title">${r.title}</div><div class="res-desc">${r.desc}</div></div></a>`).join('');
+
+  // Close suggestions on outside click
+  setTimeout(()=>{
+    document.addEventListener('click',function closeSuggest(e){
+      if(!e.target.closest('#locField')){
+        const sg=document.getElementById('locSuggest');
+        if(sg)sg.classList.remove('show');
+      }
+    });
+  },100);
+}
+
+// ── LOCATION AUTOCOMPLETE ──
+function onLocationInput(){
+  const input=document.getElementById('profileLocation');
+  const suggest=document.getElementById('locSuggest');
+  if(!input||!suggest)return;
+  const val=input.value.toLowerCase().trim();
+  if(val.length<1){suggest.classList.remove('show');return;}
+  // Get unique city names from ORIGINS
+  const seen=new Set();
+  const matches=[];
+  for(const[key,v]of Object.entries(ORIGINS)){
+    if(seen.has(v.name))continue;
+    if(v.name.toLowerCase().includes(val)||key.includes(val)){
+      seen.add(v.name);
+      matches.push(v.name);
+    }
+  }
+  if(matches.length===0){suggest.classList.remove('show');return;}
+  suggest.innerHTML=matches.slice(0,8).map(m=>`<div class="loc-suggest-item" onmousedown="selectLocation('${m}')">${m}</div>`).join('');
+  suggest.classList.add('show');
+}
+
+function selectLocation(name){
+  const input=document.getElementById('profileLocation');
+  const suggest=document.getElementById('locSuggest');
+  if(input)input.value=name;
+  if(suggest)suggest.classList.remove('show');
+  userLocation=name;
+  localStorage.setItem('sbOrigin',name);
+  destroyMaps();
+  renderAll();
+}
+
+function saveProfile(){
+  const loc=document.getElementById('profileLocation').value;
+  const resort=document.getElementById('profileResort').value;
+  if(loc){userLocation=loc;localStorage.setItem('sbOrigin',loc);}
+  if(resort){activeResort=resort;localStorage.setItem('sbResort',resort);}
+  // Flash save confirmation
+  const btn=document.querySelector('.profile-save-btn');
+  btn.innerHTML=`${icon('check',12)} ${t('profile_saved')}`;
+  setTimeout(()=>{btn.innerHTML=`${icon('check',12)} ${t('save_profile')}`;},1500);
+  destroyMaps();
+  renderAll();
+}
+
+function adjustSkill(id,delta){
+  skillVals[id]=Math.max(0,Math.min(100,skillVals[id]+delta));
+  localStorage.setItem('sbSkills',JSON.stringify(skillVals));
+  renderProfile();
+}
+
+// ── FAVORITE RESORTS ──
+function getFavorites(){return JSON.parse(localStorage.getItem('sbFavorites')||'[]')}
+function setFavorites(favs){localStorage.setItem('sbFavorites',JSON.stringify(favs))}
+
+function renderFavSlots(){
+  const favs=getFavorites();
+  let html='';
+  for(let i=0;i<3;i++){
+    if(favs[i]){
+      const r=RESORTS.find(x=>x.id===favs[i]);
+      html+=`<div class="fav-slot filled">
+        <div class="fav-name">${r?r.name:favs[i]}</div>
+        <div class="fav-remove" onclick="event.stopPropagation();removeFav(${i})">${icon('x-close',10)}</div>
+      </div>`;
+    } else {
+      html+=`<div class="fav-slot" onclick="openFavPicker(${i})" id="favSlot${i}" style="position:relative">
+        <span>${t('add_resort')}</span>
+        <div class="fav-dropdown" id="favDrop${i}">
+          <input class="fav-search" placeholder="${t('search')||'Search...'}" oninput="filterFavOptions(${i},this.value)" onclick="event.stopPropagation()"/>
+          <div class="fav-options" id="favOpts${i}">${RESORTS.filter(r=>r.status!=='CLOSED'&&!favs.includes(r.id)).map(r=>`<div class="fav-option" onclick="event.stopPropagation();pickFav(${i},'${r.id}')">${r.name}</div>`).join('')}</div>
+        </div>
+      </div>`;
+    }
+  }
+  return html;
+}
+
+function openFavPicker(idx){
+  const drop=document.getElementById('favDrop'+idx);
+  if(drop){drop.classList.toggle('show');if(drop.classList.contains('show')){const inp=drop.querySelector('.fav-search');if(inp)inp.focus();}}
+}
+
+function filterFavOptions(idx,val){
+  const favs=getFavorites();
+  const opts=document.getElementById('favOpts'+idx);
+  if(!opts)return;
+  const v=val.toLowerCase();
+  opts.innerHTML=RESORTS.filter(r=>r.status!=='CLOSED'&&!favs.includes(r.id)&&r.name.toLowerCase().includes(v)).map(r=>`<div class="fav-option" onclick="event.stopPropagation();pickFav(${idx},'${r.id}')">${r.name}</div>`).join('');
+}
+
+function pickFav(idx,id){
+  const favs=getFavorites();
+  if(favs.length>=3||favs.includes(id))return;
+  while(favs.length<=idx)favs.push(null);
+  favs[idx]=id;
+  setFavorites(favs.filter(Boolean));
+  renderProfile();destroyMaps();renderAll();
+}
+
+function removeFav(idx){
+  const favs=getFavorites();
+  favs.splice(idx,1);
+  setFavorites(favs);
+  renderProfile();destroyMaps();renderAll();
+}
+
+// Close fav dropdowns on outside click
+document.addEventListener('click',e=>{if(!e.target.closest('.fav-slot')){document.querySelectorAll('.fav-dropdown').forEach(d=>d.classList.remove('show'))}});
+
+// ── DESTROY MAPS (for re-render on location change) ──
+function destroyMaps(){
+  document.querySelectorAll('[id^="map-"],[id^="trip-map"]').forEach(el=>{
+    if(el._leaflet_id){
+      // Find the Leaflet map instance and remove it
+      // Leaflet stores the map on the container
+      const mapInst=Object.values(el).find(v=>v&&typeof v==='object'&&v._leaflet_id);
+      try{
+        // Use L.DomUtil to find the map
+        if(el._leaflet){el._leaflet.remove();}
+        else{
+          // Brute force: clear the element and remove leaflet id
+          el.innerHTML='';
+          delete el._leaflet_id;
+        }
+      }catch(e){
+        el.innerHTML='';
+        delete el._leaflet_id;
+      }
+    }
+  });
+}
+
+// ── RESORT DETAIL SHEET (with 7-day forecast, hourly, 3-week outlook) ──
+function openDetail(id){
+  const r=RESORTS.find(x=>x.id===id);if(!r)return;
+  activeResort=id;localStorage.setItem('sbResort',id);
+  const origin=getOrigin(userLocation);
+  const ti=getTravelInfo(origin,r);
+  const score=scoreResort(r,origin);
+  const maxYOY=Math.max(r.yoy.thisYear,r.yoy.lastYear,r.yoy.avg);
+  const forecast=generateForecast(r);
+  const hourly=generateHourly(r);
+  const outlook=generateWeekOutlook(r);
+
+  document.getElementById('detailContent').innerHTML=`
+    <div style="font-family:var(--font-display);font-size:24px;color:var(--white);margin-bottom:4px">${r.name}</div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:16px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">${icon('pin',12)} ${r.loc} &middot; ${r.elev.toLocaleString()} ft &middot; ${r.acres.toLocaleString()} acres &middot; Ikon: ${r.ikonDays}</div>
+
+    <div class="detail-stats">
+      <div class="d-stat"><div class="d-stat-label">${icon('star',10)} Score</div><div class="d-stat-val" style="color:${score>=80?'var(--fresh)':score>=65?'var(--sky)':'var(--warn)'}">${score}</div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('cloud-snow',10)} ${t('fresh')}</div><div class="d-stat-val">${r.fresh}"</div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('mountain',10)} ${t('base')}</div><div class="d-stat-val">${r.base}"</div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('arrow-right',10)} ${t('trails')}</div><div class="d-stat-val">${r.trailsOpen}/${r.trails}</div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('bolt',10)} ${t('lifts')}</div><div class="d-stat-val">${r.liftsOpen}/${r.lifts}</div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('eye',10)} ${t('quality')}</div><div class="d-stat-val" style="font-size:12px">${r.quality}</div></div>
+    </div>
+
+    <div style="padding:10px 12px;background:var(--card);border-radius:var(--r-sm);border:1px solid var(--border);margin:12px 0;font-size:11px;color:var(--text2);line-height:1.6">
+      ${icon('clock',12)} ${t('open')}: <strong style="color:var(--fresh)">${r.open}</strong> &mdash; ${t('close_t')}: <strong style="color:var(--danger)">${r.close}</strong>
+      <br>${icon('plane',12)} ${r.airport}
+    </div>
+
+    ${r.ann?`<div style="padding:10px 12px;background:var(--accent-soft);border:1px solid rgba(196,149,106,0.15);border-radius:var(--r-sm);margin:10px 0;font-size:11px;color:var(--text2);line-height:1.6">${icon('bolt',12)} ${r.ann}</div>`:''}
+
+    <!-- 7-DAY FORECAST -->
+    <div class="sec-label" style="margin-top:16px">${icon('calendar',12)} ${t('seven_day')}</div>
+    <div class="forecast-strip">
+      ${forecast.map((d,i)=>`<div class="forecast-day${i===0?' today':''}">
+        <div class="fd-name">${d.dayName}</div>
+        <div class="fd-icon">${icon(d.condition,20)}</div>
+        <div class="fd-temps">${d.high}&deg; <span>${d.low}&deg;</span></div>
+        <div class="fd-wind">${icon('wind',10)} ${d.wind}mph</div>
+        ${d.snowfall>0?`<div class="fd-snow">${d.snowfall}"</div>`:''}
+      </div>`).join('')}
+    </div>
+    <!-- BAR CHARTS FOR 7-DAY -->
+    <div class="fc-bar-section">
+      <div class="fc-bar-legend">
+        <div class="fc-bar-legend-item"><div class="fc-bar-legend-swatch" style="background:var(--sky)"></div> ${t('snowfall_in')}</div>
+        <div class="fc-bar-legend-item"><div class="fc-bar-legend-swatch" style="background:var(--text3)"></div> ${t('wind_mph')}</div>
+      </div>
+      ${forecast.map(d=>{
+        const maxSnow=Math.max(...forecast.map(x=>x.snowfall),1);
+        const maxWind=Math.max(...forecast.map(x=>x.wind),1);
+        const tempClass=d.high<=20?'fc-temp-cold':d.high>=40?'fc-temp-warm':'fc-temp-neutral';
+        return `<div class="fc-bar-row">
+          <div class="fc-bar-label">${d.dayName}</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+            <div class="fc-bar-track fc-bar-snow"><div class="fc-bar-fill" style="width:${d.snowfall/maxSnow*100}%">${d.snowfall>0?d.snowfall+'"':''}</div></div>
+            <div class="fc-bar-track fc-bar-wind"><div class="fc-bar-fill" style="width:${d.wind/maxWind*100}%">${d.wind}mph</div></div>
+          </div>
+          <div class="fc-bar-val ${tempClass}">${d.high}&deg;/${d.low}&deg;</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="data-source">${t('forecast_data')}: <a href="${r.links.snow}" target="_blank">${r.name} ${t('snow_report')}</a> &middot; <a href="https://openweathermap.org" target="_blank">OpenWeather</a></div>
+
+    <!-- HOURLY TODAY -->
+    <div class="hourly-wrap">
+      <div class="hourly-title">${icon('clock',12)} ${t('hourly_today')}</div>
+      <div class="hourly-strip">
+        ${hourly.map(h=>`<div class="hourly-cell">
+          <div class="hc-hour">${h.hour===0?'12a':h.hour<12?h.hour+'a':h.hour===12?'12p':(h.hour-12)+'p'}</div>
+          <div class="hc-temp">${h.temp}&deg;</div>
+          <div class="hc-wind">${h.wind}mph</div>
+          ${h.snow>0?`<div class="hc-snow">${h.snow}"</div>`:''}
+        </div>`).join('')}
+      </div>
+    </div>
+    <div class="data-source">${t('forecast_data')}: <a href="${r.links.snow}" target="_blank">${r.name} ${t('snow_report')}</a> &middot; <a href="https://openweathermap.org" target="_blank">OpenWeather</a></div>
+
+    <!-- 3-WEEK OUTLOOK -->
+    <div class="week-outlook">
+      <div class="week-outlook-title">${icon('eye',12)} ${t('three_week')}</div>
+      ${outlook.map(w=>`<div class="week-row">
+        <div class="wr-label">${w.label}</div>
+        <div class="wr-range">${w.low}" - ${w.high}"</div>
+        <div class="wr-trend ${w.trend}">${w.trend==='up'?icon('chevron-up',12)+' '+t('more_snow'):w.trend==='down'?icon('chevron-down',12)+' '+t('drying'):icon('arrow-right',12)+' '+t('steady')}</div>
+      </div>`).join('')}
+    </div>
+    <div class="data-source">${t('forecast_data')}: <a href="${r.links.snow}" target="_blank">${r.name} ${t('snow_report')}</a> &middot; <a href="https://openweathermap.org" target="_blank">OpenWeather</a></div>
+
+    ${r.liftList.length?`<div class="sec-label" style="margin-top:16px">${icon('bolt',12)} ${t('lift_status')}</div>${r.liftList.map(l=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px"><div style="width:7px;height:7px;border-radius:50%;background:${l.s==='on'?'var(--fresh)':l.s==='hold'?'var(--warn)':'var(--danger)'}"></div><div style="flex:1;color:var(--text)">${l.n}</div><div style="font-size:9px;color:var(--text3)">${l.t}</div></div>`).join('')}`:''}
+
+    <div class="yoy-section">
+      <div class="yoy-title">${icon('mountain',12)} ${t('season_total')} \u2014 ${t('yoy_inches')}</div>
+      <div class="yoy-row"><div class="yoy-label">${t('this_year')}</div><div class="yoy-bar"><div class="yoy-fill" style="width:${r.yoy.thisYear/maxYOY*100}%;background:var(--accent);display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-size:9px;color:var(--bg);font-weight:600;min-width:fit-content">${r.yoy.thisYear}"</div></div><div class="yoy-val" style="color:var(--accent)">${r.yoy.thisYear}"</div></div>
+      <div class="yoy-row"><div class="yoy-label">${t('last_year')}</div><div class="yoy-bar"><div class="yoy-fill" style="width:${r.yoy.lastYear/maxYOY*100}%;background:var(--sky);display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-size:9px;color:var(--bg);font-weight:600;min-width:fit-content">${r.yoy.lastYear}"</div></div><div class="yoy-val" style="color:var(--sky)">${r.yoy.lastYear}"</div></div>
+      <div class="yoy-row"><div class="yoy-label">${t('average')}</div><div class="yoy-bar"><div class="yoy-fill" style="width:${r.yoy.avg/maxYOY*100}%;background:var(--text3);display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-size:9px;color:var(--bg);font-weight:600;min-width:fit-content">${r.yoy.avg}"</div></div><div class="yoy-val">${r.yoy.avg}"</div></div>
+    </div>
+
+    <div class="season-outlook">
+      <strong>${t('next_season')}:</strong> ${r.nextSeason}<br>
+      ${r.yoy.thisYear>r.yoy.avg?`This season is tracking <strong>${Math.round((r.yoy.thisYear/r.yoy.avg-1)*100)}% above</strong> the 5-year average. Excellent year.`:`Season snowfall is ${r.yoy.thisYear<r.yoy.avg?'below':'near'} the 5-year average.`}
+    </div>
+
+    <div class="data-source" style="margin:12px 0 4px">${icon('external-link',10)} ${t('forecast_data')}: <a href="${r.links.snow}" target="_blank">${r.name} ${t('snow_report')} ${icon('external-link',10)}</a></div>
+    <div class="data-source">${t('demo_forecast')}. ${icon('alert-triangle',10)}</div>
+
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">
+      <a href="${r.links.official}" target="_blank" class="ghost-btn" style="flex:1;min-width:100px">${icon('external-link',12)} ${t('official_site')}</a>
+      <a href="${r.links.snow}" target="_blank" class="ghost-btn" style="flex:1;min-width:100px">${icon('cloud-snow',12)} ${t('snow_report')}</a>
+      <a href="${r.links.ig}" target="_blank" class="ghost-btn" style="flex:1;min-width:100px">${icon('external-link',12)} ${t('instagram')}</a>
+    </div>`;
+
+  document.getElementById('detailOverlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+
+function closeDetail(e){
+  if(e&&e.target!==document.getElementById('detailOverlay')&&!e.target.classList.contains('sheet-close'))return;
+  document.getElementById('detailOverlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+// ── CARD EXPAND/COLLAPSE ──
+function toggleRec(card){
+  const detail=card.querySelector('.rec-detail');
+  const open=card.classList.contains('expanded');
+  if(open){
+    card.classList.remove('expanded');
+    detail.style.maxHeight='0';
+    card.querySelector('.rec-chevron').innerHTML=icon('chevron-down',14);
+  } else {
+    card.classList.add('expanded');
+    detail.style.maxHeight=detail.scrollHeight+'px';
+    card.querySelector('.rec-chevron').innerHTML=icon('chevron-up',14);
+    const m=detail.querySelector('[id^="map-"]');
+    if(m&&!m._leaflet_id)setTimeout(()=>initResortMap(m),150);
+  }
+}
+
+// ── MAP WITH OSRM ROUTING ──
+function initResortMap(el){
+  const id=el.id.replace('map-','');
+  const r=RESORTS.find(x=>x.id===id);if(!r)return;
+  const origin=getOrigin(userLocation);
+  const dark=document.documentElement.getAttribute('data-theme')==='dark';
+  const map=L.map(el,{center:[38.5,-120],zoom:7,zoomControl:false,attributionControl:false});
+  L.tileLayer(dark?'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png':'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:18}).addTo(map);
+
+  // Origin and resort markers
+  L.circleMarker([origin.lat,origin.lng],{radius:6,fillColor:'#c4956a',color:'#fff',weight:2,fillOpacity:1}).addTo(map).bindPopup(getOrigin(userLocation).name);
+  L.circleMarker([r.lat,r.lng],{radius:7,fillColor:'#6aafc4',color:'#fff',weight:2,fillOpacity:1}).addTo(map).bindPopup(r.name);
+
+  // Chain control markers
+  const chainZones={mammoth:[[37.66,-119.02,'SR-203']],palisades:[[39.1,-120.31,'I-80']],june:[[37.78,-119.05,'US-395']],snowbird:[[40.58,-111.72,'Little Cottonwood']],brighton:[[40.6,-111.62,'Big Cottonwood']],solitude:[[40.61,-111.60,'Big Cottonwood']],alta:[[40.58,-111.66,'Little Cottonwood']]};
+  if(chainZones[id]){chainZones[id].forEach(([lt,ln,name])=>{L.circleMarker([lt,ln],{radius:8,fillColor:'#d4a03a',color:'#fff',weight:2,fillOpacity:.9}).addTo(map).bindPopup(`<b>${icon('chain',12)} Chain Control</b><br>${name}`)})}
+
+  // Attempt OSRM route
+  const osrmUrl=`https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${r.lng},${r.lat}?overview=full&geometries=geojson`;
+  fetch(osrmUrl).then(res=>res.json()).then(data=>{
+    if(data.code==='Ok'&&data.routes&&data.routes[0]){
+      const coords=data.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
+      L.polyline(coords,{color:'#c4956a',weight:3,opacity:.8}).addTo(map);
+      map.fitBounds(L.polyline(coords).getBounds(),{padding:[20,20]});
+    } else {
+      drawFallbackLine(map,origin,r);
+    }
+  }).catch(()=>{
+    drawFallbackLine(map,origin,r);
+  });
+
+  function drawFallbackLine(map,origin,r){
+    const mid=[(origin.lat+r.lat)/2+.15,(origin.lng+r.lng)/2-.2];
+    L.polyline([[origin.lat,origin.lng],mid,[r.lat,r.lng]],{color:'#c4956a',weight:3,opacity:.8,dashArray:'8 4'}).addTo(map);
+    map.fitBounds([[Math.min(origin.lat,r.lat)-.5,Math.min(origin.lng,r.lng)-.5],[Math.max(origin.lat,r.lat)+.5,Math.max(origin.lng,r.lng)+.5]],{padding:[20,20]});
+  }
+}
+
+// ── THEME ──
+function toggleTheme(){
+  const h=document.documentElement;
+  const next=h.getAttribute('data-theme')==='dark'?'light':'dark';
+  h.setAttribute('data-theme',next);
+  localStorage.setItem('sbTheme',next);
+  updateThemeIcon();
+}
+function updateThemeIcon(){
+  const isDark=document.documentElement.getAttribute('data-theme')==='dark';
+  document.getElementById('themeBtn').innerHTML=isDark?icon('moon',16):icon('sun',16);
+}
+
+// ── LANGUAGE DROPDOWN ──
+function toggleLangMenu(){document.getElementById('langWrap').classList.toggle('open')}
+function closeLangMenu(){document.getElementById('langWrap').classList.remove('open')}
+document.addEventListener('click',e=>{if(!e.target.closest('.lang-wrap'))closeLangMenu()});
+
+// ── EMAIL ──
+function submitEmail(e){
+  e.preventDefault();
+  document.getElementById('emailForm').style.display='none';
+  document.getElementById('emailSuccess').innerHTML=`${icon('check',14)} ${t('subscribed')}`;
+  document.getElementById('emailSuccess').style.display='flex';
+}
+
+// ── BOTTOM NAV ICONS ──
+function renderNavIcons(){
+  const navItems=document.querySelectorAll('.nav-item');
+  navItems[0].querySelector('.nav-icon').innerHTML=icon('mountain',20);
+  navItems[1].querySelector('.nav-icon').innerHTML=icon('calendar',20);
+  navItems[2].querySelector('.nav-icon').innerHTML=icon('user',20);
+  // Close button
+  document.querySelector('.sheet-close').innerHTML=icon('x-close',16);
+}
+
+// ── CLOCK ──
+function tick(){
+  const n=new Date();
+  document.getElementById('dateDisplay').textContent=n.toLocaleDateString(lang==='zh'?'zh-CN':lang==='ja'?'ja-JP':'en-US',{weekday:'long',month:'long',day:'numeric'});
+  document.getElementById('timeDisplay').innerHTML=`${icon('clock',12)} ${n.toLocaleTimeString(lang==='zh'?'zh-CN':lang==='ja'?'ja-JP':'en-US',{hour:'numeric',minute:'2-digit'})}`;
+}
+
+// ── SNOW PARTICLES ──
+(()=>{const c=document.getElementById('snowWrap');const chars=['\u2744','\u2745','\u2746','\u00B7','*'];for(let i=0;i<30;i++){const s=document.createElement('div');s.className='flake';s.textContent=chars[~~(Math.random()*5)];s.style.cssText=`left:${Math.random()*100}vw;animation-duration:${10+Math.random()*16}s;animation-delay:${Math.random()*20}s;font-size:${5+Math.random()*7}px`;c.appendChild(s)}})();
+
+// ── RENDER ALL ──
+function renderAll(){
+  tick();renderWeatherOverview();renderTopPicks();renderNextTrip();renderAllResorts();renderTrip();renderProfile();
+  document.querySelectorAll('[data-i18n]').forEach(el=>{const v=t(el.dataset.i18n);if(v)el.textContent=v});
+}
+
+// ── INIT ──
+const savedTheme=localStorage.getItem('sbTheme');
+if(savedTheme)document.documentElement.setAttribute('data-theme',savedTheme);
+renderNavIcons();
+updateThemeIcon();
+renderAll();
+setInterval(tick,1000);
+</script>
+</body>
+</html>

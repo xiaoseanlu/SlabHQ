@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>SlabHQ — Direction D: Editorial Sport</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* ── DIRECTION D: EDITORIAL SPORT ──
+   Barlow Condensed + Space Mono
+   Bold, authoritative, high-energy — The Athletic meets Bloomberg
+*/
+
+:root {
+  --font-display: 'Barlow Condensed', sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  --ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --ease-std: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --r: 8px;
+  --r-sm: 5px;
+}
+
+[data-theme="dark"] {
+  --bg: #0a0a0c;
+  --surface: #111114;
+  --card: #18181c;
+  --card2: #202026;
+  --border: #2a2a32;
+  --border2: #38383e;
+  --accent: #00d4ff;
+  --accent-soft: rgba(0,212,255,0.08);
+  --fresh: #00e676;
+  --fresh-soft: rgba(0,230,118,0.08);
+  --warn: #ffab00;
+  --warn-soft: rgba(255,171,0,0.08);
+  --danger: #ff5252;
+  --danger-soft: rgba(255,82,82,0.08);
+  --text: #c8ccd4;
+  --text2: #6e7280;
+  --text3: #42454e;
+  --white: #f0f2f5;
+}
+
+[data-theme="light"] {
+  --bg: #f2f2f4;
+  --surface: #e8e8ec;
+  --card: #ffffff;
+  --card2: #f8f8fa;
+  --border: #d4d4da;
+  --border2: #bbbbc4;
+  --accent: #0088aa;
+  --accent-soft: rgba(0,136,170,0.06);
+  --fresh: #00873a;
+  --fresh-soft: rgba(0,135,58,0.06);
+  --warn: #b87700;
+  --warn-soft: rgba(184,119,0,0.06);
+  --danger: #cc2020;
+  --danger-soft: rgba(204,32,32,0.06);
+  --text: #1a1a22;
+  --text2: #5a5a66;
+  --text3: #8e8e9a;
+  --white: #0a0a10;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg); color: var(--text);
+  font-family: var(--font-display); font-size: 14px; line-height: 1.4;
+  min-height: 100dvh; -webkit-font-smoothing: antialiased;
+  padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 16px);
+  transition: background 0.3s, color 0.3s;
+}
+
+/* ── TOP BAR ── */
+.top-bar {
+  position: sticky; top: 0; z-index: 400;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px; height: 48px;
+  background: var(--bg); border-bottom: 1px solid var(--border);
+}
+.logo {
+  font-family: var(--font-display); font-size: 24px; font-weight: 800;
+  color: var(--white); letter-spacing: 2px; text-transform: uppercase;
+}
+.logo-dot { color: var(--accent); }
+.top-r { display: flex; gap: 6px; align-items: center; }
+.tb {
+  padding: 5px 10px; background: none; border: 1px solid var(--border);
+  color: var(--text2); font-family: var(--font-mono); font-size: 10px;
+  cursor: pointer; transition: all 0.12s; letter-spacing: 0.5px;
+}
+.tb:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── CONTAINER ── */
+.c { max-width: 480px; margin: 0 auto; padding: 0 16px; }
+
+/* ── TICKER BAR ── */
+.ticker {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: 10px; color: var(--text3);
+  overflow: hidden;
+}
+.ticker-date { color: var(--white); font-weight: 700; white-space: nowrap; }
+.ticker-time { white-space: nowrap; }
+.ticker-demo {
+  color: var(--warn); background: var(--warn-soft);
+  padding: 2px 8px; font-size: 9px; letter-spacing: 1px;
+  white-space: nowrap;
+}
+.ticker-sep { color: var(--border2); }
+
+/* ── LOCATION ── */
+.loc-strip {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 0; border-bottom: 1px solid var(--border);
+}
+.loc-label {
+  font-family: var(--font-mono); font-size: 9px; color: var(--text3);
+  letter-spacing: 1px; text-transform: uppercase; flex-shrink: 0;
+}
+.loc-input {
+  flex: 1; background: none; border: none; color: var(--white);
+  font-family: var(--font-display); font-size: 16px; font-weight: 600;
+  letter-spacing: 0.5px; outline: none;
+}
+.loc-input::placeholder { color: var(--text3); }
+
+/* ── SECTION HEAD ── */
+.sh {
+  font-family: var(--font-display); font-size: 11px; font-weight: 600;
+  color: var(--text3); letter-spacing: 3px; text-transform: uppercase;
+  padding: 20px 0 10px;
+}
+
+/* ── HERO ── */
+.hero {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); margin-bottom: 10px;
+  position: relative; overflow: hidden;
+  animation: pop 0.35s var(--ease-out) 0.05s both;
+}
+@keyframes pop { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.hero-stripe { height: 4px; }
+.stripe-go { background: var(--fresh); }
+.stripe-good { background: var(--accent); }
+.stripe-ok { background: var(--warn); }
+.stripe-skip { background: var(--danger); }
+.hero-body { padding: 20px; }
+.hero-row1 { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 12px; }
+.hero-score {
+  font-family: var(--font-mono); font-size: 72px; font-weight: 700;
+  line-height: 0.85; letter-spacing: -4px;
+}
+.hero-tag {
+  font-family: var(--font-display); font-size: 14px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  padding: 6px 14px;
+}
+.tag-go { background: var(--fresh-soft); color: var(--fresh); }
+.tag-good { background: var(--accent-soft); color: var(--accent); }
+.tag-ok { background: var(--warn-soft); color: var(--warn); }
+.tag-skip { background: var(--danger-soft); color: var(--danger); }
+
+.hero-name {
+  font-family: var(--font-display); font-size: 32px; font-weight: 800;
+  color: var(--white); letter-spacing: 1px; text-transform: uppercase;
+  line-height: 1;
+}
+.hero-sub {
+  font-family: var(--font-display); font-size: 14px; font-weight: 400;
+  color: var(--text2); margin-top: 6px; letter-spacing: 0.3px; line-height: 1.5;
+}
+.hero-btn {
+  display: block; width: 100%; padding: 14px; margin-top: 18px;
+  background: var(--accent); color: var(--bg);
+  font-family: var(--font-display); font-size: 14px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase; text-align: center;
+  border: none; border-radius: var(--r-sm); cursor: pointer;
+  transition: all 0.12s;
+}
+.hero-btn:hover { opacity: 0.88; }
+
+/* ── STATS BAR ── */
+.stats-bar {
+  display: grid; grid-template-columns: repeat(4,1fr); gap: 4px;
+  margin-bottom: 20px;
+}
+.sb {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r-sm); padding: 12px 8px; text-align: center;
+}
+.sb-val {
+  font-family: var(--font-mono); font-size: 20px; font-weight: 700;
+  color: var(--white); line-height: 1;
+}
+.sb-unit { font-size: 11px; font-weight: 400; color: var(--text2); }
+.sb-lbl {
+  font-family: var(--font-display); font-size: 9px; color: var(--text3);
+  letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px;
+}
+
+/* ── RANK CARDS ── */
+.rk {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); margin-bottom: 6px;
+  overflow: hidden; cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.rk:hover { border-color: var(--border2); }
+.rk:active { transform: scale(0.995); }
+.rk.ex { border-color: var(--accent); }
+.rk-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px; }
+.rk-pos {
+  font-family: var(--font-mono); font-size: 10px; color: var(--text3);
+  min-width: 18px;
+}
+.rk-sc {
+  font-family: var(--font-mono); font-size: 28px; font-weight: 700;
+  min-width: 40px; line-height: 1;
+}
+.rk-nfo { flex: 1; min-width: 0; }
+.rk-nm {
+  font-family: var(--font-display); font-size: 17px; font-weight: 700;
+  color: var(--white); letter-spacing: 0.5px; text-transform: uppercase;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rk-mt { font-size: 12px; color: var(--text2); margin-top: 1px; }
+.rk-ch {
+  font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+  padding: 3px 8px; letter-spacing: 1px; text-transform: uppercase;
+  flex-shrink: 0;
+}
+.ch-epic { background: var(--fresh-soft); color: var(--fresh); }
+.ch-prime { background: var(--accent-soft); color: var(--accent); }
+.ch-good { background: var(--warn-soft); color: var(--warn); }
+.ch-limited { background: var(--danger-soft); color: var(--danger); }
+.ch-closed { background: rgba(66,69,78,0.2); color: var(--text3); }
+.rk-arr { color: var(--text3); font-size: 10px; transition: transform 0.2s; flex-shrink: 0; }
+.rk.ex .rk-arr { transform: rotate(180deg); }
+
+/* ── EXPANDED ── */
+.rk-bd { max-height: 0; overflow: hidden; transition: max-height 0.3s var(--ease-std); }
+.rk-bd-in { padding: 0 14px 14px; border-top: 1px solid var(--border); }
+.ds { display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; margin: 10px 0; }
+.ds-i { background: var(--card2); border-radius: var(--r-sm); padding: 10px; }
+.ds-l { font-family: var(--font-mono); font-size: 9px; color: var(--text3); letter-spacing: 0.5px; margin-bottom: 3px; }
+.ds-v { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: var(--white); }
+
+/* ── MAP ── */
+.mp { border-radius: var(--r-sm); overflow: hidden; border: 1px solid var(--border); margin: 8px 0; }
+.mp-el { height: 200px; }
+.leaflet-container { background: var(--bg) !important; }
+
+.dr { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 8px 0; }
+.dr-c { background: var(--card2); border-radius: var(--r-sm); padding: 10px; }
+.dr-l { font-family: var(--font-mono); font-size: 9px; color: var(--text3); margin-bottom: 3px; letter-spacing: 0.5px; }
+.dr-v { font-family: var(--font-mono); font-size: 22px; font-weight: 700; color: var(--white); }
+.dr-n { font-size: 10px; color: var(--text2); margin-top: 2px; }
+
+/* ── CHAIN ── */
+.ca {
+  display: flex; gap: 10px; padding: 12px;
+  background: var(--warn-soft); border-left: 3px solid var(--warn);
+  margin: 8px 0;
+}
+.ca-ic { font-size: 14px; flex-shrink: 0; }
+.ca-h {
+  font-family: var(--font-display); font-size: 13px; font-weight: 700;
+  color: var(--warn); letter-spacing: 0.5px; text-transform: uppercase;
+}
+.ca-p { font-size: 11px; color: var(--text2); margin-top: 3px; line-height: 1.5; }
+.ca-s { font-size: 10px; color: var(--text3); margin-top: 4px; }
+.ca-s a { color: var(--accent); text-decoration: none; }
+
+.rk-btn {
+  display: block; width: 100%; padding: 11px; margin-top: 8px;
+  background: var(--accent); color: var(--bg);
+  font-family: var(--font-display); font-size: 12px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase; text-align: center;
+  border: none; border-radius: var(--r-sm); cursor: pointer;
+}
+
+/* ── LINE ── */
+.ln { height: 1px; background: var(--border); margin: 16px 0; }
+
+/* ── EMAIL ── */
+.em {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 24px 16px; margin-top: 24px;
+  text-align: center;
+}
+.em-eye {
+  font-family: var(--font-mono); font-size: 9px; color: var(--accent);
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px;
+}
+.em-h {
+  font-family: var(--font-display); font-size: 26px; font-weight: 800;
+  color: var(--white); letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.em-p { font-size: 13px; color: var(--text2); margin-bottom: 14px; }
+.em-row { display: flex; gap: 6px; }
+.em-in {
+  flex: 1; padding: 12px; background: var(--card2);
+  border: 1px solid var(--border); color: var(--text);
+  font-family: var(--font-mono); font-size: 12px;
+  border-radius: var(--r-sm); outline: none;
+}
+.em-in::placeholder { color: var(--text3); }
+.em-in:focus { border-color: var(--accent); }
+.em-go {
+  padding: 12px 18px; background: var(--accent); color: var(--bg);
+  font-family: var(--font-display); font-size: 12px; font-weight: 700;
+  letter-spacing: 2px; text-transform: uppercase;
+  border: none; border-radius: var(--r-sm); cursor: pointer; white-space: nowrap;
+}
+.em-fine { font-size: 10px; color: var(--text3); margin-top: 10px; }
+
+/* ── EMPTY ── */
+.empty { text-align: center; padding: 40px 16px; animation: pop 0.4s var(--ease-out) both; }
+.empty-g { font-size: 56px; margin-bottom: 14px; opacity: 0.5; }
+.empty-h {
+  font-family: var(--font-display); font-size: 28px; font-weight: 800;
+  color: var(--white); letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.empty-p { font-size: 13px; color: var(--text2); line-height: 1.6; max-width: 300px; margin: 0 auto 18px; }
+.empty-t { font-family: var(--font-mono); font-size: 13px; color: var(--accent); margin-bottom: 18px; }
+
+/* ── BOTTOM NAV ── */
+.bn {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
+  display: flex; justify-content: space-around;
+  height: calc(56px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: var(--surface); border-top: 1px solid var(--border);
+}
+.bn-i {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 2px; padding: 6px 20px;
+  color: var(--text3); cursor: pointer; text-decoration: none;
+  transition: color 0.12s; position: relative;
+}
+.bn-i.on { color: var(--accent); }
+.bn-i.on::before {
+  content: ''; position: absolute; top: 0; width: 20px; height: 2px;
+  background: var(--accent);
+}
+.bn-ic { font-size: 20px; }
+.bn-lb {
+  font-family: var(--font-display); font-size: 9px; font-weight: 600;
+  letter-spacing: 1.5px; text-transform: uppercase;
+}
+
+@media (max-width: 380px) {
+  .stats-bar { grid-template-columns: repeat(2,1fr); }
+  .ds { grid-template-columns: 1fr 1fr; }
+  .hero-name { font-size: 26px; }
+}
+</style>
+</head>
+<body>
+
+<header class="top-bar">
+  <div class="logo">SLAB<span class="logo-dot">.</span>HQ</div>
+  <div class="top-r">
+    <button class="tb" onclick="toggleTheme()" id="thBtn">&#9789;</button>
+    <button class="tb" onclick="cycleLang()" id="lBtn">EN</button>
+  </div>
+</header>
+
+<div class="c">
+  <!-- TICKER -->
+  <div class="ticker">
+    <span class="ticker-date" id="tDate">SAT APR 12</span>
+    <span class="ticker-sep">|</span>
+    <span class="ticker-time" id="tTime">10:32 AM</span>
+    <span class="ticker-sep">|</span>
+    <span class="ticker-demo">DEMO</span>
+    <span class="ticker-sep">|</span>
+    <span>IKON PASS RESORTS</span>
+  </div>
+
+  <!-- LOCATION -->
+  <div class="loc-strip">
+    <div class="loc-label">LOC</div>
+    <input class="loc-input" value="San Francisco, CA" placeholder="Enter your city" />
+  </div>
+
+  <div class="sh">This Weekend &middot; Top Pick</div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-stripe stripe-go"></div>
+    <div class="hero-body">
+      <div class="hero-row1">
+        <div class="hero-score" style="color:var(--fresh)">92</div>
+        <div class="hero-tag tag-go">GO</div>
+      </div>
+      <div class="hero-name">Mammoth Mountain</div>
+      <div class="hero-sub">18" fresh overnight &middot; Light powder &middot; 5h 20m drive &middot; Chain control SR-203</div>
+      <button class="hero-btn">Full Trip Details &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-bar">
+    <div class="sb"><div class="sb-val">8<span class="sb-unit">&deg;</span></div><div class="sb-lbl">Summit</div></div>
+    <div class="sb"><div class="sb-val">18<span class="sb-unit">"</span></div><div class="sb-lbl">Fresh</div></div>
+    <div class="sb"><div class="sb-val">12<span class="sb-unit">mph</span></div><div class="sb-lbl">Wind</div></div>
+    <div class="sb"><div class="sb-val">55<span class="sb-unit">%</span></div><div class="sb-lbl">Vis</div></div>
+  </div>
+
+  <div class="ln"></div>
+  <div class="sh">All Resorts Ranked</div>
+
+  <!-- #2 Palisades -->
+  <div class="rk" onclick="tog(this)">
+    <div class="rk-head">
+      <div class="rk-pos">#2</div>
+      <div class="rk-sc" style="color:var(--accent)">78</div>
+      <div class="rk-nfo">
+        <div class="rk-nm">Palisades Tahoe</div>
+        <div class="rk-mt">14" fresh &middot; 3h 30m &middot; Chains</div>
+      </div>
+      <div class="rk-ch ch-prime">PRIME</div>
+      <div class="rk-arr">&#9662;</div>
+    </div>
+    <div class="rk-bd">
+      <div class="rk-bd-in">
+        <div class="ds">
+          <div class="ds-i"><div class="ds-l">FRESH</div><div class="ds-v">14"</div></div>
+          <div class="ds-i"><div class="ds-l">BASE</div><div class="ds-v">118"</div></div>
+          <div class="ds-i"><div class="ds-l">LIFTS</div><div class="ds-v">24/29</div></div>
+        </div>
+        <div class="mp"><div class="mp-el" id="map-d-pal"></div></div>
+        <div class="dr">
+          <div class="dr-c"><div class="dr-l">DISTANCE</div><div class="dr-v">196<span class="sb-unit"> mi</span></div></div>
+          <div class="dr-c"><div class="dr-l">EST. DRIVE</div><div class="dr-v" style="color:var(--warn)">3h 48m</div><div class="dr-n">+30 min chain stops</div></div>
+        </div>
+        <div class="ca">
+          <div class="ca-ic">&#9888;</div>
+          <div>
+            <div class="ca-h">Chain Control R2 &mdash; I-80 East</div>
+            <div class="ca-p">Active since 4:20 AM. All vehicles need chains. Expected lift: 2:00 PM.</div>
+            <div class="ca-s"><a href="https://quickmap.dot.ca.gov" target="_blank">Caltrans QuickMap &#8599;</a> &middot; 9:45 AM</div>
+          </div>
+        </div>
+        <button class="rk-btn">Full Trip Details &rarr;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- #3 Snowbird -->
+  <div class="rk" onclick="tog(this)">
+    <div class="rk-head">
+      <div class="rk-pos">#3</div>
+      <div class="rk-sc" style="color:var(--accent)">72</div>
+      <div class="rk-nfo">
+        <div class="rk-nm">Snowbird</div>
+        <div class="rk-mt">22" fresh &middot; &#9992; SLC 1h40m + 35min</div>
+      </div>
+      <div class="rk-ch ch-epic">EPIC</div>
+      <div class="rk-arr">&#9662;</div>
+    </div>
+    <div class="rk-bd"><div class="rk-bd-in">
+      <div class="ds">
+        <div class="ds-i"><div class="ds-l">FRESH</div><div class="ds-v">22"</div></div>
+        <div class="ds-i"><div class="ds-l">BASE</div><div class="ds-v">142"</div></div>
+        <div class="ds-i"><div class="ds-l">LIFTS</div><div class="ds-v">25/41</div></div>
+      </div>
+      <div class="dr">
+        <div class="dr-c"><div class="dr-l">FLIGHT</div><div class="dr-v">1h 40m</div><div class="dr-n">SFO &rarr; SLC + 35 min</div></div>
+        <div class="dr-c"><div class="dr-l">DRIVE</div><div class="dr-v" style="color:var(--danger)">10h 30m</div><div class="dr-n">Not recommended</div></div>
+      </div>
+      <div class="ca">
+        <div class="ca-ic">&#9888;</div>
+        <div>
+          <div class="ca-h">Chain Law &mdash; Little Cottonwood</div>
+          <div class="ca-p">R2 since 11 PM. Road open. UDOT avalanche mitigation done. Expected: all day.</div>
+          <div class="ca-s"><a href="https://udot.utah.gov" target="_blank">UDOT &#8599;</a> &middot; 8:30 AM</div>
+        </div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- #4 Brighton -->
+  <div class="rk" onclick="tog(this)">
+    <div class="rk-head">
+      <div class="rk-pos">#4</div>
+      <div class="rk-sc" style="color:var(--accent)">70</div>
+      <div class="rk-nfo"><div class="rk-nm">Brighton Resort</div><div class="rk-mt">16" &middot; &#9992; SLC + 40min &middot; Night skiing</div></div>
+      <div class="rk-ch ch-prime">PRIME</div>
+      <div class="rk-arr">&#9662;</div>
+    </div>
+    <div class="rk-bd"><div class="rk-bd-in">
+      <div class="ds">
+        <div class="ds-i"><div class="ds-l">FRESH</div><div class="ds-v">16"</div></div>
+        <div class="ds-i"><div class="ds-l">BASE</div><div class="ds-v">128"</div></div>
+        <div class="ds-i"><div class="ds-l">LIFTS</div><div class="ds-v">8/8</div></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- #5 Solitude -->
+  <div class="rk" onclick="tog(this)">
+    <div class="rk-head">
+      <div class="rk-pos">#5</div>
+      <div class="rk-sc" style="color:var(--warn)">68</div>
+      <div class="rk-nfo"><div class="rk-nm">Solitude Mountain</div><div class="rk-mt">15" &middot; &#9992; SLC + 45min</div></div>
+      <div class="rk-ch ch-prime">PRIME</div>
+      <div class="rk-arr">&#9662;</div>
+    </div>
+    <div class="rk-bd"><div class="rk-bd-in">
+      <div class="ds">
+        <div class="ds-i"><div class="ds-l">FRESH</div><div class="ds-v">15"</div></div>
+        <div class="ds-i"><div class="ds-l">BASE</div><div class="ds-v">122"</div></div>
+        <div class="ds-i"><div class="ds-l">LIFTS</div><div class="ds-v">8/10</div></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- Sierra CLOSED -->
+  <div class="rk" style="opacity:0.35; pointer-events:none;">
+    <div class="rk-head">
+      <div class="rk-pos">&mdash;</div>
+      <div class="rk-sc" style="color:var(--text3)">&mdash;</div>
+      <div class="rk-nfo"><div class="rk-nm" style="color:var(--text3)">Sierra at Tahoe</div><div class="rk-mt">Closed 2025/26</div></div>
+      <div class="rk-ch ch-closed">CLOSED</div>
+    </div>
+  </div>
+
+  <!-- EMAIL -->
+  <div class="em">
+    <div class="em-eye">Powder Alerts</div>
+    <div class="em-h">Never Miss It</div>
+    <div class="em-p">Get notified when conditions peak at your top resorts</div>
+    <div class="em-row">
+      <input class="em-in" type="email" placeholder="your@email.com" />
+      <button class="em-go">Subscribe</button>
+    </div>
+    <div class="em-fine">Zero spam &middot; Unsubscribe anytime</div>
+  </div>
+
+  <!-- EMPTY STATE -->
+  <div style="margin-top:36px; border-top:1px solid var(--border); padding-top:20px;">
+    <div class="sh">Off-Season</div>
+    <div class="empty">
+      <div class="empty-g">&#9968;</div>
+      <div class="empty-h">Mountains Are Resting</div>
+      <div class="empty-p">Season opens mid-November. We'll send you a heads-up when snow starts falling.</div>
+      <div class="empty-t">~218 days until season</div>
+      <div class="em-row" style="max-width:300px;margin:0 auto;">
+        <input class="em-in" type="email" placeholder="your@email.com" />
+        <button class="em-go">Notify Me</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bn">
+  <a class="bn-i on"><div class="bn-ic">&#9924;</div><div class="bn-lb">Home</div></a>
+  <a class="bn-i"><div class="bn-ic">&#128197;</div><div class="bn-lb">Trip</div></a>
+  <a class="bn-i"><div class="bn-ic">&#128100;</div><div class="bn-lb">Profile</div></a>
+</nav>
+
+<script>
+function toggleTheme(){
+  const h=document.documentElement;
+  const n=h.getAttribute('data-theme')==='dark'?'light':'dark';
+  h.setAttribute('data-theme',n);
+  document.getElementById('thBtn').innerHTML=n==='dark'?'&#9789;':'&#9788;';
+}
+const ls=['EN','中文','日本語'];let lx=0;
+function cycleLang(){lx=(lx+1)%ls.length;document.getElementById('lBtn').textContent=ls[lx];}
+
+function tog(c){
+  if(c.style.pointerEvents==='none')return;
+  const b=c.querySelector('.rk-bd'),o=c.classList.contains('ex');
+  document.querySelectorAll('.rk.ex').forEach(x=>{if(x!==c){x.classList.remove('ex');x.querySelector('.rk-bd').style.maxHeight='0';}});
+  if(o){c.classList.remove('ex');b.style.maxHeight='0';}
+  else{c.classList.add('ex');b.style.maxHeight=b.scrollHeight+'px';
+    const m=b.querySelector('[id^="map-"]');
+    if(m&&!m._leaflet_id)setTimeout(()=>bMap(m),120);
+  }
+}
+
+function bMap(el){
+  const dk=document.documentElement.getAttribute('data-theme')==='dark';
+  const m=L.map(el,{center:[38.5,-120.5],zoom:7,zoomControl:false,attributionControl:false});
+  L.tileLayer(dk?'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png':'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:18}).addTo(m);
+  L.polyline([[37.77,-122.42],[38.1,-121.2],[39.19,-120.24]],{color:'#00d4ff',weight:3,opacity:0.8}).addTo(m);
+  L.circleMarker([37.77,-122.42],{radius:6,fillColor:'#ff5252',color:'#fff',weight:2,fillOpacity:1}).addTo(m);
+  L.circleMarker([39.19,-120.24],{radius:7,fillColor:'#00d4ff',color:'#fff',weight:2,fillOpacity:1}).addTo(m);
+  L.polyline([[39.05,-120.35],[39.15,-120.28]],{color:'#ffab00',weight:5,opacity:0.9,dashArray:'8,6'}).addTo(m).bindPopup('<b>&#9939; Chain R2</b><br>I-80 EB &middot; Since 4:20 AM');
+  L.circleMarker([39.1,-120.31],{radius:8,fillColor:'#ffab00',color:'#fff',weight:2,fillOpacity:0.9}).addTo(m);
+  m.fitBounds([[37.7,-122.5],[39.3,-120.1]],{padding:[20,20]});
+}
+
+function tk(){
+  const n=new Date();
+  document.getElementById('tDate').textContent=n.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}).toUpperCase();
+  document.getElementById('tTime').textContent=n.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
+}
+tk();setInterval(tk,1000);
+</script>
+</body>
+</html>
