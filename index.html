@@ -1127,13 +1127,22 @@ const ORIGINS={
 let geocodedOrigin=JSON.parse(localStorage.getItem('sbGeocodedOrigin')||'null');
 
 function getOrigin(s){
-  const k=s.toLowerCase().trim();
-  // Check for 5-digit zip code
+  const k=(s||'').toLowerCase().trim();
+  // 1. Exact zip code match
   if(/^\d{5}$/.test(k)&&ORIGINS[k])return ORIGINS[k];
-  for(const[key,v]of Object.entries(ORIGINS)){if(k.includes(key))return v}
-  // Use geocoded result if available and matches current location
-  if(geocodedOrigin&&(geocodedOrigin.query===k||k.includes(geocodedOrigin.query?.split(',')[0])||geocodedOrigin.query?.includes(k.split(',')[0])))return geocodedOrigin;
-  // Fall back to nearest known origin by partial match
+  // 2. Exact key match
+  if(ORIGINS[k])return ORIGINS[k];
+  // 3. Use geocoded result first — most accurate (actual GPS coordinates)
+  if(geocodedOrigin){
+    const gq=(geocodedOrigin.query||'').toLowerCase();
+    const kCity=k.split(',')[0].trim();
+    const gCity=gq.split(',')[0].trim();
+    if(gq===k||kCity===gCity||k.startsWith(gCity)||gCity.startsWith(kCity))return geocodedOrigin;
+  }
+  // 4. Word-boundary partial match against known cities (avoid "la" matching "livermore")
+  for(const[key,v]of Object.entries(ORIGINS)){
+    if(key.length>=4&&k.includes(key))return v;
+  }
   return ORIGINS['san francisco'];
 }
 
@@ -2742,22 +2751,61 @@ Object.keys(weatherCache).forEach(k=>delete weatherCache[k]);
 renderAll(); // Stage 1: render immediately with hardcoded data
 setInterval(tick,1000);
 
-// Auto-detect user location on first visit (no saved location)
-if(!localStorage.getItem('sbOrigin')&&navigator.geolocation){
-  navigator.geolocation.getCurrentPosition(async(pos)=>{
-    try{
-      const res=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json&addressdetails=1`);
-      const data=await res.json();
-      const city=data.address.city||data.address.town||data.address.village||data.address.county||'';
-      const state=data.address.state||'';
-      const name=city&&state?`${city}, ${state}`:city||state||'Your Location';
-      geocodedOrigin={lat:pos.coords.latitude,lng:pos.coords.longitude,name,query:name.toLowerCase()};
-      localStorage.setItem('sbGeocodedOrigin',JSON.stringify(geocodedOrigin));
-      userLocation=name;
-      localStorage.setItem('sbOrigin',name);
-      destroyMaps();renderAll();
-    }catch(e){console.warn('Reverse geocode failed',e)}
-  },()=>{},{ timeout: 5000 });
+// Live location: lat/lng of user's current GPS position (updated continuously while app is open)
+// Separate from userLocation/geocodedOrigin which represent the saved home/profile location
+let liveGPS=null;
+let lastLiveGPSUpdate=0;
+
+function applyLiveGPS(lat,lng){
+  liveGPS={lat,lng};
+  lastLiveGPSUpdate=Date.now();
+  // Update geocodedOrigin so getOrigin() returns accurate coordinates
+  geocodedOrigin={lat,lng,name:userLocation,query:(userLocation||'').toLowerCase().trim()};
+  localStorage.setItem('sbGeocodedOrigin',JSON.stringify(geocodedOrigin));
+  // Refresh distance/route if detail sheet is open
+  const detailSheet=document.getElementById('detailSheet');
+  if(detailSheet&&detailSheet.classList.contains('open')){
+    destroyMaps();
+    openDetail(activeResort);
+  }
+  // Refresh top picks scoring with new position
+  renderTopPicks();
+  renderNextTrip();
+}
+
+if(navigator.geolocation){
+  // First visit: set location from GPS if not saved
+  if(!localStorage.getItem('sbOrigin')){
+    navigator.geolocation.getCurrentPosition(async(pos)=>{
+      try{
+        const res=await fetch(`https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json&addressdetails=1`);
+        const data=await res.json();
+        const city=data.address.city||data.address.town||data.address.village||data.address.county||'';
+        const state=data.address.state||'';
+        const name=city&&state?`${city}, ${state}`:city||state||'Your Location';
+        geocodedOrigin={lat:pos.coords.latitude,lng:pos.coords.longitude,name,query:name.toLowerCase()};
+        localStorage.setItem('sbGeocodedOrigin',JSON.stringify(geocodedOrigin));
+        userLocation=name;
+        localStorage.setItem('sbOrigin',name);
+        destroyMaps();renderAll();
+      }catch(e){console.warn('Reverse geocode failed',e)}
+    },()=>{},{timeout:5000});
+  }
+  // Continuous tracking: update route/distance as user moves (while driving)
+  navigator.geolocation.watchPosition(
+    (pos)=>{
+      const{latitude:lat,longitude:lng,accuracy}=pos.coords;
+      // Only update if moved >0.1 miles from last position and accuracy <200m
+      if(accuracy>200)return;
+      if(liveGPS){
+        const moved=distMiles(liveGPS,{lat,lng});
+        if(moved<0.1)return; // ignore tiny jitter
+      }
+      applyLiveGPS(lat,lng);
+    },
+    ()=>{}, // silently ignore permission denied
+    {enableHighAccuracy:true,maximumAge:30000,timeout:10000}
+  );
 }
 
 // Stage 2 & 3: fetch real weather data in background, then update UI
