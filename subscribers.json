@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "email": "xiaoseanlu@gmail.com",
+    "location": "Livermore, CA",
+    "favorites": "palisades, mammoth",
+    "prefs": [
+      "powder_8in",
+      "storm_12in",
+      "epic_85"
+    ],
+    "subscribedAt": "2026-04-12T08:12:39.403Z"
+  }
+]
