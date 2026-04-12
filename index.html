@@ -113,7 +113,7 @@
   --sky-soft: rgba(58,127,154,0.08);
   --text: #2a2420;
   --text2: #6a6058;
-  --text3: #9a9088;
+  --text3: #736b63;
   --white: #1a1614;
   --overlay: rgba(247,243,238,0.7);
 }
@@ -138,6 +138,17 @@ input{font-family:inherit}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
 
+/* ── REDUCED MOTION ── */
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:0.01ms!important;animation-iteration-count:1!important;transition-duration:0.01ms!important}
+  .flake{display:none!important}
+  .snow-wrap{display:none!important}
+}
+
+/* ── SKIP LINK ── */
+.skip-link{position:absolute;top:-40px;left:0;padding:8px 16px;background:var(--accent);color:var(--bg);z-index:9999;font-size:12px;border-radius:0 0 8px 0;transition:top .2s}
+.skip-link:focus{top:0}
+
 /* ── SNOW PARTICLES ── */
 .snow-wrap{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
 .flake{position:absolute;top:-12px;color:var(--text3);opacity:0.15;animation:fall linear infinite}
@@ -156,7 +167,7 @@ input{font-family:inherit}
 .logo-group{display:flex;align-items:baseline;gap:8px}
 .logo{font-family:var(--font-display);font-size:22px;color:var(--white)}
 .logo-accent{color:var(--accent)}
-.logo-tagline{font-family:var(--font-mono);font-size:9px;color:var(--text3);letter-spacing:0.5px;white-space:nowrap}
+.logo-tagline{font-family:var(--font-mono);font-size:10px;color:var(--text3);letter-spacing:0.5px;white-space:nowrap}
 @media(max-width:360px){.logo-tagline{display:none}}
 .top-actions{display:flex;align-items:center;gap:6px}
 .top-btn{
@@ -189,16 +200,33 @@ input{font-family:inherit}
 }
 .lang-wrap.open .lang-menu{opacity:1;transform:translateY(0);pointer-events:auto}
 .lang-option{
-  display:block;width:100%;padding:8px 12px;background:none;border:none;
+  display:block;width:100%;padding:12px;background:none;border:none;
   color:var(--text2);font-family:var(--font-mono);font-size:11px;
   text-align:left;border-radius:var(--r-xs);cursor:pointer;
-  transition:all .1s;
+  transition:all .1s;min-height:44px;
 }
 .lang-option:hover{background:var(--accent-soft);color:var(--accent)}
 .lang-option.active{color:var(--accent);font-weight:500}
 
 /* ═══ CONTAINER ═══ */
 .container{max-width:520px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
+@media(min-width:768px){.container{max-width:680px}}
+@media(min-width:1024px){.container{max-width:720px}}
+@media(min-width:768px){
+  .bottom-nav{display:none!important}
+  body{padding-bottom:0!important}
+  .top-bar .top-desktop-nav{display:flex}
+}
+.top-desktop-nav{display:none;align-items:center;gap:4px;margin-left:24px}
+.top-desktop-nav button{
+  display:flex;align-items:center;gap:4px;padding:8px 14px;background:none;border:none;
+  color:var(--text2);font-family:var(--font-mono);font-size:11px;cursor:pointer;
+  border-radius:6px;transition:all .15s;
+}
+.top-desktop-nav button:hover{color:var(--accent);background:var(--accent-soft)}
+.top-desktop-nav button.active{color:var(--accent);font-weight:600}
+/* Responsive stat grid */
+@media(max-width:380px){.detail-stats{grid-template-columns:repeat(2,1fr)}}
 
 /* ═══ HEADER / DATE ═══ */
 .page-header{padding:24px 0 8px}
@@ -207,7 +235,7 @@ input{font-family:inherit}
 .header-time{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px}
 .header-demo{
   display:inline-flex;align-items:center;gap:5px;
-  font-size:9px;color:var(--warn);background:var(--warn-soft);
+  font-size:10px;color:var(--warn);background:var(--warn-soft);
   padding:3px 8px;border-radius:4px;
 }
 .header-demo::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--warn);animation:pulse 2s infinite}
@@ -239,11 +267,11 @@ input{font-family:inherit}
   content:'';position:absolute;top:0;left:0;right:0;height:3px;
   background:linear-gradient(90deg,var(--accent),transparent 80%);
 }
-.wx-eyebrow{font-size:9px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.wx-eyebrow{font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
 .wx-headline{font-family:var(--font-display);font-size:20px;color:var(--white);line-height:1.3;margin-bottom:8px}
 .wx-timeline{display:flex;margin:16px 0;position:relative}
 .wx-phase{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;z-index:1}
-.wx-phase-label{font-size:9px;color:var(--text3);letter-spacing:0.5px}
+.wx-phase-label{font-size:10px;color:var(--text3);letter-spacing:0.5px}
 .wx-phase-dot{width:12px;height:12px;border-radius:50%;border:2px solid var(--border);background:var(--card)}
 .wx-phase-dot.active{background:var(--accent);border-color:var(--accent)}
 .wx-phase-dot.past{background:var(--text3);border-color:var(--text3)}
@@ -252,24 +280,25 @@ input{font-family:inherit}
 .wx-timeline::before{content:'';position:absolute;top:24px;left:10%;right:10%;height:2px;background:var(--border);z-index:0}
 .wx-summary{font-size:12px;color:var(--text2);line-height:1.6;margin-top:10px}
 .wx-summary strong{color:var(--text)}
-.wx-source{font-size:9px;color:var(--text3);margin-top:8px}
+.wx-source{font-size:10px;color:var(--text3);margin-top:8px}
 .wx-source a{color:var(--accent)}
 
 /* ── NEXT TRIP OUTLOOK ── */
 .outlook-row{
-  display:flex;align-items:center;gap:10px;
-  padding:12px;background:var(--card);border:1px solid var(--border);
+  display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px;
+  padding:14px;background:var(--card);border:1px solid var(--border);
   border-radius:var(--r-sm);margin-bottom:8px;cursor:pointer;
   transition:all .15s;
 }
 .outlook-row:hover{border-color:var(--accent)}
-.outlook-week{font-size:10px;color:var(--accent);font-weight:500;min-width:50px}
-.outlook-info{flex:1;min-width:0}
-.outlook-title{font-size:12px;font-weight:500;color:var(--white)}
-.outlook-detail{font-size:10px;color:var(--text2);margin-top:2px}
+.outlook-week{font-size:10px;color:var(--accent);font-weight:600;min-width:50px;padding-top:2px}
+.outlook-info{flex:1;min-width:180px}
+.outlook-title{font-size:12px;font-weight:500;color:var(--white);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.outlook-detail{font-size:10px;color:var(--text2);margin-top:4px}
 .outlook-trend{font-size:11px;font-weight:500;min-width:40px;text-align:right}
 .outlook-region-tag{font-size:8px;letter-spacing:.5px;padding:2px 6px;border-radius:3px;margin-left:4px}
-.outlook-resort-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:10px;color:var(--text2)}
+@media(max-width:420px){.outlook-trend{width:100%;text-align:left;border-top:1px solid var(--border);padding-top:8px;margin-top:4px}}
+.outlook-resort-row{display:flex;align-items:center;gap:8px;padding:8px 0;font-size:10px;color:var(--text2);min-height:44px}
 .outlook-resort-row:hover{color:var(--accent);cursor:pointer}
 
 /* ═══ RECOMMENDATION CARDS ═══ */
@@ -323,7 +352,7 @@ input{font-family:inherit}
   border-radius:var(--r-sm);margin:12px 0;font-size:11px;color:var(--text2);line-height:1.6;
 }
 .storm-context strong{color:var(--text)}
-.storm-context .storm-label{font-size:9px;color:var(--sky);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.storm-context .storm-label{font-size:10px;color:var(--sky);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
 
 .detail-narrative{
   font-size:12px;color:var(--text2);line-height:1.75;
@@ -333,7 +362,7 @@ input{font-family:inherit}
 
 .detail-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .d-stat{background:var(--card2);border-radius:var(--r-sm);padding:12px 10px}
-.d-stat-label{font-size:9px;color:var(--text3);letter-spacing:.5px;margin-bottom:3px;display:flex;align-items:center;gap:4px}
+.d-stat-label{font-size:10px;color:var(--text3);letter-spacing:.5px;margin-bottom:3px;display:flex;align-items:center;gap:4px}
 .d-stat-val{font-size:16px;font-weight:600;color:var(--white)}
 .d-stat-link{color:var(--white);text-decoration:none;border-bottom:1px dashed var(--border2)}
 .d-stat-link:hover{color:var(--accent);border-color:var(--accent)}
@@ -347,7 +376,7 @@ input{font-family:inherit}
 
 .drive-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
 .drive-cell{background:var(--card2);border-radius:var(--r-sm);padding:10px}
-.drive-label{font-size:9px;color:var(--text3);margin-bottom:3px;display:flex;align-items:center;gap:4px}
+.drive-label{font-size:10px;color:var(--text3);margin-bottom:3px;display:flex;align-items:center;gap:4px}
 .drive-val{font-size:20px;font-weight:500;color:var(--white)}
 .drive-note{font-size:10px;color:var(--text2);margin-top:2px}
 
@@ -360,11 +389,11 @@ input{font-family:inherit}
 .chain-icon{flex-shrink:0;margin-top:1px;color:var(--warn)}
 .chain-title{font-size:11px;font-weight:500;color:var(--warn)}
 .chain-meta{font-size:10px;color:var(--text2);margin-top:3px;line-height:1.5}
-.chain-source{font-size:9px;color:var(--text3);margin-top:4px}
+.chain-source{font-size:10px;color:var(--text3);margin-top:4px}
 .chain-source a{color:var(--accent)}
 
 /* ── DATA SOURCE ── */
-.data-source{font-size:9px;color:var(--text3);margin-top:6px;display:flex;align-items:center;gap:4px}
+.data-source{font-size:10px;color:var(--text3);margin-top:6px;display:flex;align-items:center;gap:4px}
 .data-source a{color:var(--accent);display:inline-flex;align-items:center;gap:2px}
 
 /* ── YOY COMPARISON ── */
@@ -478,7 +507,7 @@ input{font-family:inherit}
   background:var(--card);border:1px dashed var(--border2);
   border-radius:var(--r);padding:28px;margin-top:28px;text-align:center;
 }
-.email-eyebrow{font-size:9px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+.email-eyebrow{font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
 .email-heading{font-family:var(--font-display);font-size:20px;color:var(--white);margin-bottom:4px}
 .email-sub{font-size:12px;color:var(--text2);margin-bottom:14px}
 .email-row{display:flex;gap:8px}
@@ -502,7 +531,7 @@ input{font-family:inherit}
 .email-note{font-size:10px;color:var(--text3);margin-top:10px}
 .alert-prefs{margin-top:12px;padding:12px;background:var(--card2);border:1px solid var(--border);border-radius:var(--r-sm)}
 .alert-pref-title{font-size:10px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:4px}
-.alert-opt{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text);padding:5px 0;cursor:pointer}
+.alert-opt{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text);padding:8px 0;cursor:pointer;min-height:44px}
 .alert-opt input[type="checkbox"]{accent-color:var(--accent);width:14px;height:14px;cursor:pointer}
 .alert-logic{margin-top:12px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm)}
 .alert-logic-title{font-size:10px;color:var(--text2);margin-bottom:6px;display:flex;align-items:center;gap:4px;font-weight:500}
@@ -560,12 +589,12 @@ input{font-family:inherit}
   border-radius:var(--r-sm);padding:10px 8px;text-align:center;
 }
 .forecast-day.today{border-color:var(--accent);background:var(--accent-soft)}
-.fd-name{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.fd-name{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
 .fd-icon{margin:4px 0;display:flex;justify-content:center}
 .fd-icon svg{width:20px;height:20px}
 .fd-temps{font-size:11px;color:var(--white);margin:4px 0}
 .fd-temps span{color:var(--text3);font-size:10px}
-.fd-wind{font-size:9px;color:var(--text2);display:flex;align-items:center;gap:2px;justify-content:center}
+.fd-wind{font-size:10px;color:var(--text2);display:flex;align-items:center;gap:2px;justify-content:center}
 .fd-snow{font-size:10px;color:var(--sky);font-weight:500;margin-top:2px}
 
 /* ── HOURLY TABLE ── */
@@ -580,7 +609,7 @@ input{font-family:inherit}
   flex-shrink:0;width:48px;scroll-snap-align:start;
   background:var(--card);border:1px solid var(--border);
   border-radius:var(--r-xs);padding:6px 4px;text-align:center;
-  font-size:9px;
+  font-size:10px;
 }
 .hc-hour{color:var(--text3);margin-bottom:2px}
 .hc-temp{color:var(--white);font-weight:500;font-size:10px}
@@ -673,7 +702,7 @@ input{font-family:inherit}
 .routine-measure{font-size:10px;color:var(--fresh);padding:10px 0 4px;margin-top:8px;border-top:1px solid var(--border);display:flex;align-items:flex-start;gap:6px;line-height:1.5}
 .routine-measure strong{color:var(--text);white-space:nowrap}
 .routine-measure svg{flex-shrink:0;margin-top:2px}
-.step-num{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;background:var(--border);color:var(--text);font-size:9px;font-weight:600;border-radius:50%;flex-shrink:0;font-family:var(--font-mono)}
+.step-num{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;background:var(--border);color:var(--text);font-size:10px;font-weight:600;border-radius:50%;flex-shrink:0;font-family:var(--font-mono)}
 .routine-card{
   background:var(--card);border:1px solid var(--border);
   border-radius:var(--r-sm);padding:12px;margin-bottom:8px;
@@ -682,7 +711,7 @@ input{font-family:inherit}
 .routine-card:hover{border-color:var(--accent);transform:translateX(2px)}
 .routine-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .routine-title{font-size:12px;font-weight:500;color:var(--white)}
-.routine-dur{font-size:9px;color:var(--fresh);background:var(--fresh-soft);padding:2px 7px;border-radius:3px}
+.routine-dur{font-size:10px;color:var(--fresh);background:var(--fresh-soft);padding:2px 7px;border-radius:3px}
 .routine-steps{list-style:none}
 .routine-steps li{font-size:10px;color:var(--text2);padding:4px 0;display:flex;gap:8px;align-items:flex-start;line-height:1.5}
 .routine-body{max-height:0;overflow:hidden;transition:max-height .25s var(--ease-std)}
@@ -697,7 +726,7 @@ input{font-family:inherit}
 .res-icon{flex-shrink:0;color:var(--accent)}
 .res-icon svg{width:16px;height:16px}
 .res-title{font-size:11px;font-weight:500}
-.res-desc{font-size:9px;color:var(--text3);margin-top:1px}
+.res-desc{font-size:10px;color:var(--text3);margin-top:1px}
 
 /* ═══ BOTTOM NAV ═══ */
 .bottom-nav{
@@ -723,7 +752,7 @@ input{font-family:inherit}
 }
 .nav-icon{display:flex;align-items:center;justify-content:center}
 .nav-icon svg{width:20px;height:20px}
-.nav-label{font-size:9px;letter-spacing:.5px}
+.nav-label{font-size:10px;letter-spacing:.5px}
 
 /* ═══ TAB VISIBILITY ═══ */
 .tab-section{display:none}
@@ -731,7 +760,7 @@ input{font-family:inherit}
 
 /* ── FORECAST BAR CHARTS ── */
 .fc-bar-section{margin:12px 0}
-.fc-bar-legend{display:flex;gap:14px;margin-bottom:8px;font-size:9px;color:var(--text2)}
+.fc-bar-legend{display:flex;gap:14px;margin-bottom:8px;font-size:10px;color:var(--text2)}
 .fc-bar-legend-item{display:flex;align-items:center;gap:4px}
 .fc-bar-legend-swatch{width:10px;height:10px;border-radius:2px}
 .fc-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:10px}
@@ -804,15 +833,22 @@ input{font-family:inherit}
 </style>
 </head>
 <body>
+<a href="#home" class="skip-link">Skip to content</a>
 
 <!-- SNOW PARTICLES -->
-<div class="snow-wrap" id="snowWrap"></div>
+<div class="snow-wrap" id="snowWrap" aria-hidden="true"></div>
 
 <!-- TOP BAR -->
 <header class="top-bar">
-  <div class="logo-group"><div class="logo">Slab<span class="logo-accent">HQ</span></div><div class="logo-tagline" data-i18n="tagline">Know before you go.</div></div>
+  <div class="logo-group"><div class="logo">Slab<span class="logo-accent">HQ</span></div><div class="logo-tagline" data-i18n="tagline">Know before you go.</div>
+    <nav class="top-desktop-nav" aria-label="Main navigation">
+      <button onclick="switchTab('home')" class="active" data-dtab="home">Home</button>
+      <button onclick="switchTab('trip')" data-dtab="trip">Trip</button>
+      <button onclick="switchTab('profile')" data-dtab="profile">Profile</button>
+    </nav>
+  </div>
   <div class="top-actions">
-    <button class="top-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme"></button>
+    <button class="top-btn" onclick="toggleTheme()" id="themeBtn" title="Toggle theme" aria-label="Toggle dark mode"></button>
     <div class="lang-wrap" id="langWrap">
       <button class="lang-trigger" onclick="toggleLangMenu()">
         <span id="langLabel">EN</span>
@@ -906,16 +942,16 @@ input{font-family:inherit}
 </div>
 
 <!-- RESORT DETAIL OVERLAY -->
-<div class="detail-overlay" id="detailOverlay" onclick="closeDetail(event)">
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail(event)" role="dialog" aria-modal="true" aria-label="Resort details">
   <div class="detail-sheet" id="detailSheet">
     <div class="sheet-handle"></div>
-    <button class="sheet-close" onclick="closeDetail()"></button>
+    <button class="sheet-close" onclick="closeDetail()" aria-label="Close resort detail"></button>
     <div id="detailContent"></div>
   </div>
 </div>
 
 <!-- BOTTOM NAV -->
-<nav class="bottom-nav" id="bottomNav">
+<nav class="bottom-nav" id="bottomNav" aria-label="Main navigation">
   <a class="nav-item active" data-tab="home" onclick="switchTab('home')">
     <div class="nav-icon"></div>
     <div class="nav-label" data-i18n="home">Home</div>
@@ -973,6 +1009,10 @@ function icon(name, size=16) {
     'w-partly-cloudy': `<svg ${s}><path d="M12 2v2M4.93 4.93l1.41 1.41M20 12h2M17.66 17.66l1.41 1.41M2 12h2M6.34 17.66l-1.41 1.41M17.07 4.93l1.41-1.41"/><circle cx="12" cy="10" r="4"/><path d="M16 16h2a3 3 0 000-6h-.5A5 5 0 008 12.5V13a3 3 0 003 3h5z"/></svg>`,
     plane: `<svg ${s}><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>`,
     info: `<svg ${s}><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`,
+    edit: `<svg ${s}><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+    settings: `<svg ${s}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1.08-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1.08 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001.08 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1.08z"/></svg>`,
+    bell: `<svg ${s}><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>`,
+    calendar: `<svg ${s}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`,
   };
   return icons[name] || `<svg ${s}><circle cx="12" cy="12" r="1"/></svg>`;
 }
@@ -980,45 +1020,45 @@ function icon(name, size=16) {
 // ── RESORT DATA (Ikon Pass) ──
 const RESORTS=[
   // === CALIFORNIA ===
-  {id:'mammoth',name:'Mammoth Mountain',loc:'Mammoth Lakes, CA',region:'ca',lat:37.6308,lng:-119.0326,elev:11053,acres:3500,ikonDays:'Unlimited',open:'8:30 AM',close:'4:00 PM',fresh:18,base:124,quality:'Light Powder',trails:163,trailsOpen:142,lifts:26,liftsOpen:21,status:'EPIC',links:{official:'https://www.mammothmountain.com',snow:'https://www.mammothmountain.com/on-the-mountain/snow-and-weather-report',ig:'https://www.instagram.com/mammothmountain/'},airport:'MMH 8 min. LAX 5.5h.',ann:'18" overnight. Gondola 7:30 AM on powder days. Chain control SR-203.',yoy:{thisYear:340,lastYear:290,avg:310},nextSeason:'Mid-Nov 2026',liftList:[{n:'Village Gondola',t:'Gondola',s:'on'},{n:'Chair 1 — Broadway',t:'6-Pack',s:'on'},{n:'Chair 23 — Cloud Nine',t:'Quad',s:'on'},{n:'Chair 14',t:'Quad',s:'hold'}]},
-  {id:'palisades',name:'Palisades Tahoe',loc:'Olympic Valley, CA',region:'ca',lat:39.1965,lng:-120.2356,elev:9050,acres:6000,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:14,base:118,quality:'Packed Powder',trails:170,trailsOpen:145,lifts:29,liftsOpen:24,status:'PRIME',links:{official:'https://www.palisadestahoe.com',snow:'https://www.palisadestahoe.com/mountain-information/mountain-report',ig:'https://www.instagram.com/palisadestahoe/'},airport:'RNO 45 min. SFO 3.5h.',ann:'Great conditions. All major lifts. Parking reservations required weekends.',yoy:{thisYear:310,lastYear:275,avg:295},nextSeason:'Mid-Nov 2026',liftList:[{n:'Funitel',t:'Funitel',s:'on'},{n:'KT-22',t:'Double',s:'on'},{n:'Siberia Express',t:'Quad',s:'on'},{n:'Headwall',t:'Double',s:'hold'}]},
-  {id:'june',name:'June Mountain',loc:'June Lake, CA',region:'ca',lat:37.7772,lng:-119.0786,elev:10135,acres:1500,ikonDays:'5 days',open:'9:00 AM',close:'4:00 PM',fresh:14,base:110,quality:'Powder',trails:35,trailsOpen:28,lifts:8,liftsOpen:7,status:'GOOD',links:{official:'https://www.junemountain.com',snow:'https://www.junemountain.com/mountain/snow-weather-report',ig:'https://www.instagram.com/junemountain/'},airport:'MMH 30 min.',ann:'14" fresh. Very low crowds. Same road as Mammoth.',yoy:{thisYear:280,lastYear:250,avg:260},nextSeason:'Dec 2026',liftList:[{n:'Chair 1',t:'Quad',s:'on'},{n:'Chair 7 Rainbow',t:'Quad',s:'on'}]},
-  {id:'bigbear',name:'Big Bear Mountain',loc:'Big Bear Lake, CA',region:'ca',lat:34.2154,lng:-116.8909,elev:8805,acres:500,ikonDays:'5 days',open:'8:30 AM',close:'4:00 PM',fresh:2,base:42,quality:'Machine Groomed',trails:55,trailsOpen:40,lifts:16,liftsOpen:11,status:'LIMITED',links:{official:'https://www.bigbearmountainresort.com',snow:'https://www.bigbearmountainresort.com/mountain/mountain-report',ig:'https://www.instagram.com/bigbearmtn/'},airport:'ONT 1.5h. LAX 2.5h.',ann:'Limited natural snow. Snowmaking active.',yoy:{thisYear:120,lastYear:95,avg:110},nextSeason:'Nov 2026',liftList:[{n:'Chair 1 Mineshaft',t:'Quad',s:'on'},{n:'Chair 8 Express',t:'HS Quad',s:'on'}]},
+  {id:'mammoth',name:'Mammoth Mountain',loc:'Mammoth Lakes, CA',region:'ca',lat:37.6308,lng:-119.0326,elev:11053,acres:3500,ikonDays:'Unlimited',open:'8:30 AM',close:'4:00 PM',fresh:8,base:98,quality:'Spring Snow',trails:163,trailsOpen:120,lifts:26,liftsOpen:18,status:'GOOD',links:{official:'https://www.mammothmountain.com',snow:'https://www.mammothmountain.com/on-the-mountain/snow-and-weather-report',ig:'https://www.instagram.com/mammothmountain/'},airport:'MMH 8 min. LAX 5.5h.',ann:'Late storm dropped 8". Spring skiing top to bottom. Chain control possible SR-203.',yoy:{thisYear:340,lastYear:290,avg:310},nextSeason:'Mid-Nov 2026',liftList:[{n:'Village Gondola',t:'Gondola',s:'on'},{n:'Chair 1 — Broadway',t:'6-Pack',s:'on'},{n:'Chair 23 — Cloud Nine',t:'Quad',s:'on'},{n:'Chair 14',t:'Quad',s:'hold'}]},
+  {id:'palisades',name:'Palisades Tahoe',loc:'Olympic Valley, CA',region:'ca',lat:39.1965,lng:-120.2356,elev:9050,acres:6000,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:3,base:72,quality:'Spring Snow',trails:170,trailsOpen:105,lifts:29,liftsOpen:18,status:'GOOD',links:{official:'https://www.palisadestahoe.com',snow:'https://www.palisadestahoe.com/mountain-information/mountain-report',ig:'https://www.instagram.com/palisadestahoe/'},airport:'RNO 45 min. SFO 3.5h.',ann:'Spring skiing. Corn snow by late morning. Upper mountain best. Parking reservations weekends.',yoy:{thisYear:310,lastYear:275,avg:295},nextSeason:'Mid-Nov 2026',liftList:[{n:'Funitel',t:'Funitel',s:'on'},{n:'KT-22',t:'Double',s:'on'},{n:'Siberia Express',t:'Quad',s:'on'},{n:'Headwall',t:'Double',s:'hold'}]},
+  {id:'june',name:'June Mountain',loc:'June Lake, CA',region:'ca',lat:37.7772,lng:-119.0786,elev:10135,acres:1500,ikonDays:'5 days',open:'9:00 AM',close:'4:00 PM',fresh:4,base:68,quality:'Spring Snow',trails:35,trailsOpen:18,lifts:8,liftsOpen:5,status:'LIMITED',links:{official:'https://www.junemountain.com',snow:'https://www.junemountain.com/mountain/snow-weather-report',ig:'https://www.instagram.com/junemountain/'},airport:'MMH 30 min.',ann:'Late season spring skiing. Low crowds. Closing date TBD.',yoy:{thisYear:280,lastYear:250,avg:260},nextSeason:'Dec 2026',liftList:[{n:'Chair 1',t:'Quad',s:'on'},{n:'Chair 7 Rainbow',t:'Quad',s:'on'}]},
+  {id:'bigbear',name:'Big Bear Mountain',loc:'Big Bear Lake, CA',region:'ca',lat:34.2154,lng:-116.8909,elev:8805,acres:500,ikonDays:'5 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:55,trailsOpen:0,lifts:16,liftsOpen:0,status:'CLOSED',links:{official:'https://www.bigbearmountainresort.com',snow:'https://www.bigbearmountainresort.com/mountain/mountain-report',ig:'https://www.instagram.com/bigbearmtn/'},airport:'ONT 1.5h. LAX 2.5h.',ann:'Season ended. Returns November 2026.',yoy:{thisYear:120,lastYear:95,avg:110},nextSeason:'Nov 2026',liftList:[]},
   {id:'sierra',name:'Sierra at Tahoe',loc:'Twin Bridges, CA',region:'ca',lat:38.7966,lng:-120.0802,elev:8852,acres:2000,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:46,trailsOpen:0,lifts:12,liftsOpen:0,status:'CLOSED',links:{official:'https://sierraattahoe.com',snow:'https://sierraattahoe.com/weather-snow-report/',ig:'https://www.instagram.com/sierraattahoe/'},airport:'SMF 60 min.',ann:'Closed for 2025/26 season. Returns 2026/27.',yoy:{thisYear:0,lastYear:220,avg:240},nextSeason:'Nov 2026',liftList:[]},
 
   // === WEST US ===
-  {id:'snowbird',name:'Snowbird',loc:'Little Cottonwood Canyon, UT',region:'us',lat:40.5833,lng:-111.6551,elev:11000,acres:2500,ikonDays:'7 days',open:'9:00 AM',close:'4:00 PM',fresh:22,base:142,quality:'Champagne Powder',trails:112,trailsOpen:84,lifts:41,liftsOpen:25,status:'EPIC',links:{official:'https://www.snowbird.com',snow:'https://www.snowbird.com/mountain/snow-report/',ig:'https://www.instagram.com/snowbird/'},airport:'SLC 35 min.',ann:'22" in 24h. Tram running. Chain law Little Cottonwood.',yoy:{thisYear:420,lastYear:380,avg:400},nextSeason:'Mid-Nov 2026',liftList:[{n:'Aerial Tram',t:'Tram',s:'on'},{n:'Peruvian Express',t:'Quad',s:'on'},{n:'Little Cloud',t:'Quad',s:'on'},{n:'Baldy Express',t:'Quad',s:'hold'}]},
-  {id:'brighton',name:'Brighton Resort',loc:'Big Cottonwood Canyon, UT',region:'us',lat:40.5975,lng:-111.5833,elev:10500,acres:1050,ikonDays:'5 days',open:'9:00 AM',close:'9:00 PM',fresh:16,base:128,quality:'Dry Powder',trails:66,trailsOpen:62,lifts:8,liftsOpen:8,status:'PRIME',links:{official:'https://www.brightonresort.com',snow:'https://www.brightonresort.com/mountain/snow-report',ig:'https://www.instagram.com/brightonresort/'},airport:'SLC 40 min. Night skiing until 9 PM.',ann:'Night skiing! All 8 lifts. 16" fresh.',yoy:{thisYear:380,lastYear:340,avg:360},nextSeason:'Mid-Nov 2026',liftList:[{n:'Crest',t:'Quad',s:'on'},{n:'Majestic',t:'Quad',s:'on'},{n:'Millicent',t:'Triple',s:'on'}]},
-  {id:'solitude',name:'Solitude Mountain',loc:'Big Cottonwood Canyon, UT',region:'us',lat:40.6203,lng:-111.5919,elev:10035,acres:1200,ikonDays:'5 days',open:'9:00 AM',close:'4:00 PM',fresh:15,base:122,quality:'Dry Powder',trails:77,trailsOpen:56,lifts:10,liftsOpen:8,status:'PRIME',links:{official:'https://www.solitudemountain.com',snow:'https://www.solitudemountain.com/mountain/conditions',ig:'https://www.instagram.com/solitudemtn/'},airport:'SLC 45 min.',ann:'Uncrowded. Honeycomb Canyon open.',yoy:{thisYear:360,lastYear:320,avg:340},nextSeason:'Mid-Nov 2026',liftList:[{n:'Apex Express',t:'Quad',s:'on'},{n:'Sunrise',t:'Quad',s:'on'}]},
-  {id:'deervalley',name:'Deer Valley',loc:'Park City, UT',region:'us',lat:40.6374,lng:-111.478,elev:9570,acres:2026,ikonDays:'Unlimited',open:'9:00 AM',close:'4:15 PM',fresh:12,base:108,quality:'Packed Powder',trails:103,trailsOpen:88,lifts:21,liftsOpen:18,status:'PRIME',links:{official:'https://www.deervalley.com',snow:'https://www.deervalley.com/mountain/snow-report',ig:'https://www.instagram.com/deervalley/'},airport:'SLC 40 min.',ann:'Grooming impeccable. Limited daily tickets. Ski-only resort.',yoy:{thisYear:310,lastYear:280,avg:300},nextSeason:'Dec 2026',liftList:[{n:'Jordanelle Gondola',t:'Gondola',s:'on'},{n:'Sterling Express',t:'Quad',s:'on'},{n:'Wasatch Express',t:'Quad',s:'on'}]},
-  {id:'alta',name:'Alta',loc:'Little Cottonwood, UT',region:'us',lat:40.5884,lng:-111.6386,elev:10550,acres:2614,ikonDays:'7 days',open:'9:15 AM',close:'4:30 PM',fresh:20,base:138,quality:'Champagne Powder',trails:116,trailsOpen:98,lifts:12,liftsOpen:10,status:'EPIC',links:{official:'https://www.alta.com',snow:'https://www.alta.com/conditions',ig:'https://www.instagram.com/altaskiarea/'},airport:'SLC 35 min.',ann:'20" overnight. Ski-only. Supreme & Collins open. Chain law active.',yoy:{thisYear:430,lastYear:390,avg:410},nextSeason:'Mid-Nov 2026',liftList:[{n:'Collins',t:'Quad',s:'on'},{n:'Supreme',t:'Quad',s:'on'},{n:'Wildcat',t:'Triple',s:'on'}]},
-  {id:'jacksonhole',name:'Jackson Hole',loc:'Teton Village, WY',region:'us',lat:43.5877,lng:-110.828,elev:10450,acres:2500,ikonDays:'7 days',open:'9:00 AM',close:'4:00 PM',fresh:16,base:110,quality:'Packed Powder',trails:133,trailsOpen:110,lifts:13,liftsOpen:11,status:'EPIC',links:{official:'https://www.jacksonhole.com',snow:'https://www.jacksonhole.com/mountain/snow-report',ig:'https://www.instagram.com/jacksonhole/'},airport:'JAC 15 min.',ann:'Corbet\'s Couloir open. Tram running. 16" in 24h.',yoy:{thisYear:380,lastYear:340,avg:360},nextSeason:'Dec 2026',liftList:[{n:'Aerial Tram',t:'Tram',s:'on'},{n:'Bridger Gondola',t:'Gondola',s:'on'},{n:'Sweetwater',t:'Quad',s:'on'}]},
-  {id:'bigsky',name:'Big Sky',loc:'Big Sky, MT',region:'us',lat:45.2833,lng:-111.4014,elev:11166,acres:5800,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:10,base:96,quality:'Packed Powder',trails:310,trailsOpen:260,lifts:36,liftsOpen:30,status:'PRIME',links:{official:'https://bigskyresort.com',snow:'https://bigskyresort.com/mountain/snow-report',ig:'https://www.instagram.com/bigskyresort/'},airport:'BZN 50 min.',ann:'Biggest skiing in America. Lone Peak Tram open. Low crowds midweek.',yoy:{thisYear:290,lastYear:260,avg:280},nextSeason:'Late Nov 2026',liftList:[{n:'Lone Peak Tram',t:'Tram',s:'on'},{n:'Ramcharger 8',t:'8-Pack',s:'on'},{n:'Swift Current',t:'6-Pack',s:'on'}]},
-  {id:'steamboat',name:'Steamboat',loc:'Steamboat Springs, CO',region:'us',lat:40.4572,lng:-106.8045,elev:10568,acres:2965,ikonDays:'Unlimited',open:'8:30 AM',close:'4:00 PM',fresh:8,base:82,quality:'Packed Powder',trails:169,trailsOpen:140,lifts:18,liftsOpen:15,status:'GOOD',links:{official:'https://www.steamboat.com',snow:'https://www.steamboat.com/the-mountain/mountain-report',ig:'https://www.instagram.com/steamboatresort/'},airport:'HDN 30 min. DEN 3h.',ann:'Champagne Powder trademark. Tree skiing excellent.',yoy:{thisYear:280,lastYear:260,avg:275},nextSeason:'Late Nov 2026',liftList:[{n:'Wild Blue Gondola',t:'Gondola',s:'on'},{n:'Sunshine Express',t:'Quad',s:'on'},{n:'Storm Peak Express',t:'Quad',s:'on'}]},
-  {id:'winterpark',name:'Winter Park',loc:'Winter Park, CO',region:'us',lat:39.8841,lng:-105.7625,elev:12060,acres:3081,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:6,base:78,quality:'Spring Snow',trails:166,trailsOpen:130,lifts:25,liftsOpen:20,status:'GOOD',links:{official:'https://www.winterparkresort.com',snow:'https://www.winterparkresort.com/the-mountain/mountain-report',ig:'https://www.instagram.com/winterparkresort/'},airport:'DEN 1.5h.',ann:'Mary Jane bumps legendary. Panoramic Express open.',yoy:{thisYear:270,lastYear:250,avg:265},nextSeason:'Mid-Nov 2026',liftList:[{n:'Gondola',t:'Gondola',s:'on'},{n:'Panoramic Express',t:'6-Pack',s:'on'},{n:'Mary Jane',t:'Quad',s:'on'}]},
-  {id:'copper',name:'Copper Mountain',loc:'Frisco, CO',region:'us',lat:39.5022,lng:-106.1497,elev:12313,acres:2490,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:5,base:72,quality:'Spring Snow',trails:150,trailsOpen:115,lifts:23,liftsOpen:18,status:'GOOD',links:{official:'https://www.coppercolorado.com',snow:'https://www.coppercolorado.com/the-mountain/conditions/snow-report',ig:'https://www.instagram.com/coppercolorado/'},airport:'DEN 1.5h.',ann:'Naturally divided terrain. Woodward park is world-class.',yoy:{thisYear:240,lastYear:220,avg:235},nextSeason:'Nov 2026',liftList:[{n:'American Eagle',t:'6-Pack',s:'on'},{n:'Super Bee',t:'6-Pack',s:'on'},{n:'Alpine',t:'Quad',s:'on'}]},
-  {id:'eldora',name:'Eldora',loc:'Nederland, CO',region:'us',lat:39.9375,lng:-105.5831,elev:10800,acres:680,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:4,base:52,quality:'Machine Groomed',trails:61,trailsOpen:45,lifts:10,liftsOpen:8,status:'GOOD',links:{official:'https://www.eldora.com',snow:'https://www.eldora.com/mountain/conditions',ig:'https://www.instagram.com/eldoramountain/'},airport:'DEN 1.5h. Boulder 25 min.',ann:'Close to Boulder/Denver. Snowmaking helps. Good learning terrain.',yoy:{thisYear:180,lastYear:160,avg:170},nextSeason:'Nov 2026',liftList:[{n:'Challenge',t:'Quad',s:'on'},{n:'Indian Peaks Express',t:'Quad',s:'on'}]},
-  {id:'aspensnowmass',name:'Aspen Snowmass',loc:'Aspen, CO',region:'us',lat:39.2084,lng:-106.9499,elev:12510,acres:5527,ikonDays:'7 days',open:'9:00 AM',close:'3:30 PM',fresh:7,base:74,quality:'Spring Snow',trails:362,trailsOpen:290,lifts:41,liftsOpen:32,status:'GOOD',links:{official:'https://www.aspensnowmass.com',snow:'https://www.aspensnowmass.com/our-mountains/snow-report',ig:'https://www.instagram.com/aspensnowmass/'},airport:'ASE 10 min. DEN 4h.',ann:'4 mountains. Spring skiing events. Ajax, Highlands, Buttermilk, Snowmass.',yoy:{thisYear:260,lastYear:240,avg:250},nextSeason:'Late Nov 2026',liftList:[{n:'Silver Queen Gondola',t:'Gondola',s:'on'},{n:'Ajax Express',t:'6-Pack',s:'on'},{n:'Big Burn',t:'Quad',s:'on'}]},
-  {id:'abasin',name:'Arapahoe Basin',loc:'Keystone, CO',region:'us',lat:39.6425,lng:-105.8719,elev:13050,acres:1428,ikonDays:'7 days',open:'9:00 AM',close:'4:00 PM',fresh:6,base:68,quality:'Spring Snow',trails:147,trailsOpen:110,lifts:9,liftsOpen:7,status:'GOOD',links:{official:'https://www.arapahoebasin.com',snow:'https://www.arapahoebasin.com/snow-report/',ig:'https://www.instagram.com/aaboreal/'},airport:'DEN 1.5h.',ann:'Often last CO resort to close. High alpine terrain. Beach party vibes.',yoy:{thisYear:250,lastYear:230,avg:240},nextSeason:'Oct 2026',liftList:[{n:'Black Mountain Express',t:'Quad',s:'on'},{n:'Pallavicini',t:'Double',s:'on'}]},
-  {id:'taos',name:'Taos Ski Valley',loc:'Taos, NM',region:'us',lat:36.5966,lng:-105.4543,elev:12481,acres:1294,ikonDays:'7 days',open:'9:00 AM',close:'4:00 PM',fresh:3,base:54,quality:'Packed Powder',trails:110,trailsOpen:75,lifts:14,liftsOpen:10,status:'GOOD',links:{official:'https://www.skitaos.com',snow:'https://www.skitaos.com/mountain/conditions',ig:'https://www.instagram.com/skitaos/'},airport:'SAF 2.5h. ABQ 3h.',ann:'Steep expert terrain. Kachina Peak open on powder days.',yoy:{thisYear:200,lastYear:180,avg:190},nextSeason:'Late Nov 2026',liftList:[{n:'Kachina Peak Lift',t:'Quad',s:'on'},{n:'Lift 1',t:'Quad',s:'on'},{n:'Lift 4',t:'Triple',s:'on'}]},
-  {id:'sunvalley',name:'Sun Valley',loc:'Ketchum, ID',region:'us',lat:43.6977,lng:-114.3514,elev:9150,acres:2154,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:4,base:62,quality:'Spring Snow',trails:121,trailsOpen:90,lifts:13,liftsOpen:10,status:'GOOD',links:{official:'https://www.sunvalley.com',snow:'https://www.sunvalley.com/mountain/snow-report',ig:'https://www.instagram.com/sunvalley/'},airport:'SUN 15 min.',ann:'World-class grooming. Legendary Baldy Mountain. Low crowds.',yoy:{thisYear:220,lastYear:200,avg:210},nextSeason:'Late Nov 2026',liftList:[{n:'River Run Gondola',t:'Gondola',s:'on'},{n:'Christmas',t:'Quad',s:'on'},{n:'Lookout Express',t:'Quad',s:'on'}]},
-  {id:'crystalmt',name:'Crystal Mountain',loc:'Enumclaw, WA',region:'us',lat:46.9349,lng:-121.5045,elev:7012,acres:2600,ikonDays:'5 days',open:'9:00 AM',close:'4:00 PM',fresh:10,base:96,quality:'Packed Powder',trails:57,trailsOpen:48,lifts:11,liftsOpen:9,status:'PRIME',links:{official:'https://www.crystalmountainresort.com',snow:'https://www.crystalmountainresort.com/mountain/conditions',ig:'https://www.instagram.com/crystalmountain/'},airport:'SEA 2h.',ann:'Mt. Rainier views. Northwest powder. Gondola open.',yoy:{thisYear:340,lastYear:300,avg:320},nextSeason:'Mid-Nov 2026',liftList:[{n:'Mt. Rainier Gondola',t:'Gondola',s:'on'},{n:'Green Valley',t:'Quad',s:'on'},{n:'Chinook Express',t:'Quad',s:'on'}]},
-  {id:'bachelor',name:'Mt. Bachelor',loc:'Bend, OR',region:'us',lat:43.9792,lng:-121.689,elev:9065,acres:4318,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:8,base:88,quality:'Packed Powder',trails:121,trailsOpen:95,lifts:12,liftsOpen:10,status:'GOOD',links:{official:'https://www.mtbachelor.com',snow:'https://www.mtbachelor.com/mountain/conditions',ig:'https://www.instagram.com/mtbachelor/'},airport:'RDM 30 min.',ann:'360-degree skiing around a volcano. Summit open on calm days.',yoy:{thisYear:300,lastYear:280,avg:290},nextSeason:'Late Nov 2026',liftList:[{n:'Pine Marten Express',t:'Quad',s:'on'},{n:'Summit Express',t:'Quad',s:'on'},{n:'Northwest Express',t:'Quad',s:'on'}]},
+  {id:'snowbird',name:'Snowbird',loc:'Little Cottonwood Canyon, UT',region:'us',lat:40.5833,lng:-111.6551,elev:11000,acres:2500,ikonDays:'7 days',open:'9:00 AM',close:'4:00 PM',fresh:6,base:108,quality:'Spring Snow',trails:112,trailsOpen:70,lifts:41,liftsOpen:18,status:'GOOD',links:{official:'https://www.snowbird.com',snow:'https://www.snowbird.com/mountain/snow-report/',ig:'https://www.instagram.com/snowbird/'},airport:'SLC 35 min.',ann:'Spring conditions. Tram running. Corn snow by midday. Chain law possible Little Cottonwood.',yoy:{thisYear:420,lastYear:380,avg:400},nextSeason:'Mid-Nov 2026',liftList:[{n:'Aerial Tram',t:'Tram',s:'on'},{n:'Peruvian Express',t:'Quad',s:'on'},{n:'Little Cloud',t:'Quad',s:'on'},{n:'Baldy Express',t:'Quad',s:'hold'}]},
+  {id:'brighton',name:'Brighton Resort',loc:'Big Cottonwood Canyon, UT',region:'us',lat:40.5975,lng:-111.5833,elev:10500,acres:1050,ikonDays:'5 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:66,trailsOpen:0,lifts:8,liftsOpen:0,status:'CLOSED',links:{official:'https://www.brightonresort.com',snow:'https://www.brightonresort.com/mountain/snow-report',ig:'https://www.instagram.com/brightonresort/'},airport:'SLC 40 min. Night skiing until 9 PM.',ann:'Season ended early April. Returns November 2026.',yoy:{thisYear:380,lastYear:340,avg:360},nextSeason:'Mid-Nov 2026',liftList:[]},
+  {id:'solitude',name:'Solitude Mountain',loc:'Big Cottonwood Canyon, UT',region:'us',lat:40.6203,lng:-111.5919,elev:10035,acres:1200,ikonDays:'5 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:77,trailsOpen:0,lifts:10,liftsOpen:0,status:'CLOSED',links:{official:'https://www.solitudemountain.com',snow:'https://www.solitudemountain.com/mountain/conditions',ig:'https://www.instagram.com/solitudemtn/'},airport:'SLC 45 min.',ann:'Season ended early April. Returns November 2026.',yoy:{thisYear:360,lastYear:320,avg:340},nextSeason:'Mid-Nov 2026',liftList:[]},
+  {id:'deervalley',name:'Deer Valley',loc:'Park City, UT',region:'us',lat:40.6374,lng:-111.478,elev:9570,acres:2026,ikonDays:'Unlimited',open:'9:00 AM',close:'4:15 PM',fresh:2,base:70,quality:'Spring Snow',trails:103,trailsOpen:55,lifts:21,liftsOpen:10,status:'LIMITED',links:{official:'https://www.deervalley.com',snow:'https://www.deervalley.com/mountain/snow-report',ig:'https://www.instagram.com/deervalley/'},airport:'SLC 40 min.',ann:'Final week of season. Spring grooming. Ski-only. Closing April 13.',yoy:{thisYear:310,lastYear:280,avg:300},nextSeason:'Dec 2026',liftList:[{n:'Jordanelle Gondola',t:'Gondola',s:'on'},{n:'Sterling Express',t:'Quad',s:'on'},{n:'Wasatch Express',t:'Quad',s:'on'}]},
+  {id:'alta',name:'Alta',loc:'Little Cottonwood, UT',region:'us',lat:40.5884,lng:-111.6386,elev:10550,acres:2614,ikonDays:'7 days',open:'9:15 AM',close:'4:30 PM',fresh:4,base:95,quality:'Corn Snow',trails:116,trailsOpen:72,lifts:12,liftsOpen:8,status:'GOOD',links:{official:'https://www.alta.com',snow:'https://www.alta.com/conditions',ig:'https://www.instagram.com/altaskiarea/'},airport:'SLC 35 min.',ann:'Spring corn. Ski-only. Collins & Wildcat open. Season ends late April.',yoy:{thisYear:430,lastYear:390,avg:410},nextSeason:'Mid-Nov 2026',liftList:[{n:'Collins',t:'Quad',s:'on'},{n:'Supreme',t:'Quad',s:'on'},{n:'Wildcat',t:'Triple',s:'on'}]},
+  {id:'jacksonhole',name:'Jackson Hole',loc:'Teton Village, WY',region:'us',lat:43.5877,lng:-110.828,elev:10450,acres:2500,ikonDays:'7 days',open:'9:00 AM',close:'4:00 PM',fresh:2,base:68,quality:'Spring Snow',trails:133,trailsOpen:65,lifts:13,liftsOpen:7,status:'LIMITED',links:{official:'https://www.jacksonhole.com',snow:'https://www.jacksonhole.com/mountain/snow-report',ig:'https://www.instagram.com/jacksonhole/'},airport:'JAC 15 min.',ann:'Final days of season. Tram running weekends only. Spring conditions.',yoy:{thisYear:380,lastYear:340,avg:360},nextSeason:'Dec 2026',liftList:[{n:'Aerial Tram',t:'Tram',s:'on'},{n:'Bridger Gondola',t:'Gondola',s:'on'},{n:'Sweetwater',t:'Quad',s:'on'}]},
+  {id:'bigsky',name:'Big Sky',loc:'Big Sky, MT',region:'us',lat:45.2833,lng:-111.4014,elev:11166,acres:5800,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:2,base:62,quality:'Spring Snow',trails:310,trailsOpen:140,lifts:36,liftsOpen:16,status:'LIMITED',links:{official:'https://bigskyresort.com',snow:'https://bigskyresort.com/mountain/snow-report',ig:'https://www.instagram.com/bigskyresort/'},airport:'BZN 50 min.',ann:'Final weekend approaching. Limited terrain open. Lone Peak Tram weather-dependent.',yoy:{thisYear:290,lastYear:260,avg:280},nextSeason:'Late Nov 2026',liftList:[{n:'Lone Peak Tram',t:'Tram',s:'on'},{n:'Ramcharger 8',t:'8-Pack',s:'on'},{n:'Swift Current',t:'6-Pack',s:'on'}]},
+  {id:'steamboat',name:'Steamboat',loc:'Steamboat Springs, CO',region:'us',lat:40.4572,lng:-106.8045,elev:10568,acres:2965,ikonDays:'Unlimited',open:'8:30 AM',close:'4:00 PM',fresh:2,base:58,quality:'Spring Snow',trails:169,trailsOpen:85,lifts:18,liftsOpen:10,status:'LIMITED',links:{official:'https://www.steamboat.com',snow:'https://www.steamboat.com/the-mountain/mountain-report',ig:'https://www.instagram.com/steamboatresort/'},airport:'HDN 30 min. DEN 3h.',ann:'Spring closing weekend. Corn snow afternoons. Season ends April 13.',yoy:{thisYear:280,lastYear:260,avg:275},nextSeason:'Late Nov 2026',liftList:[{n:'Wild Blue Gondola',t:'Gondola',s:'on'},{n:'Sunshine Express',t:'Quad',s:'on'},{n:'Storm Peak Express',t:'Quad',s:'on'}]},
+  {id:'winterpark',name:'Winter Park',loc:'Winter Park, CO',region:'us',lat:39.8841,lng:-105.7625,elev:12060,acres:3081,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:3,base:60,quality:'Spring Snow',trails:166,trailsOpen:90,lifts:25,liftsOpen:14,status:'GOOD',links:{official:'https://www.winterparkresort.com',snow:'https://www.winterparkresort.com/the-mountain/mountain-report',ig:'https://www.instagram.com/winterparkresort/'},airport:'DEN 1.5h.',ann:'Spring operations. Mary Jane bumps softening by midday. Open through late April.',yoy:{thisYear:270,lastYear:250,avg:265},nextSeason:'Mid-Nov 2026',liftList:[{n:'Gondola',t:'Gondola',s:'on'},{n:'Panoramic Express',t:'6-Pack',s:'on'},{n:'Mary Jane',t:'Quad',s:'on'}]},
+  {id:'copper',name:'Copper Mountain',loc:'Frisco, CO',region:'us',lat:39.5022,lng:-106.1497,elev:12313,acres:2490,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:2,base:52,quality:'Spring Snow',trails:150,trailsOpen:70,lifts:23,liftsOpen:12,status:'LIMITED',links:{official:'https://www.coppercolorado.com',snow:'https://www.coppercolorado.com/the-mountain/conditions/snow-report',ig:'https://www.instagram.com/coppercolorado/'},airport:'DEN 1.5h.',ann:'Spring conditions. Limited terrain. Closing mid-April.',yoy:{thisYear:240,lastYear:220,avg:235},nextSeason:'Nov 2026',liftList:[{n:'American Eagle',t:'6-Pack',s:'on'},{n:'Super Bee',t:'6-Pack',s:'on'},{n:'Alpine',t:'Quad',s:'on'}]},
+  {id:'eldora',name:'Eldora',loc:'Nederland, CO',region:'us',lat:39.9375,lng:-105.5831,elev:10800,acres:680,ikonDays:'Unlimited',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:61,trailsOpen:0,lifts:10,liftsOpen:0,status:'CLOSED',links:{official:'https://www.eldora.com',snow:'https://www.eldora.com/mountain/conditions',ig:'https://www.instagram.com/eldoramountain/'},airport:'DEN 1.5h. Boulder 25 min.',ann:'Season ended early April. Returns November 2026.',yoy:{thisYear:180,lastYear:160,avg:170},nextSeason:'Nov 2026',liftList:[]},
+  {id:'aspensnowmass',name:'Aspen Snowmass',loc:'Aspen, CO',region:'us',lat:39.2084,lng:-106.9499,elev:12510,acres:5527,ikonDays:'7 days',open:'9:00 AM',close:'3:30 PM',fresh:2,base:56,quality:'Spring Snow',trails:362,trailsOpen:150,lifts:41,liftsOpen:18,status:'LIMITED',links:{official:'https://www.aspensnowmass.com',snow:'https://www.aspensnowmass.com/our-mountains/snow-report',ig:'https://www.instagram.com/aspensnowmass/'},airport:'ASE 10 min. DEN 4h.',ann:'Aspen Mountain & Snowmass open. Highlands & Buttermilk closed for season. Spring events.',yoy:{thisYear:260,lastYear:240,avg:250},nextSeason:'Late Nov 2026',liftList:[{n:'Silver Queen Gondola',t:'Gondola',s:'on'},{n:'Ajax Express',t:'6-Pack',s:'on'},{n:'Big Burn',t:'Quad',s:'on'}]},
+  {id:'abasin',name:'Arapahoe Basin',loc:'Keystone, CO',region:'us',lat:39.6425,lng:-105.8719,elev:13050,acres:1428,ikonDays:'7 days',open:'9:00 AM',close:'4:00 PM',fresh:3,base:58,quality:'Corn Snow',trails:147,trailsOpen:80,lifts:9,liftsOpen:6,status:'GOOD',links:{official:'https://www.arapahoebasin.com',snow:'https://www.arapahoebasin.com/snow-report/',ig:'https://www.instagram.com/aaboreal/'},airport:'DEN 1.5h.',ann:'Often last CO resort to close. High alpine terrain. Beach party vibes.',yoy:{thisYear:250,lastYear:230,avg:240},nextSeason:'Oct 2026',liftList:[{n:'Black Mountain Express',t:'Quad',s:'on'},{n:'Pallavicini',t:'Double',s:'on'}]},
+  {id:'taos',name:'Taos Ski Valley',loc:'Taos, NM',region:'us',lat:36.5966,lng:-105.4543,elev:12481,acres:1294,ikonDays:'7 days',open:'9:00 AM',close:'4:00 PM',fresh:0,base:36,quality:'Spring Snow',trails:110,trailsOpen:40,lifts:14,liftsOpen:6,status:'LIMITED',links:{official:'https://www.skitaos.com',snow:'https://www.skitaos.com/mountain/conditions',ig:'https://www.instagram.com/skitaos/'},airport:'SAF 2.5h. ABQ 3h.',ann:'Final days. Kachina Peak closed. Lower mountain spring skiing only.',yoy:{thisYear:200,lastYear:180,avg:190},nextSeason:'Late Nov 2026',liftList:[{n:'Kachina Peak Lift',t:'Quad',s:'on'},{n:'Lift 1',t:'Quad',s:'on'},{n:'Lift 4',t:'Triple',s:'on'}]},
+  {id:'sunvalley',name:'Sun Valley',loc:'Ketchum, ID',region:'us',lat:43.6977,lng:-114.3514,elev:9150,acres:2154,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:0,base:42,quality:'Spring Snow',trails:121,trailsOpen:55,lifts:13,liftsOpen:7,status:'LIMITED',links:{official:'https://www.sunvalley.com',snow:'https://www.sunvalley.com/mountain/snow-report',ig:'https://www.instagram.com/sunvalley/'},airport:'SUN 15 min.',ann:'Final week. Groomed runs on Baldy. Season closing April 13.',yoy:{thisYear:220,lastYear:200,avg:210},nextSeason:'Late Nov 2026',liftList:[{n:'River Run Gondola',t:'Gondola',s:'on'},{n:'Christmas',t:'Quad',s:'on'},{n:'Lookout Express',t:'Quad',s:'on'}]},
+  {id:'crystalmt',name:'Crystal Mountain',loc:'Enumclaw, WA',region:'us',lat:46.9349,lng:-121.5045,elev:7012,acres:2600,ikonDays:'5 days',open:'9:00 AM',close:'4:00 PM',fresh:4,base:72,quality:'Spring Snow',trails:57,trailsOpen:35,lifts:11,liftsOpen:7,status:'GOOD',links:{official:'https://www.crystalmountainresort.com',snow:'https://www.crystalmountainresort.com/mountain/conditions',ig:'https://www.instagram.com/crystalmountain/'},airport:'SEA 2h.',ann:'Spring skiing with Rainier views. Gondola open. Corn snow afternoons.',yoy:{thisYear:340,lastYear:300,avg:320},nextSeason:'Mid-Nov 2026',liftList:[{n:'Mt. Rainier Gondola',t:'Gondola',s:'on'},{n:'Green Valley',t:'Quad',s:'on'},{n:'Chinook Express',t:'Quad',s:'on'}]},
+  {id:'bachelor',name:'Mt. Bachelor',loc:'Bend, OR',region:'us',lat:43.9792,lng:-121.689,elev:9065,acres:4318,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:3,base:68,quality:'Spring Snow',trails:121,trailsOpen:70,lifts:12,liftsOpen:8,status:'GOOD',links:{official:'https://www.mtbachelor.com',snow:'https://www.mtbachelor.com/mountain/conditions',ig:'https://www.instagram.com/mtbachelor/'},airport:'RDM 30 min.',ann:'Spring volcano skiing. Summit open calm days. Open through late May.',yoy:{thisYear:300,lastYear:280,avg:290},nextSeason:'Late Nov 2026',liftList:[{n:'Pine Marten Express',t:'Quad',s:'on'},{n:'Summit Express',t:'Quad',s:'on'},{n:'Northwest Express',t:'Quad',s:'on'}]},
 
   // === EAST US ===
-  {id:'killington',name:'Killington',loc:'Killington, VT',region:'us',lat:43.6045,lng:-72.8201,elev:4241,acres:1509,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:3,base:36,quality:'Spring Snow',trails:155,trailsOpen:80,lifts:22,liftsOpen:14,status:'GOOD',links:{official:'https://www.killington.com',snow:'https://www.killington.com/mountain/conditions',ig:'https://www.instagram.com/killingtonmtn/'},airport:'BTV 2h. BDL 2.5h.',ann:'The Beast of the East. Last to close in the East. Spring skiing mode.',yoy:{thisYear:180,lastYear:160,avg:170},nextSeason:'Oct 2026',liftList:[{n:'K-1 Express Gondola',t:'Gondola',s:'on'},{n:'Superstar Express',t:'Quad',s:'on'},{n:'Snowdon',t:'6-Pack',s:'on'}]},
-  {id:'sugarbush',name:'Sugarbush',loc:'Warren, VT',region:'us',lat:44.1358,lng:-72.8954,elev:4083,acres:578,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:2,base:30,quality:'Spring Snow',trails:111,trailsOpen:55,lifts:16,liftsOpen:10,status:'LIMITED',links:{official:'https://www.sugarbush.com',snow:'https://www.sugarbush.com/conditions',ig:'https://www.instagram.com/sugaboreal/'},airport:'BTV 1h.',ann:'Two peaks connected by shuttle. Spring corn skiing on warm days.',yoy:{thisYear:160,lastYear:140,avg:155},nextSeason:'Nov 2026',liftList:[{n:'Super Bravo Express',t:'Quad',s:'on'},{n:'Valley House Quad',t:'Quad',s:'on'},{n:'Heaven\'s Gate Triple',t:'Triple',s:'on'}]},
-  {id:'stratton',name:'Stratton',loc:'Stratton, VT',region:'us',lat:43.1134,lng:-72.9079,elev:3875,acres:670,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:2,base:28,quality:'Machine Groomed',trails:99,trailsOpen:50,lifts:11,liftsOpen:7,status:'LIMITED',links:{official:'https://www.stratton.com',snow:'https://www.stratton.com/mountain/conditions',ig:'https://www.instagram.com/strattonresort/'},airport:'ALB 2h.',ann:'Birthplace of Burton Snowboards. Good park. Spring operations.',yoy:{thisYear:150,lastYear:130,avg:145},nextSeason:'Nov 2026',liftList:[{n:'Gondola',t:'Gondola',s:'on'},{n:'American Express',t:'6-Pack',s:'on'}]},
-  {id:'loon',name:'Loon Mountain',loc:'Lincoln, NH',region:'us',lat:44.0369,lng:-71.6218,elev:3050,acres:370,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:1,base:24,quality:'Machine Groomed',trails:61,trailsOpen:30,lifts:10,liftsOpen:6,status:'LIMITED',links:{official:'https://www.loonmtn.com',snow:'https://www.loonmtn.com/mountain/conditions',ig:'https://www.instagram.com/laboreal/'},airport:'MHT 1.5h. BOS 2h.',ann:'White Mountains. Family friendly. Spring conditions.',yoy:{thisYear:130,lastYear:115,avg:125},nextSeason:'Nov 2026',liftList:[{n:'Kancamagus Express',t:'Quad',s:'on'},{n:'Lincoln Express',t:'Quad',s:'on'}]},
-  {id:'sugarloaf',name:'Sugarloaf',loc:'Carrabassett Valley, ME',region:'us',lat:45.0314,lng:-70.3131,elev:4237,acres:1230,ikonDays:'Unlimited',open:'9:00 AM',close:'3:50 PM',fresh:4,base:40,quality:'Packed Powder',trails:162,trailsOpen:75,lifts:13,liftsOpen:8,status:'GOOD',links:{official:'https://www.sugarloaf.com',snow:'https://www.sugarloaf.com/conditions-and-cams',ig:'https://www.instagram.com/sugarloafmtn/'},airport:'PWM 2.5h. BOS 4h.',ann:'Only lift-served skiing above treeline in the East. Snowfields open.',yoy:{thisYear:190,lastYear:170,avg:180},nextSeason:'Nov 2026',liftList:[{n:'SuperQuad',t:'Quad',s:'on'},{n:'King Pine Quad',t:'Quad',s:'on'},{n:'Whiffletree',t:'Double',s:'on'}]},
+  {id:'killington',name:'Killington',loc:'Killington, VT',region:'us',lat:43.6045,lng:-72.8201,elev:4241,acres:1509,ikonDays:'Unlimited',open:'9:00 AM',close:'4:00 PM',fresh:0,base:24,quality:'Corn Snow',trails:155,trailsOpen:30,lifts:22,liftsOpen:6,status:'LIMITED',links:{official:'https://www.killington.com',snow:'https://www.killington.com/mountain/conditions',ig:'https://www.instagram.com/killingtonmtn/'},airport:'BTV 2h. BDL 2.5h.',ann:'Superstar trail only. Last to close in the East. Pond skimming this weekend.',yoy:{thisYear:180,lastYear:160,avg:170},nextSeason:'Oct 2026',liftList:[{n:'K-1 Express Gondola',t:'Gondola',s:'on'},{n:'Superstar Express',t:'Quad',s:'on'},{n:'Snowdon',t:'6-Pack',s:'on'}]},
+  {id:'sugarbush',name:'Sugarbush',loc:'Warren, VT',region:'us',lat:44.1358,lng:-72.8954,elev:4083,acres:578,ikonDays:'Unlimited',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:111,trailsOpen:0,lifts:16,liftsOpen:0,status:'CLOSED',links:{official:'https://www.sugarbush.com',snow:'https://www.sugarbush.com/conditions',ig:'https://www.instagram.com/sugaboreal/'},airport:'BTV 1h.',ann:'Season ended early April. Returns November 2026.',yoy:{thisYear:160,lastYear:140,avg:155},nextSeason:'Nov 2026',liftList:[]},
+  {id:'stratton',name:'Stratton',loc:'Stratton, VT',region:'us',lat:43.1134,lng:-72.9079,elev:3875,acres:670,ikonDays:'Unlimited',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:99,trailsOpen:0,lifts:11,liftsOpen:0,status:'CLOSED',links:{official:'https://www.stratton.com',snow:'https://www.stratton.com/mountain/conditions',ig:'https://www.instagram.com/strattonresort/'},airport:'ALB 2h.',ann:'Season ended. Returns November 2026.',yoy:{thisYear:150,lastYear:130,avg:145},nextSeason:'Nov 2026',liftList:[]},
+  {id:'loon',name:'Loon Mountain',loc:'Lincoln, NH',region:'us',lat:44.0369,lng:-71.6218,elev:3050,acres:370,ikonDays:'Unlimited',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:61,trailsOpen:0,lifts:10,liftsOpen:0,status:'CLOSED',links:{official:'https://www.loonmtn.com',snow:'https://www.loonmtn.com/mountain/conditions',ig:'https://www.instagram.com/laboreal/'},airport:'MHT 1.5h. BOS 2h.',ann:'Season ended. Returns November 2026.',yoy:{thisYear:130,lastYear:115,avg:125},nextSeason:'Nov 2026',liftList:[]},
+  {id:'sugarloaf',name:'Sugarloaf',loc:'Carrabassett Valley, ME',region:'us',lat:45.0314,lng:-70.3131,elev:4237,acres:1230,ikonDays:'Unlimited',open:'9:00 AM',close:'3:50 PM',fresh:0,base:22,quality:'Spring Snow',trails:162,trailsOpen:30,lifts:13,liftsOpen:4,status:'LIMITED',links:{official:'https://www.sugarloaf.com',snow:'https://www.sugarloaf.com/conditions-and-cams',ig:'https://www.instagram.com/sugarloafmtn/'},airport:'PWM 2.5h. BOS 4h.',ann:'Snowfields open on warm days. Final weekend approaching. Limited terrain.',yoy:{thisYear:190,lastYear:170,avg:180},nextSeason:'Nov 2026',liftList:[{n:'SuperQuad',t:'Quad',s:'on'},{n:'King Pine Quad',t:'Quad',s:'on'},{n:'Whiffletree',t:'Double',s:'on'}]},
 
   // === INTERNATIONAL ===
-  {id:'niseko',name:'Niseko United',loc:'Hokkaido, Japan',region:'intl',lat:42.8628,lng:140.6988,elev:4291,acres:2191,ikonDays:'5 days',open:'8:30 AM',close:'8:30 PM',fresh:24,base:180,quality:'Japow \u2014 Legendary Dry Powder',trails:80,trailsOpen:72,lifts:30,liftsOpen:28,status:'EPIC',links:{official:'https://www.niseko.ne.jp/en/',snow:'https://www.niseko.ne.jp/en/conditions/',ig:'https://www.instagram.com/nisekotourism/'},airport:'CTS (New Chitose) 2.5h drive. NRT 95 min flight + 2.5h.',ann:'Japow season peaking. 24" overnight. Night skiing until 8:30 PM. Legendary tree runs.',yoy:{thisYear:520,lastYear:480,avg:500},nextSeason:'Dec 2026',liftList:[{n:'Hirafu Gondola',t:'Gondola',s:'on'},{n:'King Hooded Quad',t:'Quad',s:'on'}]},
-  {id:'revelstoke',name:'Revelstoke Mountain',loc:'British Columbia, Canada',region:'intl',lat:50.9577,lng:-118.1649,elev:7300,acres:3121,ikonDays:'5 days',open:'8:30 AM',close:'3:30 PM',fresh:20,base:160,quality:'Deep Powder',trails:75,trailsOpen:65,lifts:7,liftsOpen:6,status:'EPIC',links:{official:'https://www.revelstokemountainresort.com',snow:'https://www.revelstokemountainresort.com/conditions/snow-report',ig:'https://www.instagram.com/revaboreal/'},airport:'YLW (Kelowna) 2.5h drive. YVR 5h.',ann:'Massive 20" dump. North America\'s biggest vertical. Expert terrain wide open.',yoy:{thisYear:440,lastYear:400,avg:420},nextSeason:'Late Nov 2026',liftList:[{n:'Revelation Gondola',t:'Gondola',s:'on'},{n:'Stoke Chair',t:'Quad',s:'on'}]},
-  {id:'tremblant',name:'Tremblant',loc:'Mont-Tremblant, QC',region:'intl',lat:46.2146,lng:-74.5855,elev:2871,acres:755,ikonDays:'Unlimited',open:'9:00 AM',close:'3:30 PM',fresh:1,base:22,quality:'Machine Groomed',trails:102,trailsOpen:42,lifts:14,liftsOpen:8,status:'LIMITED',links:{official:'https://www.tremblant.ca',snow:'https://www.tremblant.ca/mountain/conditions',ig:'https://www.instagram.com/monttremblant/'},airport:'YUL 1.5h.',ann:'Spring conditions. Village is charming. Late season limited terrain.',yoy:{thisYear:140,lastYear:120,avg:135},nextSeason:'Nov 2026',liftList:[{n:'Cabriolet',t:'Gondola',s:'on'},{n:'Flying Mile Express',t:'Quad',s:'on'},{n:'TGV',t:'Quad',s:'on'}]},
+  {id:'niseko',name:'Niseko United',loc:'Hokkaido, Japan',region:'intl',lat:42.8628,lng:140.6988,elev:4291,acres:2191,ikonDays:'5 days',open:'8:30 AM',close:'8:30 PM',fresh:2,base:82,quality:'Spring Snow',trails:80,trailsOpen:40,lifts:30,liftsOpen:14,status:'LIMITED',links:{official:'https://www.niseko.ne.jp/en/',snow:'https://www.niseko.ne.jp/en/conditions/',ig:'https://www.instagram.com/nisekotourism/'},airport:'CTS (New Chitose) 2.5h drive. NRT 95 min flight + 2.5h.',ann:'Late season spring skiing. Night skiing still running. Closing early May. Corn snow.',yoy:{thisYear:520,lastYear:480,avg:500},nextSeason:'Dec 2026',liftList:[{n:'Hirafu Gondola',t:'Gondola',s:'on'},{n:'King Hooded Quad',t:'Quad',s:'on'}]},
+  {id:'revelstoke',name:'Revelstoke Mountain',loc:'British Columbia, Canada',region:'intl',lat:50.9577,lng:-118.1649,elev:7300,acres:3121,ikonDays:'5 days',open:'8:30 AM',close:'3:30 PM',fresh:4,base:95,quality:'Spring Snow',trails:75,trailsOpen:40,lifts:7,liftsOpen:4,status:'LIMITED',links:{official:'https://www.revelstokemountainresort.com',snow:'https://www.revelstokemountainresort.com/conditions/snow-report',ig:'https://www.instagram.com/revaboreal/'},airport:'YLW (Kelowna) 2.5h drive. YVR 5h.',ann:'Final days. North America\'s biggest vertical. Spring corn on south-facing. Closing mid-April.',yoy:{thisYear:440,lastYear:400,avg:420},nextSeason:'Late Nov 2026',liftList:[{n:'Revelation Gondola',t:'Gondola',s:'on'},{n:'Stoke Chair',t:'Quad',s:'on'}]},
+  {id:'tremblant',name:'Tremblant',loc:'Mont-Tremblant, QC',region:'intl',lat:46.2146,lng:-74.5855,elev:2871,acres:755,ikonDays:'Unlimited',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:102,trailsOpen:0,lifts:14,liftsOpen:0,status:'CLOSED',links:{official:'https://www.tremblant.ca',snow:'https://www.tremblant.ca/mountain/conditions',ig:'https://www.instagram.com/monttremblant/'},airport:'YUL 1.5h.',ann:'Season ended early April. Village open year-round. Returns November 2026.',yoy:{thisYear:140,lastYear:120,avg:135},nextSeason:'Nov 2026',liftList:[]},
   {id:'bluemountain',name:'Blue Mountain',loc:'Collingwood, ON',region:'intl',lat:44.5018,lng:-80.3161,elev:1483,acres:364,ikonDays:'5 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:43,trailsOpen:0,lifts:17,liftsOpen:0,status:'CLOSED',links:{official:'https://www.bluemountain.ca',snow:'https://www.bluemountain.ca/conditions',ig:'https://www.instagram.com/bluaboreal/'},airport:'YYZ 1.5h.',ann:'Season ended early April. Returns November.',yoy:{thisYear:100,lastYear:90,avg:95},nextSeason:'Nov 2026',liftList:[]},
-  {id:'chamonix',name:'Chamonix Mont-Blanc',loc:'Chamonix, France',region:'intl',lat:45.9237,lng:6.8694,elev:12605,acres:2500,ikonDays:'7 days',open:'8:30 AM',close:'4:30 PM',fresh:10,base:95,quality:'Spring Snow',trails:80,trailsOpen:55,lifts:49,liftsOpen:30,status:'PRIME',links:{official:'https://www.chamonix.com',snow:'https://www.chamonix.com/snow-and-weather-report',ig:'https://www.instagram.com/chamonixmontblanc/'},airport:'GVA 1.5h.',ann:'Grands Montets still open. Vallee Blanche spring conditions. High alpine.',yoy:{thisYear:320,lastYear:290,avg:310},nextSeason:'Dec 2026',liftList:[{n:'Aiguille du Midi',t:'Cable Car',s:'on'},{n:'Grands Montets Gondola',t:'Gondola',s:'on'},{n:'Brevent Gondola',t:'Gondola',s:'on'}]},
-  {id:'zermatt',name:'Zermatt',loc:'Zermatt, Switzerland',region:'intl',lat:46.0207,lng:7.7491,elev:12739,acres:1420,ikonDays:'7 days',open:'8:30 AM',close:'4:15 PM',fresh:6,base:80,quality:'Spring Snow',trails:145,trailsOpen:100,lifts:52,liftsOpen:35,status:'GOOD',links:{official:'https://www.zermatt.ch',snow:'https://www.zermatt.ch/en/snow-report',ig:'https://www.instagram.com/zaboreal/'},airport:'GVA 3.5h. ZRH 3.5h.',ann:'Year-round glacier skiing. Matterhorn Glacier Paradise open. Spring cruising.',yoy:{thisYear:280,lastYear:260,avg:270},nextSeason:'Year-round',liftList:[{n:'Matterhorn Glacier Paradise',t:'Cable Car',s:'on'},{n:'Sunnegga Express',t:'Funicular',s:'on'},{n:'Gornergrat Railway',t:'Cog Rail',s:'on'}]},
+  {id:'chamonix',name:'Chamonix Mont-Blanc',loc:'Chamonix, France',region:'intl',lat:45.9237,lng:6.8694,elev:12605,acres:2500,ikonDays:'7 days',open:'8:30 AM',close:'4:30 PM',fresh:4,base:70,quality:'Spring Snow',trails:80,trailsOpen:40,lifts:49,liftsOpen:22,status:'GOOD',links:{official:'https://www.chamonix.com',snow:'https://www.chamonix.com/snow-and-weather-report',ig:'https://www.instagram.com/chamonixmontblanc/'},airport:'GVA 1.5h.',ann:'Vallee Blanche spring conditions. High alpine still skiable. Lower areas closing.',yoy:{thisYear:320,lastYear:290,avg:310},nextSeason:'Dec 2026',liftList:[{n:'Aiguille du Midi',t:'Cable Car',s:'on'},{n:'Grands Montets Gondola',t:'Gondola',s:'on'},{n:'Brevent Gondola',t:'Gondola',s:'on'}]},
+  {id:'zermatt',name:'Zermatt',loc:'Zermatt, Switzerland',region:'intl',lat:46.0207,lng:7.7491,elev:12739,acres:1420,ikonDays:'7 days',open:'8:30 AM',close:'4:15 PM',fresh:2,base:65,quality:'Spring Snow',trails:145,trailsOpen:80,lifts:52,liftsOpen:28,status:'GOOD',links:{official:'https://www.zermatt.ch',snow:'https://www.zermatt.ch/en/snow-report',ig:'https://www.instagram.com/zaboreal/'},airport:'GVA 3.5h. ZRH 3.5h.',ann:'Year-round glacier skiing. Matterhorn Glacier Paradise open. Spring cruising.',yoy:{thisYear:280,lastYear:260,avg:270},nextSeason:'Year-round',liftList:[{n:'Matterhorn Glacier Paradise',t:'Cable Car',s:'on'},{n:'Sunnegga Express',t:'Funicular',s:'on'},{n:'Gornergrat Railway',t:'Cog Rail',s:'on'}]},
   {id:'vallenevado',name:'Valle Nevado',loc:'Santiago, Chile',region:'intl',lat:-33.3614,lng:-70.2478,elev:12045,acres:2225,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:40,trailsOpen:0,lifts:14,liftsOpen:0,status:'CLOSED',links:{official:'https://www.vallenevado.com',snow:'https://www.vallenevado.com/en/snow-report/',ig:'https://www.instagram.com/vallenevado/'},airport:'SCL 1.5h.',ann:'Southern hemisphere. Season runs June-October. Off-season now.',yoy:{thisYear:0,lastYear:180,avg:170},nextSeason:'Jun 2026',liftList:[]},
   {id:'thredbo',name:'Thredbo',loc:'Kosciuszko NP, Australia',region:'intl',lat:-36.5054,lng:148.3069,elev:6726,acres:1235,ikonDays:'5 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:50,trailsOpen:0,lifts:14,liftsOpen:0,status:'CLOSED',links:{official:'https://www.thredbo.com.au',snow:'https://www.thredbo.com.au/snow-report/',ig:'https://www.instagram.com/thredboresort/'},airport:'SYD 5h. CBR 3h.',ann:'Southern hemisphere. Season runs June-October. Off-season now.',yoy:{thisYear:0,lastYear:120,avg:110},nextSeason:'Jun 2026',liftList:[]}
 ];
@@ -1141,7 +1181,7 @@ const T={
     // Fix 4 & 8 new keys
     storm_started:'Storm started',peaks_at:'Peaks',clears_at:'Clears',best_window:'Best day window',morning_label:'morning',
     night_skiing:'Night skiing',epic_conditions:'Epic conditions',great_conditions:'Great conditions',worth_considering:'Worth considering',
-    live_data:'Live Data',updating:'Updating...',snow_report_demo:'Snow report data: demo',weather_openmeteo:'Weather: Open-Meteo',seasonal_projection:'Seasonal projection',trace:'Trace',from:'from',est_drive:'Est. Drive',actual_may_vary:'Actual time may vary with traffic & conditions',view_on_google:'View on Google Maps',starting_from:'Starting from',weather_live_source:'Weather: Live (Open-Meteo)',snow_sample_source:'Snow/lifts: sample data — verify at source',all_sample_source:'All data: sample — verify at resort site',verify_source:'Verify at source',
+    live_data:'Live Data',updating:'Updating...',snow_report_demo:'Snow report data: demo',weather_openmeteo:'Weather: Open-Meteo',seasonal_projection:'Seasonal projection',trace:'Trace',accuracy:'accuracy',from:'from',est_drive:'Est. Drive',actual_may_vary:'Actual time may vary with traffic & conditions',view_on_google:'View on Google Maps',starting_from:'Starting from',change_location:'Change in Profile',weather_live_source:'Weather: Live (Open-Meteo)',snow_sample_source:'Snow/lifts: sample data — verify at source',all_sample_source:'All data: sample — verify at resort site',verify_source:'Verify at source',
     no_significant_snow:'No significant snowfall in the forecast.',packed_base_for_groomers:'packed base for groomer days.',check_back:'Check back \u2014 spring storms can surprise.',
     pacific_front_since:'Pacific front since',dropping:'dropping',of_quality:'of',more_with:'with 4-6" more',fresh_tracks:'for fresh tracks',
     narrative_powder_day:'makes this a powder day.',narrative_solid:'Solid',narrative_overnight:'overnight.',narrative_conditions_across:'conditions across the mountain.',
@@ -1189,13 +1229,13 @@ const T={
     today_label:'Today',tomorrow_label:'Tomorrow',
     tagline:'Know before you go.',
     alert_when:'Alert me when:',alert_powder:'8"+ fresh snow at my resorts',alert_storm:'Major storm incoming (12"+)',alert_epic:'EPIC conditions (score 85+)',alert_weekly:'Weekly forecast digest (Wednesdays)',
-    alert_logic_title:'When do alerts fire?',alert_logic_powder:'Powder: When any of your favorite resorts reports 8"+ fresh overnight',alert_logic_storm:'Storm: 48h before a major system hits (12"+ forecast)',alert_logic_epic:'Epic: When a resort scores 85+ based on snow + weather + your location',alert_logic_weekly:'Weekly: Wednesday evening — weekend forecast for your top resorts',
+    alert_logic_title:'When do alerts fire?',alert_logic_powder:'Powder: When any of your favorite resorts reports 8"+ fresh overnight',alert_logic_storm:'Storm: 48h before a major system hits (12"+ forecast)',alert_logic_epic:'Epic: When a resort scores 85+ based on snow + weather + your location',alert_logic_weekly:'Weekly: Wednesday evening — weekend forecast for your top resorts',alert_timeline_title:'Alert Schedule',alert_timeline_2w:'2 weeks out: Early heads-up when models show high snow probability',alert_timeline_1w:'1 week out: Confirmed storm alert with expected snowfall range',alert_timeline_3d:'3 days out: Updated forecast + resort prep details',alert_timeline_1d:'Day before: Final conditions report + drive/chain advisory',
     checkpoint:'Checkpoint:'
   },
   zh:{top_picks:'本周末推荐',this_weekend:'本周末',all_resorts:'所有IKON滑雪场',trip_plan:'行程规划',my_profile:'我的资料',my_level:'我的等级',my_skills:'我的技能',practice:'训练计划',resources:'资源',subscribe:'订阅',fresh:'新雪量',base:'积雪深度',lifts:'缆车',trails:'雪道',distance:'距离',drive:'预计车程',flight:'航班',open:'开放',close_t:'关闭',chain_ctrl:'链条控制',view_detail:'查看详情',season_total:'本季总量',last_year:'去年',average:'5年均值',next_season:'下季开放',off_season_title:'山在休息',off_season_body:'雪季通常在11月中旬开始。订阅以获得首雪通知。',days_until:'天后开季',show_all:'显示全部',show_less:'收起',resorts:'滑雪场',storm_context:'风暴信息',location:'位置',email:'邮箱',saved_resort:'收藏滑雪场',profile_saved:'已保存',seven_day:'7天预报',hourly_today:'今日逐时',three_week:'3周展望',storm_briefing:'风暴简报',weather_update:'天气更新',clear_skies:'山区天气晴朗',plan_next:'规划下次行程',best_windows:'未来3周最佳窗口',week:'第',snow_chance:'降雪概率',expected:'预计',best_bet:'最佳推荐',score_explain:'这些分数是什么意思？',score_label:'分数',composite_ranking:'综合排名',snow_conditions:'雪况',weather:'天气',travel_distance:'路程',crowd_factor:'人流量',skill_match:'技能匹配',status_labels:'状态标签',epic:'极佳',prime:'优秀',good:'良好',limited:'有限',closed:'关闭',epic_desc:'15寸以上新粉雪日',prime_desc:'8-15寸良好雪况',good_desc:'3-8寸尚可降雪',limited_desc:'自然降雪极少',closed_desc:'未运营',save_profile:'保存资料',favorite_resorts:'收藏滑雪场',add_resort:'+ 添加滑雪场',powder_alerts:'粉雪提醒',never_miss:'不错过每个好雪天',notify_text:'当你最爱的滑雪场条件最佳时我们会通知你',condition_alerts:'雪况提醒',storm_forecasts:'暴风雪预报',zero_spam:'无垃圾邮件',subscribed:'已订阅，有雪时我们会通知你。',selected_resort:'已选滑雪场',itinerary:'粉雪日行程示例',packing:'装备清单',quality:'雪质',snowfall_in:'降雪量（英寸）',wind_mph:'风速（mph）',more_snow:'更多降雪',drying:'转晴',steady:'稳定',lift_status:'缆车状态',yoy_inches:'年度对比（英寸）',this_year:'今年',demo_forecast:'演示预报数据',demo_subscribe:'订阅获取真实提醒',forecast_data:'预报数据',snow_report:'雪况报告',official_site:'官方网站',instagram:'Instagram',home:'首页',trip:'行程',profile:'资料',demo_data:'演示数据',updated_today:'今日更新',started:'开始',peaks:'高峰',clears:'放晴',powder_day:'粉雪日',
     storm_started:'暴风雪开始',peaks_at:'高峰',clears_at:'放晴',best_window:'最佳时间',morning_label:'早上',
     night_skiing:'夜间滑雪',epic_conditions:'极佳条件',great_conditions:'良好条件',worth_considering:'值得考虑',
-    live_data:'实时数据',updating:'更新中...',snow_report_demo:'雪况数据：演示',weather_openmeteo:'天气：Open-Meteo',seasonal_projection:'季节预测',trace:'微量',from:'从',est_drive:'预计驾车',actual_may_vary:'实际时间因交通和路况而异',view_on_google:'在Google地图中查看',starting_from:'出发地',weather_live_source:'天气：实时 (Open-Meteo)',snow_sample_source:'雪况/缆车：示例数据 — 请核实',all_sample_source:'所有数据：示例 — 请在官网核实',verify_source:'核实来源',
+    live_data:'实时数据',updating:'更新中...',snow_report_demo:'雪况数据：演示',weather_openmeteo:'天气：Open-Meteo',seasonal_projection:'季节预测',trace:'微量',accuracy:'准确度',from:'从',est_drive:'预计驾车',actual_may_vary:'实际时间因交通和路况而异',view_on_google:'在Google地图中查看',starting_from:'出发地',change_location:'在个人资料中更改',weather_live_source:'天气：实时 (Open-Meteo)',snow_sample_source:'雪况/缆车：示例数据 — 请核实',all_sample_source:'所有数据：示例 — 请在官网核实',verify_source:'核实来源',
     no_significant_snow:'预报中无明显降雪。',packed_base_for_groomers:'压实基础适合压雪道。',check_back:'请关注——春季风暴可能突然来袭。',
     pacific_front_since:'太平洋锋面自',dropping:'降下',of_quality:'的',more_with:'还有4-6"',fresh_tracks:'去追新雪',
     narrative_powder_day:'是粉雪日。',narrative_solid:'不错的',narrative_overnight:'隔夜降雪。',narrative_conditions_across:'全山条件。',
@@ -1243,13 +1283,13 @@ const T={
     today_label:'今天',tomorrow_label:'明天',
     tagline:'出发前，先看这里。',
     alert_when:'提醒条件：',alert_powder:'我的滑雪场8寸以上新雪',alert_storm:'大暴风雪来袭（12寸以上）',alert_epic:'极佳条件（评分85+）',alert_weekly:'每周预报摘要（周三）',
-    alert_logic_title:'何时发送提醒？',alert_logic_powder:'粉雪：你收藏的滑雪场一夜降雪8寸以上',alert_logic_storm:'暴风雪：重大天气系统到达前48小时（预报12寸+）',alert_logic_epic:'极佳：滑雪场综合评分达85+（雪况+天气+你的位置）',alert_logic_weekly:'每周：周三晚间——周末你的滑雪场预报',
+    alert_logic_title:'何时发送提醒？',alert_logic_powder:'粉雪：你收藏的滑雪场一夜降雪8寸以上',alert_logic_storm:'暴风雪：重大天气系统到达前48小时（预报12寸+）',alert_logic_epic:'极佳：滑雪场综合评分达85+（雪况+天气+你的位置）',alert_logic_weekly:'每周：周三晚间——周末你的滑雪场预报',alert_timeline_title:'提醒时间表',alert_timeline_2w:'提前2周：模型显示高降雪概率时预警',alert_timeline_1w:'提前1周：确认暴风雪提醒及预计降雪量',alert_timeline_3d:'提前3天：更新预报+滑雪场准备详情',alert_timeline_1d:'前一天：最终路况报告+驾车/防滑链建议',
     checkpoint:'检查点：'
   },
   ja:{top_picks:'今週末のおすすめ',this_weekend:'今週末',all_resorts:'全IKONリゾート',trip_plan:'旅行プランナー',my_profile:'マイプロフィール',my_level:'レベル',my_skills:'スキル',practice:'トレーニングプログラム',resources:'リソース',subscribe:'登録',fresh:'新雪量',base:'ベース',lifts:'リフト',trails:'コース',distance:'距離',drive:'運転時間',flight:'フライト',open:'オープン',close_t:'クローズ',chain_ctrl:'チェーン規制',view_detail:'詳細を見る',season_total:'シーズン合計',last_year:'昨年',average:'5年平均',next_season:'次シーズン',off_season_title:'山は休んでいます',off_season_body:'シーズンは通常11月中旬に始まります。',days_until:'日後にシーズン開始',show_all:'全て表示',show_less:'折りたたむ',resorts:'リゾート',storm_context:'嵐の状況',location:'場所',email:'メール',saved_resort:'お気に入り',profile_saved:'保存済み',seven_day:'7日予報',hourly_today:'今日の時間別',three_week:'3週間の見通し',storm_briefing:'嵐情報',weather_update:'天気更新',clear_skies:'山岳地帯は晴天',plan_next:'次の旅行を計画',best_windows:'今後3週間のベストタイミング',week:'第',snow_chance:'降雪確率',expected:'予想',best_bet:'おすすめ',score_explain:'スコアの意味は？',score_label:'スコア',composite_ranking:'総合評価',snow_conditions:'雪の状態',weather:'天気',travel_distance:'移動距離',crowd_factor:'混雑度',skill_match:'スキルマッチ',status_labels:'ステータス',epic:'最高',prime:'優良',good:'良好',limited:'限定的',closed:'クローズ',epic_desc:'15インチ以上の新雪パウダーデイ',prime_desc:'8-15インチの良好なコンディション',good_desc:'3-8インチのまずまずの雪',limited_desc:'自然降雪が少ない',closed_desc:'営業していない',save_profile:'プロフィール保存',favorite_resorts:'お気に入りリゾート',add_resort:'+ リゾート追加',powder_alerts:'パウダーアラート',never_miss:'最高の日を見逃さない',notify_text:'お気に入りリゾートのコンディションがピークの時にお知らせします',condition_alerts:'コンディション通知',storm_forecasts:'嵐の予報',zero_spam:'スパムなし',subscribed:'登録完了。雪が降ったらお知らせします。',selected_resort:'選択中のリゾート',itinerary:'パウダーデイのスケジュール例',packing:'持ち物チェックリスト',quality:'雪質',snowfall_in:'降雪量（インチ）',wind_mph:'風速（mph）',more_snow:'雪増加',drying:'乾燥',steady:'安定',lift_status:'リフト状況',yoy_inches:'前年比（インチ）',this_year:'今年',demo_forecast:'デモ予報データ',demo_subscribe:'リアルアラートを購読',forecast_data:'予報データ',snow_report:'積雪レポート',official_site:'公式サイト',instagram:'Instagram',home:'ホーム',trip:'旅行',profile:'プロフィール',demo_data:'デモデータ',updated_today:'本日更新',started:'開始',peaks:'ピーク',clears:'晴れ',powder_day:'パウダーデイ',
     storm_started:'嵐の開始',peaks_at:'ピーク',clears_at:'晴れ',best_window:'ベストタイム',morning_label:'朝',
     night_skiing:'ナイター',epic_conditions:'最高のコンディション',great_conditions:'良好なコンディション',worth_considering:'検討の価値あり',
-    live_data:'ライブデータ',updating:'更新中...',snow_report_demo:'積雪データ：デモ',weather_openmeteo:'天気：Open-Meteo',seasonal_projection:'シーズン予測',trace:'微量',from:'から',est_drive:'推定ドライブ',actual_may_vary:'実際の時間は交通状況により異なります',view_on_google:'Googleマップで表示',starting_from:'出発地',weather_live_source:'天気：リアルタイム (Open-Meteo)',snow_sample_source:'積雪/リフト：サンプル — 公式で確認',all_sample_source:'全データ：サンプル — 公式サイトで確認',verify_source:'ソースで確認',
+    live_data:'ライブデータ',updating:'更新中...',snow_report_demo:'積雪データ：デモ',weather_openmeteo:'天気：Open-Meteo',seasonal_projection:'シーズン予測',trace:'微量',accuracy:'精度',from:'から',est_drive:'推定ドライブ',actual_may_vary:'実際の時間は交通状況により異なります',view_on_google:'Googleマップで表示',starting_from:'出発地',change_location:'プロフィールで変更',weather_live_source:'天気：リアルタイム (Open-Meteo)',snow_sample_source:'積雪/リフト：サンプル — 公式で確認',all_sample_source:'全データ：サンプル — 公式サイトで確認',verify_source:'ソースで確認',
     no_significant_snow:'予報に大きな降雪はありません。',packed_base_for_groomers:'圧雪ベースでグルーミングデイに。',check_back:'春の嵐に注意してください。',
     pacific_front_since:'太平洋前線',dropping:'降雪',of_quality:'の',more_with:'さらに4-6"',fresh_tracks:'新雪を滑りに',
     narrative_powder_day:'パウダーデイです。',narrative_solid:'良い',narrative_overnight:'夜間降雪。',narrative_conditions_across:'全山のコンディション。',
@@ -1297,7 +1337,7 @@ const T={
     today_label:'今日',tomorrow_label:'明日',
     tagline:'行く前に、知る。',
     alert_when:'通知条件：',alert_powder:'8インチ以上の新雪',alert_storm:'大嵐の接近（12インチ以上）',alert_epic:'最高コンディション（スコア85+）',alert_weekly:'週間予報ダイジェスト（水曜日）',
-    alert_logic_title:'いつアラートが届く？',alert_logic_powder:'パウダー：お気に入りリゾートに一晩で8インチ以上降雪時',alert_logic_storm:'嵐：大規模気象到達48時間前（12インチ以上予報）',alert_logic_epic:'最高：リゾートのスコアが85+（雪質+天気+あなたの位置）',alert_logic_weekly:'毎週：水曜夕方—お気に入りリゾートの週末予報',
+    alert_logic_title:'いつアラートが届く？',alert_logic_powder:'パウダー：お気に入りリゾートに一晩で8インチ以上降雪時',alert_logic_storm:'嵐：大規模気象到達48時間前（12インチ以上予報）',alert_logic_epic:'最高：リゾートのスコアが85+（雪質+天気+あなたの位置）',alert_logic_weekly:'毎週：水曜夕方—お気に入りリゾートの週末予報',alert_timeline_title:'アラートスケジュール',alert_timeline_2w:'2週間前：モデルが高降雪確率を示した時の早期通知',alert_timeline_1w:'1週間前：暴風雪確認アラート+予想降雪量',alert_timeline_3d:'3日前：予報更新+リゾート準備詳細',alert_timeline_1d:'前日：最終コンディション報告+ドライブ/チェーン情報',
     checkpoint:'チェックポイント：'
   }
 };
@@ -1662,7 +1702,10 @@ function switchTab(tab){
   document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active-tab'));
   document.getElementById(tab).classList.add('active-tab');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.querySelector(`.nav-item[data-tab="${tab}"]`).classList.add('active');
+  document.querySelector(`.nav-item[data-tab="${tab}"]`)?.classList.add('active');
+  // Update desktop nav
+  document.querySelectorAll('.top-desktop-nav button').forEach(b=>b.classList.remove('active'));
+  document.querySelector(`.top-desktop-nav button[data-dtab="${tab}"]`)?.classList.add('active');
   if(tab==='home'){renderTopPicks();renderAllResorts();}
   if(tab==='trip')renderTrip();
   if(tab==='profile')renderProfile();
@@ -1751,7 +1794,7 @@ function renderNextTrip(){
     <div class="outlook-row" style="flex-wrap:wrap">
       <div class="outlook-week">${w.weekLabel}</div>
       <div class="outlook-info">
-        <div class="outlook-title">${w.dateRange}${w.isLive?' <span style="font-size:10px;color:var(--fresh);font-weight:600">LIVE</span>':w.weekNum>1?' <span style="font-size:10px;color:var(--text3);font-weight:500">PROJECTION</span>':''}</div>
+        <div class="outlook-title">${w.dateRange}${w.isLive?' <span style="font-size:10px;color:var(--fresh);font-weight:600">LIVE ~85%</span>':w.weekNum===2?' <span style="font-size:10px;color:var(--text3);font-weight:500">~60% '+t("accuracy")+'</span>':w.weekNum===3?' <span style="font-size:10px;color:var(--text3);font-weight:500">~40% '+t("accuracy")+'</span>':''}</div>
         <div class="outlook-detail">${w.snowChance}% ${t('snow_chance')} &middot; ${w.expectedSnow} ${t('expected')}</div>
         <div style="margin-top:6px">
           ${w.top3.map(r=>{
@@ -1826,8 +1869,8 @@ function renderTopPicks(){
         </div>
         ${r.travel.dist<800?`<div class="map-wrap"><div class="map-el" id="map-${r.id}"></div></div>`:''}
         <div class="drive-row">
-          <div class="drive-cell"><div class="drive-label">${icon('pin',12)} ${t('distance')}</div><div class="drive-val">${r.travel.dist}<span style="font-size:11px;color:var(--text2)"> mi</span></div></div>
-          <div class="drive-cell"><div class="drive-label">${r.travel.flightStr?icon('plane',12):icon('clock',12)} ${r.travel.flightStr?t('flight'):t('drive')}</div><div class="drive-val" style="color:${r.travel.driveHours>8?'var(--danger)':r.travel.hasChain?'var(--warn)':'var(--fresh)'}">${r.travel.flightStr||r.travel.driveStr}</div>${r.travel.hasChain?'<div class="drive-note">+30 min for chains</div>':''}</div>
+          <div class="drive-cell"><div class="drive-label">${icon('pin',12)} ${t('distance')}</div><div class="drive-val"><a href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin.name||userLocation)}&destination=${encodeURIComponent(r.name+', '+r.loc)}&travelmode=driving" target="_blank" class="d-stat-link">${r.travel.dist}<span style="font-size:11px;color:var(--text2)"> mi</span></a></div></div>
+          <div class="drive-cell"><div class="drive-label">${r.travel.flightStr?icon('plane',12):icon('clock',12)} ${r.travel.flightStr?t('flight'):t('drive')}</div><div class="drive-val" style="color:${r.travel.driveHours>8?'var(--danger)':r.travel.hasChain?'var(--warn)':'var(--fresh)'}"><a href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin.name||userLocation)}&destination=${encodeURIComponent(r.name+', '+r.loc)}&travelmode=driving" target="_blank" class="d-stat-link" style="color:inherit">${r.travel.flightStr||r.travel.driveStr}</a></div>${r.travel.hasChain?'<div class="drive-note">+30 min for chains</div>':''}</div>
         </div>
         <div style="font-size:10px;color:var(--text3);margin:-4px 0 8px;display:flex;align-items:center;gap:4px">${icon('pin',10)} ${t('from')} ${origin.name||userLocation} &middot; <a href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin.name||userLocation)}&destination=${encodeURIComponent(r.name+', '+r.loc)}&travelmode=driving" target="_blank" style="color:var(--accent)">${t('view_on_google')}</a></div>
         ${r.travel.hasChain?getChainAlertHTML(r):''}
@@ -1863,13 +1906,13 @@ function getResortNarrative(r){
 
 function getChainAlertHTML(r){
   const alerts={
-    mammoth:{road:'SR-203 to Mammoth Lakes',src:'Caltrans',url:'https://quickmap.dot.ca.gov',since:'4:00 AM',expectedKey:'ongoing_storm'},
-    palisades:{road:'I-80 Eastbound to Tahoe',src:'Caltrans',url:'https://quickmap.dot.ca.gov',since:'4:20 AM',expectedKey:'lift_by'},
-    june:{road:'US-395 to June Lake',src:'Caltrans',url:'https://roads.dot.ca.gov',since:'3:00 AM',expectedKey:'ongoing'},
-    snowbird:{road:'Little Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'11:00 PM',expectedKey:'all_day_storm'},
-    brighton:{road:'Big Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'10:00 PM',expectedKey:'four_wd'},
-    solitude:{road:'Big Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'10:00 PM',expectedKey:'four_wd'},
-    alta:{road:'Little Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'11:00 PM',expectedKey:'all_day_storm'},
+    mammoth:{road:'SR-203 to Mammoth Lakes',src:'Caltrans',url:'https://quickmap.dot.ca.gov',since:'spring season',expectedKey:'ongoing'},
+    palisades:{road:'I-80 Eastbound to Tahoe',src:'Caltrans',url:'https://quickmap.dot.ca.gov',since:'spring season',expectedKey:'ongoing'},
+    june:{road:'US-395 to June Lake',src:'Caltrans',url:'https://roads.dot.ca.gov',since:'spring season',expectedKey:'ongoing'},
+    snowbird:{road:'Little Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'spring season',expectedKey:'ongoing'},
+    brighton:{road:'Big Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'spring season',expectedKey:'four_wd'},
+    solitude:{road:'Big Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'spring season',expectedKey:'four_wd'},
+    alta:{road:'Little Cottonwood Canyon',src:'UDOT',url:'https://udot.utah.gov',since:'spring season',expectedKey:'ongoing'},
   };
   const a=alerts[r.id];if(!a)return'';
   return`<div class="chain-alert"><div class="chain-icon">${icon('alert-triangle',16)}</div><div><div class="chain-title">${icon('chain',12)} ${t('chain_ctrl')} R2 \u2014 ${a.road}</div><div class="chain-meta">${t('chain_active_since')} ${a.since}. ${t('all_vehicles_chains')}<br>${t('expected_label')}: ${t(a.expectedKey)}.</div><div class="chain-source"><a href="${a.url}" target="_blank">${a.src} ${icon('external-link',10)}</a> &middot; ${t('updated_label')} ${new Date().getHours()>6?t('this_morning'):t('last_night')}</div></div></div>`;
@@ -1970,6 +2013,7 @@ function renderTrip(){
       <div style="flex:1">
         <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">${t('starting_from')}</div>
         <div style="font-size:13px;color:var(--white);font-weight:600;margin-top:2px">${icon('pin',12)} ${origin.name||userLocation}</div>
+        <div style="font-size:10px;color:var(--accent);margin-top:3px;cursor:pointer" onclick="switchTab('profile');setTimeout(()=>document.getElementById('locInput')?.focus(),300)">${icon('edit',10)} ${t('change_location')}</div>
       </div>
       <a href="${gmapsUrl}" target="_blank" style="font-size:10px;color:var(--accent);text-decoration:none;display:flex;align-items:center;gap:4px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;white-space:nowrap">${icon('external-link',10)} ${t('view_on_google')}</a>
     </div>
@@ -1978,8 +2022,8 @@ function renderTrip(){
       <div class="d-stat"><div class="d-stat-label">${icon('star',10)} ${t('score_label')}</div><div class="d-stat-val" style="color:${score>=80?'var(--fresh)':score>=65?'var(--sky)':'var(--warn)'}">${r.status==='CLOSED'?'\u2014':score}</div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('cloud-snow',10)} ${t('fresh')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getFresh24h(r)}"</a></div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('mountain',10)} ${t('base')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getBaseDepth(r)}"</a></div></div>
-      <div class="d-stat"><div class="d-stat-label">${icon('pin',10)} ${t('distance')}</div><div class="d-stat-val">${realDist}<span style="font-size:11px;color:var(--text2)"> mi</span></div></div>
-      <div class="d-stat"><div class="d-stat-label">${icon('clock',10)} ${t('est_drive')}</div><div class="d-stat-val" style="font-size:12px">${ti.flightStr||adjDriveStr}</div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('pin',10)} ${t('distance')}</div><div class="d-stat-val"><a href="${gmapsUrl}" target="_blank" class="d-stat-link">${realDist}<span style="font-size:11px;color:var(--text2)"> mi</span></a></div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('clock',10)} ${t('est_drive')}</div><div class="d-stat-val" style="font-size:12px"><a href="${gmapsUrl}" target="_blank" class="d-stat-link">${ti.flightStr||adjDriveStr}</a></div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('bolt',10)} ${t('lifts')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${r.liftsOpen}/${r.lifts}</a></div></div>
     </div>
     <div style="font-size:10px;color:var(--text3);margin:-8px 0 12px;display:flex;align-items:center;gap:4px">${icon('alert-triangle',10)} ${t('actual_may_vary')} (+${bufferPct}% ${bufferNote}). <a href="${gmapsUrl}" target="_blank" style="color:var(--accent)">${t('view_on_google')}</a></div>
@@ -1998,7 +2042,7 @@ function renderTrip(){
        [t('clothing'),t('clothing_items')],
        [t('equipment'),t('equipment_items')],
        [t('misc'),t('misc_items')]
-    ].map(([cat,items])=>`<div style="margin-bottom:12px"><div style="font-size:9px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">${cat}</div><div style="font-size:11px;color:var(--text2);line-height:1.8">${items}</div></div>`).join('')}`;
+    ].map(([cat,items])=>`<div style="margin-bottom:12px"><div style="font-size:10px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">${cat}</div><div style="font-size:11px;color:var(--text2);line-height:1.8">${items}</div></div>`).join('')}`;
   // Init trip map
   setTimeout(()=>{
     const el=document.getElementById('trip-map');
@@ -2100,16 +2144,25 @@ function renderProfile(){
         <input type="hidden" name="location" id="emailLoc" />
         <input type="hidden" name="favorites" id="emailFavs" />
         <input type="hidden" name="alert_prefs" id="emailPrefs" />
+        <input type="hidden" name="alert_schedule" value="2-week advance warning, follow-up reminders 7d, 3d, 1d before storm" />
         <div class="email-row">
-          <input class="email-input" type="email" name="email" placeholder="your@email.com" required id="emailInput" />
+          <input class="email-input" type="email" name="email" placeholder="your@email.com" required id="emailInput" autocomplete="email" />
           <button class="email-btn" type="submit">${t('subscribe')}</button>
         </div>
+        <div id="emailError" style="display:none;font-size:11px;color:var(--danger);margin-top:8px;text-align:center"></div>
         <div class="alert-prefs">
           <div class="alert-pref-title">${icon('settings',10)} ${t('alert_when')}</div>
           <label class="alert-opt"><input type="checkbox" name="pref_powder" checked /> ${t('alert_powder')}</label>
           <label class="alert-opt"><input type="checkbox" name="pref_storm" checked /> ${t('alert_storm')}</label>
           <label class="alert-opt"><input type="checkbox" name="pref_epic" checked /> ${t('alert_epic')}</label>
           <label class="alert-opt"><input type="checkbox" name="pref_weekly" /> ${t('alert_weekly')}</label>
+        </div>
+        <div style="margin-top:10px;padding:10px;background:var(--sky-soft);border:1px solid rgba(106,175,196,0.15);border-radius:var(--r-sm);font-size:10px;color:var(--text2);line-height:1.6">
+          ${icon('calendar',10)} <strong style="color:var(--text)">${t('alert_timeline_title')}</strong><br>
+          ${t('alert_timeline_2w')}<br>
+          ${t('alert_timeline_1w')}<br>
+          ${t('alert_timeline_3d')}<br>
+          ${t('alert_timeline_1d')}
         </div>
       </form>
       <div class="email-success" id="emailSuccess"></div>
@@ -2386,7 +2439,7 @@ function openDetail(id){
 
     <!-- 7-DAY FORECAST -->
     <div class="sec-label" style="margin-top:16px">${icon('calendar',12)} ${t('seven_day')}</div>
-    <div class="forecast-strip">
+    <div class="forecast-strip" role="region" aria-label="7-day forecast" tabindex="0">
       ${forecast.map((d,i)=>`<div class="forecast-day${i===0?' today':''}">
         <div class="fd-name">${d.dayName}</div>
         <div class="fd-icon">${icon(d.condition,20)}</div>
@@ -2420,7 +2473,7 @@ function openDetail(id){
     <!-- HOURLY TODAY -->
     <div class="hourly-wrap">
       <div class="hourly-title">${icon('clock',12)} ${t('hourly_today')}</div>
-      <div class="hourly-strip">
+      <div class="hourly-strip" role="region" aria-label="Hourly forecast" tabindex="0">
         ${hourly.map(h=>`<div class="hourly-cell">
           <div class="hc-hour">${h.hour===0?'12a':h.hour<12?h.hour+'a':h.hour===12?'12p':(h.hour-12)+'p'}</div>
           <div class="hc-temp">${h.temp}&deg;</div>
@@ -2442,13 +2495,13 @@ function openDetail(id){
     </div>
     <div class="data-source">${t('forecast_data')}: <a href="${r.links.snow}" target="_blank">${r.name} ${t('snow_report')}</a> &middot; <a href="https://openweathermap.org" target="_blank">OpenWeather</a></div>
 
-    ${r.liftList.length?`<div class="sec-label" style="margin-top:16px">${icon('bolt',12)} ${t('lift_status')}</div>${r.liftList.map(l=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px"><div style="width:7px;height:7px;border-radius:50%;background:${l.s==='on'?'var(--fresh)':l.s==='hold'?'var(--warn)':'var(--danger)'}"></div><div style="flex:1;color:var(--text)">${l.n}</div><div style="font-size:9px;color:var(--text3)">${l.t}</div></div>`).join('')}`:''}
+    ${r.liftList.length?`<div class="sec-label" style="margin-top:16px">${icon('bolt',12)} ${t('lift_status')}</div>${r.liftList.map(l=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px"><div style="width:7px;height:7px;border-radius:50%;background:${l.s==='on'?'var(--fresh)':l.s==='hold'?'var(--warn)':'var(--danger)'}"></div><div style="flex:1;color:var(--text)">${l.n}</div><div style="font-size:10px;color:var(--text3)">${l.t}</div></div>`).join('')}`:''}
 
     <div class="yoy-section">
       <div class="yoy-title">${icon('mountain',12)} ${t('season_total')} \u2014 ${t('yoy_inches')}</div>
-      <div class="yoy-row"><div class="yoy-label">${t('this_year')}</div><div class="yoy-bar"><div class="yoy-fill" style="width:${r.yoy.thisYear/maxYOY*100}%;background:var(--accent);display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-size:9px;color:var(--bg);font-weight:600;min-width:fit-content">${r.yoy.thisYear}"</div></div><div class="yoy-val" style="color:var(--accent)">${r.yoy.thisYear}"</div></div>
-      <div class="yoy-row"><div class="yoy-label">${t('last_year')}</div><div class="yoy-bar"><div class="yoy-fill" style="width:${r.yoy.lastYear/maxYOY*100}%;background:var(--sky);display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-size:9px;color:var(--bg);font-weight:600;min-width:fit-content">${r.yoy.lastYear}"</div></div><div class="yoy-val" style="color:var(--sky)">${r.yoy.lastYear}"</div></div>
-      <div class="yoy-row"><div class="yoy-label">${t('average')}</div><div class="yoy-bar"><div class="yoy-fill" style="width:${r.yoy.avg/maxYOY*100}%;background:var(--text3);display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-size:9px;color:var(--bg);font-weight:600;min-width:fit-content">${r.yoy.avg}"</div></div><div class="yoy-val">${r.yoy.avg}"</div></div>
+      <div class="yoy-row"><div class="yoy-label">${t('this_year')}</div><div class="yoy-bar"><div class="yoy-fill" style="width:${r.yoy.thisYear/maxYOY*100}%;background:var(--accent);display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-size:10px;color:var(--bg);font-weight:600;min-width:fit-content">${r.yoy.thisYear}"</div></div><div class="yoy-val" style="color:var(--accent)">${r.yoy.thisYear}"</div></div>
+      <div class="yoy-row"><div class="yoy-label">${t('last_year')}</div><div class="yoy-bar"><div class="yoy-fill" style="width:${r.yoy.lastYear/maxYOY*100}%;background:var(--sky);display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-size:10px;color:var(--bg);font-weight:600;min-width:fit-content">${r.yoy.lastYear}"</div></div><div class="yoy-val" style="color:var(--sky)">${r.yoy.lastYear}"</div></div>
+      <div class="yoy-row"><div class="yoy-label">${t('average')}</div><div class="yoy-bar"><div class="yoy-fill" style="width:${r.yoy.avg/maxYOY*100}%;background:var(--text3);display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-size:10px;color:var(--bg);font-weight:600;min-width:fit-content">${r.yoy.avg}"</div></div><div class="yoy-val">${r.yoy.avg}"</div></div>
     </div>
 
     <div class="season-outlook">
@@ -2572,38 +2625,55 @@ async function submitEmail(e){
   e.preventDefault();
   const form=document.getElementById('emailForm');
   const emailVal=document.getElementById('emailInput').value;
+  const errorEl=document.getElementById('emailError');
+  errorEl.style.display='none';
   // Populate hidden fields with user context
   document.getElementById('emailReply').value=emailVal;
   document.getElementById('emailLoc').value=userLocation;
   document.getElementById('emailFavs').value=getFavorites().join(', ')||'none set';
   const prefs=[];
-  if(form.querySelector('[name="pref_powder"]').checked)prefs.push('powder_8in');
-  if(form.querySelector('[name="pref_storm"]').checked)prefs.push('storm_12in');
-  if(form.querySelector('[name="pref_epic"]').checked)prefs.push('epic_85');
-  if(form.querySelector('[name="pref_weekly"]').checked)prefs.push('weekly_digest');
+  if(form.querySelector('[name="pref_powder"]')?.checked)prefs.push('powder_8in');
+  if(form.querySelector('[name="pref_storm"]')?.checked)prefs.push('storm_12in');
+  if(form.querySelector('[name="pref_epic"]')?.checked)prefs.push('epic_85');
+  if(form.querySelector('[name="pref_weekly"]')?.checked)prefs.push('weekly_digest');
   document.getElementById('emailPrefs').value=prefs.join(', ');
   // Submit via Formspree AJAX
   const btn=form.querySelector('.email-btn');
+  const origText=btn.textContent;
   btn.textContent=t('updating')||'Sending...';
   btn.disabled=true;
   try{
-    const res=await fetch(form.action,{method:'POST',body:new FormData(form),headers:{'Accept':'application/json'}});
+    const res=await fetch(form.action,{
+      method:'POST',
+      body:JSON.stringify({
+        email:emailVal,
+        _replyto:emailVal,
+        _subject:'SlabHQ Powder Alert Signup',
+        location:userLocation,
+        favorites:getFavorites().join(', ')||'none set',
+        alert_prefs:prefs.join(', '),
+        alert_schedule:'2-week advance, 7d/3d/1d follow-ups'
+      }),
+      headers:{'Accept':'application/json','Content-Type':'application/json'}
+    });
     if(res.ok){
       form.style.display='none';
       const successEl=document.getElementById('emailSuccess');
       successEl.innerHTML=`${icon('check',14)} ${t('subscribed')}`;
       successEl.style.display='flex';
-      // Save subscription state locally
       localStorage.setItem('sbSubscribed',JSON.stringify({email:emailVal,prefs,date:new Date().toISOString()}));
     } else {
-      btn.textContent=t('subscribe');
+      const data=await res.json().catch(()=>({}));
+      btn.textContent=origText;
       btn.disabled=false;
-      alert('Subscription failed. Please try again.');
+      errorEl.textContent=data.error||'Subscription failed. Please check your email and try again.';
+      errorEl.style.display='block';
     }
   }catch(err){
-    btn.textContent=t('subscribe');
+    btn.textContent=origText;
     btn.disabled=false;
-    alert('Network error. Please try again.');
+    errorEl.textContent='Network error. Please check your connection and try again.';
+    errorEl.style.display='block';
   }
 }
 
