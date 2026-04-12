@@ -1,0 +1,19 @@
+name: Daily Snow Alert
+on:
+  schedule:
+    - cron: '0 14 * * *'  # 6:00 AM PST (UTC-8) / 7:00 AM PDT (UTC-7)
+  workflow_dispatch: {}     # manual trigger for testing
+
+jobs:
+  check-and-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Check snow conditions and send alerts
+        run: node scripts/check-snow-and-notify.js
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          FROM_EMAIL: ${{ secrets.FROM_EMAIL }}

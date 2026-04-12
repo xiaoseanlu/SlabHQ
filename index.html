@@ -2142,7 +2142,7 @@ function renderProfile(){
       <div class="email-eyebrow">${icon('bell',12)} ${t('powder_alerts')}</div>
       <div class="email-heading">${t('never_miss')}</div>
       <div class="email-sub">${t('notify_text')}</div>
-      <form id="emailForm" action="https://formspree.io/f/mwpkqqpr" method="POST" onsubmit="submitEmail(event)">
+      <form id="emailForm" onsubmit="submitEmail(event)">
         <input type="hidden" name="_subject" value="SlabHQ Powder Alert Signup" />
         <input type="hidden" name="_replyto" id="emailReply" />
         <input type="hidden" name="location" id="emailLoc" />
@@ -2644,6 +2644,9 @@ function closeLangMenu(){document.getElementById('langWrap').classList.remove('o
 document.addEventListener('click',e=>{if(!e.target.closest('.lang-wrap'))closeLangMenu()});
 
 // ── EMAIL ──
+// Subscription endpoint — update this after deploying the Cloudflare Worker
+const SUBSCRIBE_URL='https://slabhq-subscribe.YOUR_SUBDOMAIN.workers.dev';
+
 async function submitEmail(e){
   e.preventDefault();
   const form=document.getElementById('emailForm');
@@ -2660,16 +2663,16 @@ async function submitEmail(e){
   btn.textContent=t('updating')||'Sending...';
   btn.disabled=true;
   const subData={email:emailVal,prefs,location:userLocation,favorites:getFavorites().join(', ')||'none set',date:new Date().toISOString()};
-  // Try Formspree first, fall back to local save
+  // Post to Cloudflare Worker (stores in GitHub repo + sends welcome email via Resend)
   let submitted=false;
   try{
-    const res=await fetch(form.action,{
+    const res=await fetch(SUBSCRIBE_URL,{
       method:'POST',
-      body:JSON.stringify({email:emailVal,_replyto:emailVal,_subject:'SlabHQ Powder Alert Signup',location:userLocation,favorites:subData.favorites,alert_prefs:prefs.join(', '),alert_schedule:'2-week advance, 7d/3d/1d follow-ups'}),
-      headers:{'Accept':'application/json','Content-Type':'application/json'}
+      body:JSON.stringify({email:emailVal,location:userLocation,favorites:subData.favorites,prefs}),
+      headers:{'Content-Type':'application/json'}
     });
     if(res.ok)submitted=true;
-  }catch(err){}
+  }catch(err){console.warn('Subscription API error:',err)}
   // Always save locally and show success
   localStorage.setItem('sbSubscribed',JSON.stringify(subData));
   form.style.display='none';
