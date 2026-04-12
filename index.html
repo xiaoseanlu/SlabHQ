@@ -1605,9 +1605,9 @@ function scoreResort(r,origin){
   if(lv.key==='expert'&&(r.id==='snowbird'||r.id==='revelstoke'))skillBonus=5;
   if(lv.key==='intermediate'&&r.id==='brighton')skillBonus=3;
   const crowdScore=dist>500?8:r.fresh>10?6:10;
-  // Favorite resort bonus
+  // Favorite resort bonus — strong weight so user's picks rise to top
   const favs=JSON.parse(localStorage.getItem('sbFavorites')||'[]');
-  const favoriteBonus=favs.includes(r.id)?12:0;
+  const favoriteBonus=favs.includes(r.id)?15:0;
   return Math.round(Math.min(snowScore+weatherScore+travelScore+crowdScore+skillBonus+favoriteBonus,100));
 }
 
@@ -1748,7 +1748,7 @@ function renderWeatherOverview(){
           <div class="wx-phase-day">${p.day}</div>
         </div>`).join('')}
       </div>
-      <div class="wx-summary">${t('pacific_front')} <strong>${fmtShort(stormStartDate)}</strong>, ${t('dropping_of')} ${topResort.fresh}" ${tq(topResort.quality).toLowerCase()}. ${t('peaks')} <strong>${fmtShort(peakDate)}</strong> ${t('more_with_fresh')}, ${t('clears').toLowerCase()} <strong>${fmtShort(clearDate)}</strong>. ${t('best_window')}: <strong>${fmtShort(clearDate)} ${t('morning_label')}</strong> ${t('for_fresh_tracks')}.</div>
+      <div class="wx-summary">${topResort.fresh}" of ${tq(topResort.quality).toLowerCase()} expected. ${topResort.liftsOpen}/${topResort.lifts} lifts running, ${topResort.trailsOpen} trails open. Best window for fresh tracks: <strong>${fmtShort(clearDate)} morning</strong> after the storm clears.</div>
       <div class="wx-source">${icon('external-link',10)} <a href="${topResort.links.snow}" target="_blank">${topResort.name} ${t('snow_report')}</a> &middot; <a href="https://open-meteo.com" target="_blank">Open-Meteo</a></div>
     </div>`;
 }
@@ -2082,8 +2082,8 @@ function renderProfile(){
   // Profile settings: location, favorite resort
   document.getElementById('profileSettings').innerHTML=`
     <div class="profile-field" id="locField">
-      <label>${icon('pin',12)} ${t('location')}</label>
-      <input class="profile-input" id="profileLocation" value="${userLocation}" placeholder="San Francisco, CA" autocomplete="off" oninput="onLocationInput()" onfocus="onLocationInput()" />
+      <label>${icon('pin',12)} ${t('starting_from')}</label>
+      <input class="profile-input" id="profileLocation" value="${userLocation}" placeholder="ZIP code or city name" autocomplete="off" oninput="onLocationInput()" onfocus="onLocationInput()" />
       <div class="loc-suggest" id="locSuggest"></div>
     </div>
     <div class="profile-field">
@@ -2093,6 +2093,7 @@ function renderProfile(){
       </select>
     </div>
     <button class="profile-save-btn" onclick="saveProfile()">${icon('check',12)} ${t('save_profile')}</button>
+    <div id="profileConfirm" style="display:none;margin-top:10px;padding:10px 14px;background:var(--fresh-soft);border:1px solid var(--fresh);border-radius:var(--r-sm);font-size:11px;color:var(--text);line-height:1.6"></div>
     <div class="sec-label" style="margin-top:20px">${icon('star',12)} ${t('favorite_resorts')}</div>
     <div class="fav-slots" id="favSlots">${renderFavSlots()}</div>
   `;
@@ -2284,7 +2285,7 @@ function selectGeoLocation(name,lat,lng){
   localStorage.setItem('sbOrigin',name);
   destroyMaps();
   renderAll();
-  flashProfileSaved();
+  setTimeout(()=>flashProfileSaved(),100);
 }
 
 function selectLocation(name){
@@ -2299,14 +2300,29 @@ function selectLocation(name){
   localStorage.setItem('sbOrigin',name);
   destroyMaps();
   renderAll();
-  flashProfileSaved();
+  setTimeout(()=>flashProfileSaved(),100);
 }
 
 function flashProfileSaved(){
   const btn=document.querySelector('.profile-save-btn');
   if(!btn)return;
-  btn.innerHTML=`${icon('check',12)} ${t('profile_saved')}`;
-  setTimeout(()=>{btn.innerHTML=`${icon('check',12)} ${t('save_profile')}`;},1500);
+  const origHTML=btn.innerHTML;
+  btn.innerHTML=`${icon('check',12)} Saved`;
+  btn.style.background='var(--fresh)';btn.style.borderColor='var(--fresh)';
+  // Show inline confirmation below save button
+  const confirm=document.getElementById('profileConfirm');
+  if(confirm){
+    const loc=document.getElementById('profileLocation')?.value||userLocation;
+    const resort=RESORTS.find(r=>r.id===activeResort)?.name||'';
+    const favs=getFavorites().map(id=>RESORTS.find(r=>r.id===id)?.name).filter(Boolean);
+    let msg=`${icon('check',12)} <strong>Profile saved</strong>`;
+    msg+=`<br>${icon('pin',10)} <span style="color:var(--text2)">Starting from:</span> ${loc}`;
+    if(resort)msg+=`<br>${icon('mountain',10)} <span style="color:var(--text2)">Resort:</span> ${resort}`;
+    if(favs.length)msg+=`<br>${icon('star',10)} <span style="color:var(--text2)">Favorites:</span> ${favs.join(', ')}`;
+    confirm.innerHTML=msg;
+    confirm.style.display='block';
+    setTimeout(()=>{confirm.style.display='none';btn.innerHTML=origHTML;btn.style.background='';btn.style.borderColor='';},4000);
+  }
 }
 
 function saveProfile(){
@@ -2314,9 +2330,10 @@ function saveProfile(){
   const resort=document.getElementById('profileResort').value;
   if(loc){userLocation=loc;localStorage.setItem('sbOrigin',loc);}
   if(resort){activeResort=resort;localStorage.setItem('sbResort',resort);}
-  flashProfileSaved();
   destroyMaps();
   renderAll();
+  // Flash after re-render so DOM is fresh
+  setTimeout(()=>flashProfileSaved(),100);
 }
 
 function adjustSkill(id,delta){
@@ -2650,12 +2667,28 @@ async function submitEmail(e){
     });
     if(res.ok)submitted=true;
   }catch(err){}
-  // Always save locally and show success — email alerts are saved for when backend is configured
+  // Always save locally and show success
   localStorage.setItem('sbSubscribed',JSON.stringify(subData));
   form.style.display='none';
   const successEl=document.getElementById('emailSuccess');
-  successEl.innerHTML=`${icon('check',14)} ${submitted?t('subscribed'):'Alert preferences saved! You\'ll receive alerts when the service is activated.'}`;
-  successEl.style.display='flex';
+  const origin=getOrigin(userLocation);
+  const topResort=RESORTS.filter(r=>r.status!=='CLOSED').sort((a,b)=>scoreResort(b,origin)-scoreResort(a,origin))[0];
+  const favNames=getFavorites().map(id=>RESORTS.find(r=>r.id===id)?.name).filter(Boolean);
+  successEl.innerHTML=`
+    <div style="text-align:center;margin-bottom:12px">${icon('check',20)}</div>
+    <div style="font-family:var(--font-display);font-size:18px;color:var(--white);text-align:center;margin-bottom:4px">Welcome to Powder Alerts</div>
+    <div style="font-size:11px;color:var(--text2);text-align:center;margin-bottom:16px">Thank you for subscribing, <strong style="color:var(--text)">${emailVal}</strong></div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px;margin-bottom:12px">
+      <div style="font-size:10px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">${icon('cloud-snow',10)} Current Conditions Snapshot</div>
+      ${topResort?`<div style="font-size:12px;color:var(--white);font-weight:500">${topResort.name}: ${topResort.fresh}" fresh, ${topResort.base}" base</div>
+      <div style="font-size:10px;color:var(--text2);margin-top:2px">${topResort.liftsOpen}/${topResort.lifts} lifts open &middot; ${topResort.quality}</div>`:''}
+      ${favNames.length?`<div style="font-size:10px;color:var(--text2);margin-top:8px;border-top:1px solid var(--border);padding-top:8px">${icon('star',10)} Tracking: <strong style="color:var(--text)">${favNames.join(', ')}</strong></div>`:''}
+    </div>
+    <div style="font-size:10px;color:var(--text3);text-align:center;line-height:1.6">
+      ${icon('bell',10)} You'll receive alerts for: ${prefs.map(p=>p==='powder_8in'?'Powder days':p==='storm_12in'?'Storm alerts':p==='epic_85'?'Epic conditions':'Weekly digest').join(' &middot; ')}<br>
+      First alert: 2 weeks before the next big storm
+    </div>`;
+  successEl.style.display='block';
 }
 
 // ── BOTTOM NAV ICONS ──
