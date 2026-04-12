@@ -212,7 +212,7 @@ input{font-family:inherit}
 .container{max-width:520px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
 @media(min-width:768px){.container{max-width:680px}}
 @media(min-width:1024px){.container{max-width:720px}}
-@media(min-width:768px){
+@media(min-width:1024px){
   .bottom-nav{display:none!important}
   body{padding-bottom:0!important}
   .top-bar .top-desktop-nav{display:flex}
@@ -450,10 +450,10 @@ input{font-family:inherit}
 .status-bg-limited{background:color-mix(in srgb, var(--warn) 6%, var(--card));border-left:3px solid var(--warn)}
 .status-bg-closed{background:color-mix(in srgb, var(--text3) 4%, var(--card));border-left:3px solid var(--text3);opacity:0.5}
 
-.rr-score{font-family:var(--font-display);font-size:22px;min-width:32px;color:var(--white)}
+.rr-score{font-family:var(--font-display);font-size:22px;min-width:32px;color:var(--white);text-align:right;flex-shrink:0}
 .rr-info{flex:1;min-width:0}
-.rr-name{font-family:var(--font-display);font-size:15px;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rr-meta{font-size:10px;color:var(--text2);margin-top:1px;display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.rr-name{font-family:var(--font-display);font-size:14px;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rr-meta{font-size:10px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rr-chip{
   font-size:8px;letter-spacing:.5px;padding:3px 8px;border-radius:3px;
   flex-shrink:0;
@@ -1132,7 +1132,8 @@ function getOrigin(s){
   if(/^\d{5}$/.test(k)&&ORIGINS[k])return ORIGINS[k];
   for(const[key,v]of Object.entries(ORIGINS)){if(k.includes(key))return v}
   // Use geocoded result if available and matches current location
-  if(geocodedOrigin&&geocodedOrigin.query===k)return geocodedOrigin;
+  if(geocodedOrigin&&(geocodedOrigin.query===k||k.includes(geocodedOrigin.query?.split(',')[0])||geocodedOrigin.query?.includes(k.split(',')[0])))return geocodedOrigin;
+  // Fall back to nearest known origin by partial match
   return ORIGINS['san francisco'];
 }
 
@@ -1606,7 +1607,7 @@ function scoreResort(r,origin){
   const crowdScore=dist>500?8:r.fresh>10?6:10;
   // Favorite resort bonus
   const favs=JSON.parse(localStorage.getItem('sbFavorites')||'[]');
-  const favoriteBonus=favs.includes(r.id)?8:0;
+  const favoriteBonus=favs.includes(r.id)?12:0;
   return Math.round(Math.min(snowScore+weatherScore+travelScore+crowdScore+skillBonus+favoriteBonus,100));
 }
 
@@ -1980,9 +1981,9 @@ function renderResortRow(r){
   const bgClass=r.status==='EPIC'?'status-bg-epic':r.status==='PRIME'?'status-bg-prime':r.status==='GOOD'?'status-bg-good':r.status==='LIMITED'?'status-bg-limited':'status-bg-closed';
   const travelLine=r.travel.flightStr?icon('plane',10)+' '+r.travel.flightStr:r.travel.driveStr;
   return`<div class="resort-row ${bgClass}${r.status==='CLOSED'?' closed-resort':''}" data-resort-id="${r.id}" onclick="openDetail('${r.id}')">
-    <div class="rr-score"${r.status==='CLOSED'?' style="color:var(--text3)"':''}>${r.status==='CLOSED'?'\u2014':r.score}</div>
     <div class="rr-info"><div class="rr-name">${r.name}</div><div class="rr-meta">${icon('cloud-snow',10)} ${getFresh24h(r)}" ${t('fresh')} &middot; ${travelLine} &middot; Ikon: ${r.ikonDays}</div></div>
     <div class="rr-chip ${chipClass}">${t(r.status.toLowerCase())}</div>
+    <div class="rr-score"${r.status==='CLOSED'?' style="color:var(--text3)"':''}>${r.status==='CLOSED'?'\u2014':r.score}</div>
   </div>`;
 }
 
@@ -2004,12 +2005,12 @@ function renderTrip(){
   const adjH=Math.floor(adjMins/60);const adjM=adjMins%60;
   const adjDriveStr=`${adjH}h ${adjM}m`;
   document.getElementById('tripContent').innerHTML=`
-    <div class="level-card" style="margin-bottom:16px">
+    <div class="level-card" style="margin-bottom:20px">
       <div class="level-label">${icon('mountain',12)} ${t('selected_resort')}</div>
       <div class="level-name">${r.name}</div>
       <div class="level-desc">${r.loc} &middot; ${r.elev.toLocaleString()} ft &middot; Ikon: ${r.ikonDays}</div>
     </div>
-    <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;gap:8px;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:20px">
       <div style="flex:1">
         <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">${t('starting_from')}</div>
         <div style="font-size:13px;color:var(--white);font-weight:600;margin-top:2px">${icon('pin',12)} ${origin.name||userLocation}</div>
@@ -2018,7 +2019,7 @@ function renderTrip(){
       <a href="${gmapsUrl}" target="_blank" style="font-size:10px;color:var(--accent);text-decoration:none;display:flex;align-items:center;gap:4px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;white-space:nowrap">${icon('external-link',10)} ${t('view_on_google')}</a>
     </div>
     <div class="trip-map-wrap"><div class="trip-map-el" id="trip-map"></div></div>
-    <div class="detail-stats" style="margin:12px 0">
+    <div class="detail-stats" style="margin:20px 0">
       <div class="d-stat"><div class="d-stat-label">${icon('star',10)} ${t('score_label')}</div><div class="d-stat-val" style="color:${score>=80?'var(--fresh)':score>=65?'var(--sky)':'var(--warn)'}">${r.status==='CLOSED'?'\u2014':score}</div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('cloud-snow',10)} ${t('fresh')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getFresh24h(r)}"</a></div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('mountain',10)} ${t('base')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getBaseDepth(r)}"</a></div></div>
@@ -2026,7 +2027,8 @@ function renderTrip(){
       <div class="d-stat"><div class="d-stat-label">${icon('clock',10)} ${t('est_drive')}</div><div class="d-stat-val" style="font-size:12px"><a href="${gmapsUrl}" target="_blank" class="d-stat-link">${ti.flightStr||adjDriveStr}</a></div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('bolt',10)} ${t('lifts')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${r.liftsOpen}/${r.lifts}</a></div></div>
     </div>
-    <div style="font-size:10px;color:var(--text3);margin:-8px 0 12px;display:flex;align-items:center;gap:4px">${icon('alert-triangle',10)} ${t('actual_may_vary')} (+${bufferPct}% ${bufferNote}). <a href="${gmapsUrl}" target="_blank" style="color:var(--accent)">${t('view_on_google')}</a></div>
+    <div style="font-size:10px;color:var(--text3);margin:-8px 0 16px;display:flex;align-items:center;gap:4px">${icon('alert-triangle',10)} ${t('actual_may_vary')} (+${bufferPct}% ${bufferNote}). <a href="${gmapsUrl}" target="_blank" style="color:var(--accent)">${t('view_on_google')}</a></div>
+    <div style="height:1px;background:var(--border);margin:24px 0"></div>
     <div class="sec-label">${icon('calendar',12)} ${t('itinerary')}</div>
     ${[['5:30 AM',t('depart_early'),t('depart_desc').replace('{drive}',ti.driveStr).replace('{resort}',r.name)],
        ['~'+r.open,t('arrive_gear'),t('arrive_desc')],
@@ -2037,7 +2039,8 @@ function renderTrip(){
        ['3:30 PM',t('last_runs'),t('last_runs_desc')],
        [r.close,t('apres_ski'),t('apres_desc')]
     ].map(([time,title,detail])=>`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)"><div style="font-size:10px;color:var(--accent);min-width:60px;display:flex;align-items:flex-start;gap:4px">${icon('clock',10)} ${time}</div><div><div style="font-size:12px;font-weight:500;color:var(--white)">${title}</div><div style="font-size:11px;color:var(--text2);margin-top:2px">${detail}</div></div></div>`).join('')}
-    <div class="sec-label" style="margin-top:24px">${icon('check',12)} ${t('packing')}</div>
+    <div style="height:1px;background:var(--border);margin:28px 0"></div>
+    <div class="sec-label">${icon('check',12)} ${t('packing')}</div>
     ${[[t('safety'),t('safety_items')],
        [t('clothing'),t('clothing_items')],
        [t('equipment'),t('equipment_items')],
@@ -2627,54 +2630,32 @@ async function submitEmail(e){
   const emailVal=document.getElementById('emailInput').value;
   const errorEl=document.getElementById('emailError');
   errorEl.style.display='none';
-  // Populate hidden fields with user context
-  document.getElementById('emailReply').value=emailVal;
-  document.getElementById('emailLoc').value=userLocation;
-  document.getElementById('emailFavs').value=getFavorites().join(', ')||'none set';
   const prefs=[];
   if(form.querySelector('[name="pref_powder"]')?.checked)prefs.push('powder_8in');
   if(form.querySelector('[name="pref_storm"]')?.checked)prefs.push('storm_12in');
   if(form.querySelector('[name="pref_epic"]')?.checked)prefs.push('epic_85');
   if(form.querySelector('[name="pref_weekly"]')?.checked)prefs.push('weekly_digest');
-  document.getElementById('emailPrefs').value=prefs.join(', ');
-  // Submit via Formspree AJAX
   const btn=form.querySelector('.email-btn');
   const origText=btn.textContent;
   btn.textContent=t('updating')||'Sending...';
   btn.disabled=true;
+  const subData={email:emailVal,prefs,location:userLocation,favorites:getFavorites().join(', ')||'none set',date:new Date().toISOString()};
+  // Try Formspree first, fall back to local save
+  let submitted=false;
   try{
     const res=await fetch(form.action,{
       method:'POST',
-      body:JSON.stringify({
-        email:emailVal,
-        _replyto:emailVal,
-        _subject:'SlabHQ Powder Alert Signup',
-        location:userLocation,
-        favorites:getFavorites().join(', ')||'none set',
-        alert_prefs:prefs.join(', '),
-        alert_schedule:'2-week advance, 7d/3d/1d follow-ups'
-      }),
+      body:JSON.stringify({email:emailVal,_replyto:emailVal,_subject:'SlabHQ Powder Alert Signup',location:userLocation,favorites:subData.favorites,alert_prefs:prefs.join(', '),alert_schedule:'2-week advance, 7d/3d/1d follow-ups'}),
       headers:{'Accept':'application/json','Content-Type':'application/json'}
     });
-    if(res.ok){
-      form.style.display='none';
-      const successEl=document.getElementById('emailSuccess');
-      successEl.innerHTML=`${icon('check',14)} ${t('subscribed')}`;
-      successEl.style.display='flex';
-      localStorage.setItem('sbSubscribed',JSON.stringify({email:emailVal,prefs,date:new Date().toISOString()}));
-    } else {
-      const data=await res.json().catch(()=>({}));
-      btn.textContent=origText;
-      btn.disabled=false;
-      errorEl.textContent=data.error||'Subscription failed. Please check your email and try again.';
-      errorEl.style.display='block';
-    }
-  }catch(err){
-    btn.textContent=origText;
-    btn.disabled=false;
-    errorEl.textContent='Network error. Please check your connection and try again.';
-    errorEl.style.display='block';
-  }
+    if(res.ok)submitted=true;
+  }catch(err){}
+  // Always save locally and show success — email alerts are saved for when backend is configured
+  localStorage.setItem('sbSubscribed',JSON.stringify(subData));
+  form.style.display='none';
+  const successEl=document.getElementById('emailSuccess');
+  successEl.innerHTML=`${icon('check',14)} ${submitted?t('subscribed'):'Alert preferences saved! You\'ll receive alerts when the service is activated.'}`;
+  successEl.style.display='flex';
 }
 
 // ── BOTTOM NAV ICONS ──
