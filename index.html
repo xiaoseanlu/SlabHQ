@@ -393,7 +393,7 @@ input{font-family:inherit}
 .chain-source a{color:var(--accent)}
 
 /* ── DATA SOURCE ── */
-.data-source{font-size:10px;color:var(--text3);margin-top:6px;display:flex;align-items:center;gap:4px}
+.data-source{font-size:10px;color:var(--text3);margin-top:10px;display:flex;align-items:center;gap:4px}
 .data-source a{color:var(--accent);display:inline-flex;align-items:center;gap:2px}
 
 /* ── YOY COMPARISON ── */
@@ -579,8 +579,8 @@ input{font-family:inherit}
 
 /* ═══ FORECAST STRIP ═══ */
 .forecast-strip{
-  display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;
-  padding:8px 0;margin:12px 0;-webkit-overflow-scrolling:touch;
+  display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;
+  padding:8px 0;margin:12px 0 20px;-webkit-overflow-scrolling:touch;
 }
 .forecast-strip::-webkit-scrollbar{height:2px}
 .forecast-day{
@@ -598,10 +598,10 @@ input{font-family:inherit}
 .fd-snow{font-size:10px;color:var(--sky);font-weight:500;margin-top:2px}
 
 /* ── HOURLY TABLE ── */
-.hourly-wrap{margin:12px 0}
+.hourly-wrap{margin:24px 0}
 .hourly-title{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:4px}
 .hourly-strip{
-  display:flex;gap:4px;overflow-x:auto;scroll-snap-type:x mandatory;
+  display:flex;gap:6px;overflow-x:auto;scroll-snap-type:x mandatory;
   padding:4px 0;-webkit-overflow-scrolling:touch;
 }
 .hourly-strip::-webkit-scrollbar{height:2px}
@@ -617,12 +617,12 @@ input{font-family:inherit}
 .hc-snow{color:var(--sky);font-weight:500;margin-top:1px}
 
 /* ── WEEK OUTLOOK ── */
-.week-outlook{margin:12px 0}
+.week-outlook{margin:24px 0}
 .week-outlook-title{font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:4px}
 .week-row{
-  display:flex;align-items:center;gap:8px;padding:8px 10px;
+  display:flex;align-items:center;gap:8px;padding:10px 12px;
   background:var(--card);border:1px solid var(--border);
-  border-radius:var(--r-xs);margin-bottom:4px;font-size:11px;
+  border-radius:var(--r-xs);margin-bottom:6px;font-size:11px;
 }
 .wr-label{min-width:80px;color:var(--text2)}
 .wr-range{flex:1;color:var(--white);font-weight:500}
@@ -759,13 +759,13 @@ input{font-family:inherit}
 .tab-section.active-tab{display:block}
 
 /* ── FORECAST BAR CHARTS ── */
-.fc-bar-section{margin:12px 0}
-.fc-bar-legend{display:flex;gap:14px;margin-bottom:8px;font-size:10px;color:var(--text2)}
+.fc-bar-section{margin:20px 0 24px}
+.fc-bar-legend{display:flex;gap:14px;margin-bottom:12px;font-size:10px;color:var(--text2)}
 .fc-bar-legend-item{display:flex;align-items:center;gap:4px}
 .fc-bar-legend-swatch{width:10px;height:10px;border-radius:2px}
-.fc-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:5px;font-size:10px}
+.fc-bar-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;font-size:10px}
 .fc-bar-label{min-width:48px;color:var(--text2)}
-.fc-bar-track{flex:1;height:14px;background:var(--card2);border-radius:3px;overflow:hidden;position:relative}
+.fc-bar-track{flex:1;height:16px;background:var(--card2);border-radius:3px;overflow:hidden;position:relative}
 .fc-bar-fill{height:100%;border-radius:3px;transition:width .6s var(--ease-out);display:flex;align-items:center;padding-left:4px;font-size:8px;color:var(--white);white-space:nowrap}
 .fc-bar-val{min-width:36px;text-align:right;font-weight:500}
 .fc-bar-snow .fc-bar-fill{background:var(--sky)}
@@ -1402,7 +1402,7 @@ let showAllResorts=false;
 
 // ── WEATHER CACHE & API (Fix 1) ──
 const weatherCache = {};
-const WEATHER_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+const WEATHER_CACHE_TTL = 5 * 60 * 1000; // 5 minutes — always pull fresh data on new page load
 
 async function fetchWeather(lat, lng) {
   const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,windspeed_10m,snowfall,weathercode&daily=temperature_2m_max,temperature_2m_min,windspeed_10m_max,snowfall_sum,weathercode&timezone=auto&forecast_days=7&temperature_unit=fahrenheit&windspeed_unit=mph`;
@@ -2458,7 +2458,8 @@ function openDetail(id){
     ${r.ann?`<div style="padding:10px 12px;background:var(--accent-soft);border:1px solid rgba(196,149,106,0.15);border-radius:var(--r-sm);margin:10px 0;font-size:11px;color:var(--text2);line-height:1.6">${icon('bolt',12)} <span data-translate="${r.ann.replace(/"/g,'&quot;')}">${r.ann}</span></div>`:''}
 
     <!-- 7-DAY FORECAST -->
-    <div class="sec-label" style="margin-top:16px">${icon('calendar',12)} ${t('seven_day')}</div>
+    <div style="border-top:1px solid var(--border);margin:20px 0 0"></div>
+    <div class="sec-label" style="margin-top:20px">${icon('calendar',12)} ${t('seven_day')}</div>
     <div class="forecast-strip" role="region" aria-label="7-day forecast" tabindex="0">
       ${forecast.map((d,i)=>`<div class="forecast-day${i===0?' today':''}">
         <div class="fd-name">${d.dayName}</div>
@@ -2480,7 +2481,7 @@ function openDetail(id){
         const tempClass=d.high<=20?'fc-temp-cold':d.high>=40?'fc-temp-warm':'fc-temp-neutral';
         return `<div class="fc-bar-row">
           <div class="fc-bar-label">${d.dayName}</div>
-          <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+          <div style="flex:1;display:flex;flex-direction:column;gap:4px">
             <div class="fc-bar-track fc-bar-snow"><div class="fc-bar-fill" style="width:${d.snowfall/maxSnow*100}%">${d.snowfall>0?d.snowfall+'"':''}</div></div>
             <div class="fc-bar-track fc-bar-wind"><div class="fc-bar-fill" style="width:${d.wind/maxWind*100}%">${d.wind}mph</div></div>
           </div>
@@ -2491,6 +2492,7 @@ function openDetail(id){
     <div class="data-source">${t('forecast_data')}: <a href="${r.links.snow}" target="_blank">${r.name} ${t('snow_report')}</a> &middot; <a href="https://openweathermap.org" target="_blank">OpenWeather</a></div>
 
     <!-- HOURLY TODAY -->
+    <div style="border-top:1px solid var(--border);margin:20px 0 0"></div>
     <div class="hourly-wrap">
       <div class="hourly-title">${icon('clock',12)} ${t('hourly_today')}</div>
       <div class="hourly-strip" role="region" aria-label="Hourly forecast" tabindex="0">
@@ -2505,6 +2507,7 @@ function openDetail(id){
     <div class="data-source">${t('forecast_data')}: <a href="${r.links.snow}" target="_blank">${r.name} ${t('snow_report')}</a> &middot; <a href="https://openweathermap.org" target="_blank">OpenWeather</a></div>
 
     <!-- 3-WEEK OUTLOOK -->
+    <div style="border-top:1px solid var(--border);margin:20px 0 0"></div>
     <div class="week-outlook">
       <div class="week-outlook-title">${icon('eye',12)} ${t('three_week')}</div>
       ${outlook.map(w=>`<div class="week-row">
@@ -2515,7 +2518,7 @@ function openDetail(id){
     </div>
     <div class="data-source">${t('forecast_data')}: <a href="${r.links.snow}" target="_blank">${r.name} ${t('snow_report')}</a> &middot; <a href="https://openweathermap.org" target="_blank">OpenWeather</a></div>
 
-    ${r.liftList.length?`<div class="sec-label" style="margin-top:16px">${icon('bolt',12)} ${t('lift_status')}</div>${r.liftList.map(l=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px"><div style="width:7px;height:7px;border-radius:50%;background:${l.s==='on'?'var(--fresh)':l.s==='hold'?'var(--warn)':'var(--danger)'}"></div><div style="flex:1;color:var(--text)">${l.n}</div><div style="font-size:10px;color:var(--text3)">${l.t}</div></div>`).join('')}`:''}
+    ${r.liftList.length?`<div style="border-top:1px solid var(--border);margin:20px 0 0"></div><div class="sec-label" style="margin-top:20px">${icon('bolt',12)} ${t('lift_status')}</div>${r.liftList.map(l=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px"><div style="width:7px;height:7px;border-radius:50%;background:${l.s==='on'?'var(--fresh)':l.s==='hold'?'var(--warn)':'var(--danger)'}"></div><div style="flex:1;color:var(--text)">${l.n}</div><div style="font-size:10px;color:var(--text3)">${l.t}</div></div>`).join('')}`:''}
 
     <div class="yoy-section">
       <div class="yoy-title">${icon('mountain',12)} ${t('season_total')} \u2014 ${t('yoy_inches')}</div>
@@ -2731,6 +2734,8 @@ const savedTheme=localStorage.getItem('sbTheme');
 if(savedTheme)document.documentElement.setAttribute('data-theme',savedTheme);
 renderNavIcons();
 updateThemeIcon();
+// Clear weather cache on every page load so data is always fresh
+Object.keys(weatherCache).forEach(k=>delete weatherCache[k]);
 renderAll(); // Stage 1: render immediately with hardcoded data
 setInterval(tick,1000);
 
@@ -2755,14 +2760,18 @@ if(!localStorage.getItem('sbOrigin')&&navigator.geolocation){
 // Stage 2 & 3: fetch real weather data in background, then update UI
 (async function initWeatherAndRoutes(){
   const origin=getOrigin(userLocation);
-  const top3=RESORTS.filter(r=>r.status!=='CLOSED')
+  const allOpen=RESORTS.filter(r=>r.status!=='CLOSED')
     .map(r=>({...r,score:scoreResort(r,origin)}))
-    .sort((a,b)=>b.score-a.score)
-    .slice(0,3);
+    .sort((a,b)=>b.score-a.score);
+  const top3=allOpen.slice(0,3);
+  // Load top 3 first for fast initial render
   await loadWeatherForResorts(top3);
   // Re-render with live data
   renderWeatherOverview();
   renderTopPicks();
+  // Load remaining open resorts in background so detail pages have fresh data
+  const rest=allOpen.slice(3);
+  if(rest.length)loadWeatherForResorts(rest).then(()=>{renderAll()});
   // Also load routes for top 3
   const origin2=getOrigin(userLocation);
   const top3WithTravel=top3.map(r=>({...r,travel:getTravelInfo(origin2,r)}));
