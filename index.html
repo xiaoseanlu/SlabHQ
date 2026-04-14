@@ -2365,6 +2365,14 @@ function renderProfile(){
     const successEl=document.getElementById('emailSuccess');
     if(form)form.style.display='none';
     if(successEl){successEl.innerHTML=`<div style="text-align:center;margin-bottom:8px">${icon('check',20)}</div><div style="font-size:13px;color:var(--fresh);text-align:center">${t('subscribed')}</div><div style="font-size:11px;color:var(--text2);text-align:center">(${subData.email})</div><div style="margin-top:10px;text-align:center"><a href="#" onclick="handleUnsubscribe(event)" style="font-size:10px;color:var(--text3);text-decoration:underline">Unsubscribe</a></div>`;successEl.style.display='block';}
+    // Verify still subscribed (may have unsubscribed via email link)
+    fetch(SUBSCRIBE_URL,{method:'POST',body:JSON.stringify({email:subData.email,action:'check'}),headers:{'Content-Type':'application/json'}}).then(r=>r.json()).then(d=>{
+      if(d.ok&&d.subscribed===false){
+        localStorage.removeItem('sbSubscribed');
+        if(form)form.style.display='';
+        if(successEl){successEl.innerHTML='';successEl.style.display='none';}
+      }
+    }).catch(()=>{});
   }
 
   // Close suggestions on outside click

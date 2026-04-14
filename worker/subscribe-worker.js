@@ -378,6 +378,15 @@ export default {
         });
       }
 
+      // Check if email is still subscribed
+      if (action === 'check') {
+        const subscribers = (await env.SUBSCRIBERS.get('subscribers', 'json')) || [];
+        const found = subscribers.some(s => s.email.toLowerCase() === email.toLowerCase());
+        return new Response(JSON.stringify({ ok: true, subscribed: found }), {
+          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+        });
+      }
+
       // Read current subscribers from KV
       let subscribers = (await env.SUBSCRIBERS.get('subscribers', 'json')) || [];
 
