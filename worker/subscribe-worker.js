@@ -59,69 +59,93 @@ async function fetchYOYData() {
 
   const now = new Date();
   const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth() + 1; // 1-12
-  // Season starts Nov — if before Nov, current season started last year
+  const currentMonth = now.getMonth() + 1;
   const seasonStartYear = currentMonth >= 11 ? currentYear : currentYear - 1;
   const todayStr = now.toISOString().slice(0, 10);
 
+  // Split resorts into northern and southern hemisphere
+  const northern = YOY_RESORTS.filter(r => r.lat >= 0);
+  const southern = YOY_RESORTS.filter(r => r.lat < 0);
+
   const results = {};
+  const toInches = (cm) => Math.round(cm * 0.394);
+  const sumSnow = (d) => {
+    if (!d || !d.daily || !d.daily.snowfall_sum) return 0;
+    return d.daily.snowfall_sum.reduce((s, v) => s + (v || 0), 0);
+  };
 
-  // Fetch in parallel batches of 5 to avoid rate limits
-  for (let i = 0; i < YOY_RESORTS.length; i += 5) {
-    const batch = YOY_RESORTS.slice(i, i + 5);
-    const promises = batch.map(async (resort) => {
-      try {
-        // Southern hemisphere resorts have reversed seasons (Jun-Oct)
-        const isSouthern = resort.lat < 0;
-        const seasonStart = isSouthern ? `${seasonStartYear}-06-01` : `${seasonStartYear}-11-01`;
-        const seasonEnd = todayStr;
-        const lastStart = isSouthern ? `${seasonStartYear - 1}-06-01` : `${seasonStartYear - 1}-11-01`;
-        const lastEnd = isSouthern ? `${seasonStartYear - 1}-10-31` : `${seasonStartYear}-04-30`;
-        const tz = isSouthern ? 'auto' : 'America/Los_Angeles';
+  // Batch all northern resorts into 5 API calls (this + last + 3 more years)
+  // Open-Meteo supports comma-separated coordinates, returns array
+  async function fetchBatch(resorts, seasonStart, seasonEnd, tz) {
+    const lats = resorts.map(r => r.lat).join(',');
+    const lngs = resorts.map(r => r.lng).join(',');
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lats}&longitude=${lngs}&start_date=${seasonStart}&end_date=${seasonEnd}&daily=snowfall_sum&timezone=${tz}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    // Single resort returns object, multiple returns array
+    return Array.isArray(data) ? data : [data];
+  }
 
-        // Fetch this season + last season in parallel
-        const [thisRes, lastRes] = await Promise.all([
-          fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${resort.lat}&longitude=${resort.lng}&start_date=${seasonStart}&end_date=${seasonEnd}&daily=snowfall_sum&timezone=${tz}`),
-          fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${resort.lat}&longitude=${resort.lng}&start_date=${lastStart}&end_date=${lastEnd}&daily=snowfall_sum&timezone=${tz}`),
-        ]);
+  try {
+    if (northern.length > 0) {
+      const thisStart = `${seasonStartYear}-11-01`;
+      const lastStart = `${seasonStartYear - 1}-11-01`;
+      const lastEnd = `${seasonStartYear}-04-30`;
 
-        const [thisData, lastData] = await Promise.all([thisRes.json(), lastRes.json()]);
+      // Fetch this season + last season + 3 more (= 5 API calls for ALL northern resorts)
+      const [thisData, lastData, y3Data, y4Data, y5Data] = await Promise.all([
+        fetchBatch(northern, thisStart, todayStr, 'America/Los_Angeles'),
+        fetchBatch(northern, lastStart, lastEnd, 'America/Los_Angeles'),
+        fetchBatch(northern, `${seasonStartYear - 2}-11-01`, `${seasonStartYear - 1}-04-30`, 'America/Los_Angeles'),
+        fetchBatch(northern, `${seasonStartYear - 3}-11-01`, `${seasonStartYear - 2}-04-30`, 'America/Los_Angeles'),
+        fetchBatch(northern, `${seasonStartYear - 4}-11-01`, `${seasonStartYear - 3}-04-30`, 'America/Los_Angeles'),
+      ]);
 
-        const sumSnow = (d) => {
-          if (!d.daily || !d.daily.snowfall_sum) return 0;
-          return d.daily.snowfall_sum.reduce((s, v) => s + (v || 0), 0);
-        };
-
-        const thisSeasonCm = sumSnow(thisData);
-        const lastSeasonCm = sumSnow(lastData);
-
-        // Compute 5-year average (fetch just totals for 3 more seasons)
-        let totalFiveYear = thisSeasonCm + lastSeasonCm;
-        let seasonCount = 2;
-        for (let y = 2; y < 5; y++) {
-          try {
-            const yStart = isSouthern ? `${seasonStartYear - y}-06-01` : `${seasonStartYear - y}-11-01`;
-            const yEnd = isSouthern ? `${seasonStartYear - y}-10-31` : `${seasonStartYear - y + 1}-04-30`;
-            const yRes = await fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${resort.lat}&longitude=${resort.lng}&start_date=${yStart}&end_date=${yEnd}&daily=snowfall_sum&timezone=${tz}`);
-            const yData = await yRes.json();
-            totalFiveYear += sumSnow(yData);
-            seasonCount++;
-          } catch (e) { /* skip failed seasons */ }
-        }
-
-        const toInches = (cm) => Math.round(cm * 0.394);
+      northern.forEach((resort, i) => {
+        const thisCm = sumSnow(thisData[i]);
+        const lastCm = sumSnow(lastData[i]);
+        const y3Cm = sumSnow(y3Data[i]);
+        const y4Cm = sumSnow(y4Data[i]);
+        const y5Cm = sumSnow(y5Data[i]);
+        const avgCm = (thisCm + lastCm + y3Cm + y4Cm + y5Cm) / 5;
         results[resort.id] = {
-          thisYear: toInches(thisSeasonCm),
-          lastYear: toInches(lastSeasonCm),
-          avg: Math.round(toInches(totalFiveYear / seasonCount)),
+          thisYear: toInches(thisCm),
+          lastYear: toInches(lastCm),
+          avg: Math.round(toInches(avgCm)),
           source: 'Open-Meteo Historical API',
-          seasonLabel: isSouthern ? `Jun ${seasonStartYear} – Oct ${seasonStartYear}` : `Nov ${seasonStartYear} – Apr ${seasonStartYear + 1}`,
+          seasonLabel: `Nov ${seasonStartYear} – Apr ${seasonStartYear + 1}`,
         };
-      } catch (e) {
-        results[resort.id] = { error: 'Failed to fetch', detail: e.message };
-      }
-    });
-    await Promise.all(promises);
+      });
+    }
+
+    if (southern.length > 0) {
+      const thisStart = `${seasonStartYear}-06-01`;
+      const lastStart = `${seasonStartYear - 1}-06-01`;
+      const lastEnd = `${seasonStartYear - 1}-10-31`;
+
+      const [thisData, lastData, y3Data] = await Promise.all([
+        fetchBatch(southern, thisStart, todayStr, 'auto'),
+        fetchBatch(southern, lastStart, lastEnd, 'auto'),
+        fetchBatch(southern, `${seasonStartYear - 2}-06-01`, `${seasonStartYear - 2}-10-31`, 'auto'),
+      ]);
+
+      southern.forEach((resort, i) => {
+        const thisCm = sumSnow(thisData[i]);
+        const lastCm = sumSnow(lastData[i]);
+        const y3Cm = sumSnow(y3Data[i]);
+        const avgCm = (thisCm + lastCm + y3Cm) / 3;
+        results[resort.id] = {
+          thisYear: toInches(thisCm),
+          lastYear: toInches(lastCm),
+          avg: Math.round(toInches(avgCm)),
+          source: 'Open-Meteo Historical API',
+          seasonLabel: `Jun ${seasonStartYear} – Oct ${seasonStartYear}`,
+        };
+      });
+    }
+  } catch (e) {
+    console.error('YOY fetch error:', e);
+    // Return partial results
   }
 
   yoyCache = { data: results, ts: Date.now() };
