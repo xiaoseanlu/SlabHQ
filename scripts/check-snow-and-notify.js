@@ -16,9 +16,20 @@
  */
 
 
+const crypto = require('crypto');
+
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.FROM_EMAIL || 'SlabHQ Alerts <alerts@slabhq.com>';
 const SITE_URL = 'https://xiaoseanlu.github.io/SlabHQ/';
+const WORKER_BASE_URL = process.env.WORKER_URL || 'https://slabhq-subscribe.xiaoseanlu.workers.dev';
+const SUBSCRIBERS_SECRET = process.env.SUBSCRIBERS_TOKEN || '';
+
+function makeUnsubToken(email) {
+  return crypto.createHmac('sha256', SUBSCRIBERS_SECRET).update(email.toLowerCase()).digest('hex').slice(0, 32);
+}
+function unsubscribeUrl(email) {
+  return `${WORKER_BASE_URL}/unsubscribe?email=${encodeURIComponent(email)}&token=${makeUnsubToken(email)}`;
+}
 
 // Resort data (matching index.html RESORTS)
 const RESORTS = [
@@ -471,6 +482,7 @@ function buildAlertEmail(subscriber, alert, resortAlerts, allConditions, roadCon
       <div>Data: <a href="https://open-meteo.com" style="color:#8b6f47;text-decoration:none">Open-Meteo API</a> | Roads: <a href="https://roads.dot.ca.gov" style="color:#8b6f47;text-decoration:none">Caltrans</a> &middot; Updated ${today} at 6:00 AM PST</div>
       <div>Location: ${subscriber.location || 'Not set'} &middot; Tracking: ${favIds.length ? favIds.join(', ') : 'All resorts'}</div>
       <div style="margin-top:8px"><a href="${SITE_URL}" style="color:#8b6f47;text-decoration:none">SlabHQ</a> &middot; Know before you go.</div>
+      <div style="margin-top:6px"><a href="${unsubscribeUrl(subscriber.email)}" style="color:#a09890;text-decoration:underline">Unsubscribe</a></div>
     </div>
 
   </div>
@@ -541,6 +553,7 @@ function buildWeeklyDigestEmail(subscriber, allConditions, roadConditions) {
     <div style="text-align:center;font-size:10px;color:#a09890;line-height:1.8;margin-top:32px;padding-top:16px;border-top:1px solid #e5ddd4">
       <div>Data: <a href="https://open-meteo.com" style="color:#8b6f47;text-decoration:none">Open-Meteo API</a> &middot; Updated ${today}</div>
       <div style="margin-top:8px"><a href="${SITE_URL}" style="color:#8b6f47;text-decoration:none">SlabHQ</a> &middot; Know before you go.</div>
+      <div style="margin-top:6px"><a href="${unsubscribeUrl(subscriber.email)}" style="color:#a09890;text-decoration:underline">Unsubscribe</a></div>
     </div>
 
   </div>

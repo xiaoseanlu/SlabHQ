@@ -2364,7 +2364,7 @@ function renderProfile(){
     const form=document.getElementById('emailForm');
     const successEl=document.getElementById('emailSuccess');
     if(form)form.style.display='none';
-    if(successEl){successEl.innerHTML=`${icon('check',14)} ${t('subscribed')} (${subData.email})`;successEl.style.display='flex';}
+    if(successEl){successEl.innerHTML=`<div style="text-align:center;margin-bottom:8px">${icon('check',20)}</div><div style="font-size:13px;color:var(--fresh);text-align:center">${t('subscribed')}</div><div style="font-size:11px;color:var(--text2);text-align:center">(${subData.email})</div><div style="margin-top:10px;text-align:center"><a href="#" onclick="handleUnsubscribe(event)" style="font-size:10px;color:var(--text3);text-decoration:underline">Unsubscribe</a></div>`;successEl.style.display='block';}
   }
 
   // Close suggestions on outside click
@@ -2999,8 +2999,30 @@ async function submitEmail(e){
     <div style="font-size:10px;color:var(--text3);text-align:center;line-height:1.6">
       ${icon('bell',10)} You'll receive alerts for: ${prefs.map(p=>p==='powder_8in'?'Powder days':p==='storm_12in'?'Storm alerts':p==='epic_85'?'Epic conditions':'Weekly digest').join(' &middot; ')}<br>
       First alert: 2 weeks before the next big storm
-    </div>`;
+    </div>
+    <div style="margin-top:12px;text-align:center"><a href="#" onclick="handleUnsubscribe(event)" style="font-size:10px;color:var(--text3);text-decoration:underline">Unsubscribe</a></div>`;
   successEl.style.display='block';
+}
+
+async function handleUnsubscribe(e){
+  e.preventDefault();
+  const subData=JSON.parse(localStorage.getItem('sbSubscribed')||'null');
+  if(!subData||!subData.email)return;
+  if(!confirm(`Unsubscribe ${subData.email} from all SlabHQ alerts?`))return;
+  try{
+    // Call worker unsubscribe — we don't have the HMAC token client-side,
+    // so we POST a delete request instead
+    await fetch(SUBSCRIBE_URL,{
+      method:'POST',
+      body:JSON.stringify({email:subData.email,action:'unsubscribe'}),
+      headers:{'Content-Type':'application/json'}
+    });
+  }catch(err){console.warn('Unsubscribe API error:',err)}
+  localStorage.removeItem('sbSubscribed');
+  const form=document.getElementById('emailForm');
+  const successEl=document.getElementById('emailSuccess');
+  if(form)form.style.display='';
+  if(successEl){successEl.innerHTML='';successEl.style.display='none';}
 }
 
 // ── BOTTOM NAV ICONS ──

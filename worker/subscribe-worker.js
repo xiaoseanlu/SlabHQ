@@ -256,13 +256,49 @@ async function fetchRoadConditions() {
   return conditions;
 }
 
+// HMAC-based unsubscribe token (no DB lookup needed, unforgeable)
+async function makeUnsubToken(email, secret) {
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(email.toLowerCase()));
+  return [...new Uint8Array(sig)].map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 32);
+}
+
+function unsubscribeUrl(baseUrl, email, token) {
+  return `${baseUrl}/unsubscribe?email=${encodeURIComponent(email)}&token=${token}`;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    const workerBaseUrl = url.origin;
 
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: CORS_HEADERS });
+    }
+
+    // GET /unsubscribe — one-click unsubscribe from emails
+    if (request.method === 'GET' && (url.pathname === '/unsubscribe' || url.pathname === '/unsubscribe/')) {
+      const email = url.searchParams.get('email');
+      const token = url.searchParams.get('token');
+      if (!email || !token) {
+        return new Response(unsubPage('Missing email or token.', false), { headers: { 'Content-Type': 'text/html' } });
+      }
+      const expected = await makeUnsubToken(email, env.SUBSCRIBERS_TOKEN);
+      if (token !== expected) {
+        return new Response(unsubPage('Invalid unsubscribe link.', false), { headers: { 'Content-Type': 'text/html' } });
+      }
+      try {
+        let subscribers = (await env.SUBSCRIBERS.get('subscribers', 'json')) || [];
+        const before = subscribers.length;
+        subscribers = subscribers.filter(s => s.email.toLowerCase() !== email.toLowerCase());
+        if (subscribers.length < before) {
+          await env.SUBSCRIBERS.put('subscribers', JSON.stringify(subscribers));
+        }
+        return new Response(unsubPage(`${email} has been unsubscribed. You will no longer receive SlabHQ alerts.`, true), { headers: { 'Content-Type': 'text/html' } });
+      } catch (e) {
+        return new Response(unsubPage('Something went wrong. Please try again.', false), { headers: { 'Content-Type': 'text/html' } });
+      }
     }
 
     // GET /roads — live road conditions from Caltrans
@@ -323,11 +359,21 @@ export default {
 
     try {
       const body = await request.json();
-      const { email, location, favorites, prefs } = body;
+      const { email, location, favorites, prefs, action } = body;
 
       if (!email || !email.includes('@')) {
         return new Response(JSON.stringify({ error: 'Valid email required' }), {
           status: 400,
+          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Handle unsubscribe from frontend
+      if (action === 'unsubscribe') {
+        let subscribers = (await env.SUBSCRIBERS.get('subscribers', 'json')) || [];
+        subscribers = subscribers.filter(s => s.email.toLowerCase() !== email.toLowerCase());
+        await env.SUBSCRIBERS.put('subscribers', JSON.stringify(subscribers));
+        return new Response(JSON.stringify({ ok: true, message: 'Unsubscribed' }), {
           headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
         });
       }
@@ -371,7 +417,7 @@ export default {
               from: env.FROM_EMAIL || 'SlabHQ Alerts <alerts@slabhq.com>',
               to: [email],
               subject: 'Welcome to SlabHQ Powder Alerts',
-              html: buildWelcomeEmail(email, location, favorites),
+              html: buildWelcomeEmail(email, location, favorites, unsubscribeUrl(workerBaseUrl, email, await makeUnsubToken(email, env.SUBSCRIBERS_TOKEN))),
             }),
           });
         } catch (e) {
@@ -393,7 +439,7 @@ export default {
   },
 };
 
-function buildWelcomeEmail(email, location, favorites) {
+function buildWelcomeEmail(email, location, favorites, unsubUrl) {
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -434,8 +480,26 @@ function buildWelcomeEmail(email, location, favorites) {
 
     <div style="text-align:center;font-size:10px;color:#a09890;margin-top:32px;line-height:1.6">
       <a href="https://xiaoseanlu.github.io/SlabHQ/" style="color:#8b6f47;text-decoration:none">SlabHQ</a> &middot; Know before you go.
+      ${unsubUrl ? `<br><a href="${unsubUrl}" style="color:#a09890;text-decoration:underline">Unsubscribe</a>` : ''}
     </div>
 
+  </div>
+</body>
+</html>`;
+}
+
+function unsubPage(message, success) {
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SlabHQ — ${success ? 'Unsubscribed' : 'Error'}</title></head>
+<body style="margin:0;padding:0;background:#f5f0eb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh">
+  <div style="max-width:420px;padding:32px;text-align:center">
+    <div style="font-size:28px;font-weight:800;color:#1a1a2e;letter-spacing:-0.5px;margin-bottom:24px">Slab<span style="color:#8b6f47">HQ</span></div>
+    <div style="font-size:40px;margin-bottom:16px">${success ? '&#10003;' : '&#9888;'}</div>
+    <div style="font-size:16px;color:#1a1a2e;font-weight:600;margin-bottom:8px">${success ? 'Unsubscribed' : 'Oops'}</div>
+    <div style="font-size:13px;color:#7a8fa8;line-height:1.6;margin-bottom:24px">${message}</div>
+    <a href="https://xiaoseanlu.github.io/SlabHQ/" style="display:inline-block;background:#8b6f47;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">Back to SlabHQ</a>
   </div>
 </body>
 </html>`;
