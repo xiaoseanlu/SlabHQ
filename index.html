@@ -278,19 +278,17 @@ input{font-family:inherit}
 
 /* ── NEXT TRIP OUTLOOK ── */
 .outlook-row{
-  display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px;
   padding:12px;background:var(--card);border:1px solid var(--border);
-  border-radius:var(--r-sm);margin-bottom:8px;cursor:pointer;
+  border-radius:var(--r-sm);margin-bottom:8px;
   transition:all .15s;
 }
 .outlook-row:hover{border-color:var(--accent)}
-.outlook-week{font-size:10px;color:var(--accent);font-weight:600;min-width:46px;padding-top:2px}
-.outlook-info{flex:1;min-width:0}
-.outlook-title{font-size:12px;font-weight:500;color:var(--white);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.outlook-detail{font-size:10px;color:var(--text2);margin-top:4px}
-.outlook-trend{font-size:11px;font-weight:500;min-width:40px;text-align:right}
+.outlook-header{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.outlook-week{font-size:10px;color:var(--accent);font-weight:600;white-space:nowrap}
+.outlook-title{flex:1;font-size:12px;font-weight:500;color:var(--white);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.outlook-detail{font-size:10px;color:var(--text2);margin-bottom:6px}
+.outlook-trend{font-size:11px;font-weight:500;white-space:nowrap;text-align:right}
 .outlook-region-tag{font-size:8px;letter-spacing:.5px;padding:2px 5px;border-radius:3px;flex-shrink:0}
-@media(max-width:420px){.outlook-trend{width:100%;text-align:left;border-top:1px solid var(--border);padding-top:8px;margin-top:4px}}
 .outlook-resort-row{display:flex;align-items:center;gap:8px;padding:8px 6px;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border);transition:background .15s}
 .outlook-resort-row:last-child{border-bottom:none}
 .outlook-resort-row:hover{background:rgba(106,175,196,.06);cursor:pointer}
@@ -1951,31 +1949,27 @@ function renderNextTrip(){
     weeks.push({weekLabel:`${t('week')}${lang==='en'?' ':''}${w+1}`,dateRange:`${startStr} \u2013 ${endStr}`,weekendLabel:`${satStr} \u2013 ${sunStr}`,snowChance,expectedSnow,weekendSnow,trend,trendIcon,trendColor,top3,isLive,weekNum:w+1});
   }
   document.getElementById('nextTripContent').innerHTML=weeks.map(w=>`
-    <div class="outlook-row" style="flex-wrap:wrap">
-      <div class="outlook-week">${w.weekLabel}</div>
-      <div class="outlook-info">
-        <div class="outlook-title">${w.dateRange} <span style="font-size:9px;color:var(--text3)">(Mon\u2013Sun)</span>${w.isLive?' <span style="font-size:10px;color:var(--fresh);font-weight:600">LIVE</span>':w.weekNum===2?' <span style="font-size:10px;color:var(--text3);font-weight:500">~60% '+t("accuracy")+'</span>':w.weekNum===3?' <span style="font-size:10px;color:var(--text3);font-weight:500">~40% '+t("accuracy")+'</span>':''}</div>
-        <div class="outlook-detail">${w.snowChance!==null?w.snowChance+'% '+t('snow_chance')+' &middot; ':''}${w.expectedSnow!=='--'?w.expectedSnow+' '+t('expected'):'No forecast data'}${w.weekendSnow!=='--'?' &middot; Weekend: '+(typeof w.weekendSnow==='number'?w.weekendSnow+'"':w.weekendSnow):''}</div>
-        <div style="margin-top:6px">
-          ${w.top3.map(r=>{
-            const regionTag=r.region==='ca'?'CA':r.region==='us'?'US':'INTL';
-            const tagClass=r.region==='ca'?'cat-ca':r.region==='us'?'cat-us':'cat-intl';
-            const roads=roadStatusLine(r.id);
-            return `<div class="outlook-resort-row" onclick="scrollToResort('${r.id}');event.stopPropagation()">
-              <span class="outlook-region-tag ${tagClass}">${regionTag}</span>
-              <div style="flex:1;min-width:0">
-                <a href="${r.links.snow}" target="_blank" onclick="event.stopPropagation()" class="outlook-resort-name">${r.name}</a>
-                <div class="outlook-resort-meta">${locLink(r,9)}${roads?' &middot; '+roads:''}</div>
-              </div>
-              <div class="outlook-resort-stats">
-                <div>${r.score}<span style="font-size:9px;color:var(--text3);font-weight:400"> score</span></div>
-                <div style="font-size:10px;color:var(--text3);font-weight:400">${getWeekSnowfall(r)}" wk</div>
-              </div>
-            </div>`;
-          }).join('')}
-        </div>
+    <div class="outlook-row">
+      <div class="outlook-header">
+        <div class="outlook-title"><span class="outlook-week">${w.weekLabel}</span> ${w.dateRange} <span style="font-size:9px;color:var(--text3)">(Mon\u2013Sun)</span>${w.isLive?' <span style="font-size:10px;color:var(--fresh);font-weight:600">LIVE</span>':w.weekNum===2?' <span style="font-size:10px;color:var(--text3);font-weight:500">~60% '+t("accuracy")+'</span>':w.weekNum===3?' <span style="font-size:10px;color:var(--text3);font-weight:500">~40% '+t("accuracy")+'</span>':''}</div>
+        <div class="outlook-trend" style="color:${w.trendColor}">${w.trendIcon} ${w.expectedSnow}</div>
       </div>
-      <div class="outlook-trend" style="color:${w.trendColor}">${w.trendIcon} ${w.expectedSnow}</div>
+      <div class="outlook-detail">${w.snowChance!==null?w.snowChance+'% '+t('snow_chance')+' &middot; ':''}${w.expectedSnow!=='--'?w.expectedSnow+' '+t('expected'):'No forecast data'}${w.weekendSnow!=='--'?' &middot; Weekend: '+(typeof w.weekendSnow==='number'?w.weekendSnow+'"':w.weekendSnow):''}</div>
+      ${w.top3.map(r=>{
+        const regionTag=r.region==='ca'?'CA':r.region==='us'?'US':'INTL';
+        const tagClass=r.region==='ca'?'cat-ca':r.region==='us'?'cat-us':'cat-intl';
+        return `<div class="outlook-resort-row" onclick="scrollToResort('${r.id}');event.stopPropagation()">
+          <span class="outlook-region-tag ${tagClass}">${regionTag}</span>
+          <div style="flex:1;min-width:0">
+            <a href="${r.links.snow}" target="_blank" onclick="event.stopPropagation()" class="outlook-resort-name">${r.name}</a>
+            <div class="outlook-resort-meta">${locLink(r,9)}</div>
+          </div>
+          <div class="outlook-resort-stats">
+            <div>${r.score}<span style="font-size:9px;color:var(--text3);font-weight:400"> score</span></div>
+            <div style="font-size:10px;color:var(--text3);font-weight:400">${getWeekSnowfall(r)}" wk</div>
+          </div>
+        </div>`;
+      }).join('')}
     </div>`).join('')+`
     <div class="wx-source" style="margin-top:6px">${icon('external-link',10)} ${t('week')}${lang==='en'?' ':''}1: <a href="https://open-meteo.com" target="_blank">Open-Meteo ${t('live_data')}</a> &middot; ${t('week')}${lang==='en'?' ':''}2-3: ${t('seasonal_projection')}</div>`;
 }
