@@ -259,28 +259,30 @@ input{font-family:inherit}
 
 /* ── APP OVERVIEW HERO ── */
 .wx-overview{
-  background:#1a1a2e;color:#fff;
+  background:linear-gradient(160deg,#3b2f24 0%,#5a3e2b 40%,#6b4c33 100%);color:#fff;
   border-radius:var(--r);padding:24px 20px 48px;margin:16px 0 24px;
   animation:reveal .5s var(--ease-out) .05s both;
   position:relative;overflow:hidden;
+  box-shadow:0 4px 20px rgba(90,62,43,.2);
 }
 .wx-overview::before{
   content:'';position:absolute;bottom:0;left:0;right:0;height:60px;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 60' preserveAspectRatio='none'%3E%3Cpath d='M0 60V35l80-15 120 10 100-20 80 12 120-18 100 14 80-10 120 12V60z' fill='%23c4956a' opacity='.12'/%3E%3Cpath d='M0 60V45l100-8 150 5 120-12 100 8 130-10 100 6 100-5V60z' fill='%23c4956a' opacity='.08'/%3E%3Cpath d='M0 60v-8l200 3 200-5 200 4 200-2V60z' fill='%23c4956a' opacity='.05'/%3E%3C/svg%3E") no-repeat bottom/100% 60px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 60' preserveAspectRatio='none'%3E%3Cpath d='M0 60V35l80-15 120 10 100-20 80 12 120-18 100 14 80-10 120 12V60z' fill='%23f5f0eb' opacity='.1'/%3E%3Cpath d='M0 60V45l100-8 150 5 120-12 100 8 130-10 100 6 100-5V60z' fill='%23f5f0eb' opacity='.07'/%3E%3Cpath d='M0 60v-8l200 3 200-5 200 4 200-2V60z' fill='%23f5f0eb' opacity='.04'/%3E%3C/svg%3E") no-repeat bottom/100% 60px;
 }
 .wx-overview::after{
-  content:'';position:absolute;top:0;right:0;width:120px;height:120px;
-  background:radial-gradient(circle at 80% 20%,rgba(196,149,106,.15),transparent 70%);
+  content:'';position:absolute;top:0;right:0;width:160px;height:160px;
+  background:radial-gradient(circle at 80% 20%,rgba(245,240,235,.1),transparent 70%);
   pointer-events:none;
 }
-.wx-eyebrow{font-size:10px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.wx-eyebrow{font-size:10px;color:#d4b896;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
 .wx-headline{font-family:var(--font-display);font-size:22px;color:#fff;line-height:1.3;margin-bottom:10px}
-.wx-summary{font-size:12px;color:#d8e6f2;line-height:1.6;margin-top:10px;position:relative;z-index:1}
+.wx-summary{font-size:12px;color:#e8ddd0;line-height:1.6;margin-top:10px;position:relative;z-index:1}
 .wx-summary strong{color:#fff}
-.wx-summary a{color:var(--accent)}
+.wx-summary a{color:#d4b896}
 .wx-source{font-size:10px;color:var(--text3);margin-top:8px}
 .wx-source a{color:var(--accent)}
-[data-theme="dark"] .wx-overview{background:#0f0f1a;border:1px solid rgba(196,149,106,.15)}
+[data-theme="dark"] .wx-overview{background:linear-gradient(160deg,#0f0f1a 0%,#1a1525 40%,#221a2e 100%);box-shadow:0 4px 20px rgba(0,0,0,.3);border:1px solid rgba(196,149,106,.1)}
+[data-theme="dark"] .wx-eyebrow{color:var(--accent)}
 
 /* ── NEXT TRIP OUTLOOK ── */
 .outlook-row{
@@ -362,7 +364,7 @@ input{font-family:inherit}
 .detail-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .d-stat{background:var(--card2);border-radius:var(--r-sm);padding:12px 10px}
 .d-stat-label{font-size:10px;color:var(--text3);letter-spacing:.5px;margin-bottom:3px;display:flex;align-items:center;gap:4px}
-.d-stat-val{font-size:16px;font-weight:600;color:var(--white)}
+.d-stat-val{font-size:16px;font-weight:600;color:var(--white);overflow:hidden;text-overflow:ellipsis}
 .d-stat-link{color:var(--white);text-decoration:none;border-bottom:1px dashed var(--border2)}
 .d-stat-link:hover{color:var(--accent);border-color:var(--accent)}
 
@@ -1234,7 +1236,7 @@ const T={
     lv_intermediate_desc:'Solid on blues, exploring blacks. Learning to carve.',
     lv_novice_desc:'Comfortable on greens, beginning blues. Linking turns.',
     lv_beginner_desc:'Learning to link turns. Focus on balance and greens.',
-    time_evening:'evening',time_midday:'midday',time_afternoon:'afternoon',
+    time_evening:'evening',time_midday:'midday',time_afternoon:'afternoon',time_morning:'morning',time_overnight:'overnight',started:'started',
     today_label:'Today',tomorrow_label:'Tomorrow',
     tagline:'Know before you go.',
     alert_when:'Alert me when:',alert_powder:'8"+ fresh snow at my resorts',alert_storm:'Major storm incoming (12"+)',alert_epic:'EPIC conditions (score 85+)',alert_weekly:'Weekly forecast digest (Wednesdays)',
@@ -1288,7 +1290,7 @@ const T={
     lv_intermediate_desc:'蓝道稳定，探索黑道。学习刻滑。',
     lv_novice_desc:'绿道舒适，开始蓝道。连续转弯。',
     lv_beginner_desc:'学习连续转弯。专注平衡和绿道。',
-    time_evening:'晚间',time_midday:'中午',time_afternoon:'下午',
+    time_evening:'晚间',time_midday:'中午',time_afternoon:'下午',time_morning:'上午',time_overnight:'凌晨',started:'已开始',
     today_label:'今天',tomorrow_label:'明天',
     tagline:'出发前，先看这里。',
     alert_when:'提醒条件：',alert_powder:'我的滑雪场8寸以上新雪',alert_storm:'大暴风雪来袭（12寸以上）',alert_epic:'极佳条件（评分85+）',alert_weekly:'每周预报摘要（周三）',
@@ -1342,7 +1344,7 @@ const T={
     lv_intermediate_desc:'ブルーで安定、ブラック挑戦中。カービング練習中。',
     lv_novice_desc:'グリーンで快適、ブルー開始。ターン連結。',
     lv_beginner_desc:'ターン連結を練習中。バランスとグリーンに集中。',
-    time_evening:'夕方',time_midday:'正午',time_afternoon:'午後',
+    time_evening:'夕方',time_midday:'正午',time_afternoon:'午後',time_morning:'午前',time_overnight:'深夜',started:'開始済み',
     today_label:'今日',tomorrow_label:'明日',
     tagline:'行く前に、知る。',
     alert_when:'通知条件：',alert_powder:'8インチ以上の新雪',alert_storm:'大嵐の接近（12インチ以上）',alert_epic:'最高コンディション（スコア85+）',alert_weekly:'週間予報ダイジェスト（水曜日）',
@@ -1540,7 +1542,11 @@ function getBaseDepth(r) {
   const depths = sd.hourly.snow_depth.filter(v => v !== null && v !== undefined);
   if (depths.length === 0) return r.base;
   const latestCm = depths[depths.length - 1];
-  return Math.round(latestCm * 0.394);
+  const inches = Math.round(latestCm * 0.394);
+  // Snow depth API has poor coverage for some locations — if it returns 0
+  // but the resort reports significant base, use the resort's reported value
+  if (inches === 0 && r.base >= 20) return r.base;
+  return inches;
 }
 
 function isLiveData(r) {
@@ -1658,20 +1664,47 @@ function getTravelInfo(origin,r){
   return{dist,driveStr,flightStr,hasChain,driveHours:hours}
 }
 
-// ── STORM CONTEXT (per resort) ──
+// ── STORM CONTEXT (per resort, data-driven from hourly forecast) ──
 function getStormContext(r){
-  const now=new Date();
-  if(r.fresh<3) return null;
+  const cached=getCachedWeather(r.id);
+  if(!cached)return null;
+  const w=cached.weather;
+  if(!w.hourly||!w.hourly.snowfall||!w.hourly.time)return null;
+  const times=w.hourly.time;
+  const snow=w.hourly.snowfall;
   const fmt=(d)=>d.toLocaleDateString(lang==='zh'?'zh-CN':lang==='ja'?'ja-JP':'en-US',{weekday:'short',month:'short',day:'numeric'});
-  const stormStartDate=new Date(now);stormStartDate.setDate(stormStartDate.getDate()-1);
-  const peakDate=new Date(now);
-  const clearDate=new Date(now);clearDate.setDate(clearDate.getDate()+1);
-  const bestDate=new Date(now);bestDate.setDate(bestDate.getDate()+1);
+  const timeOfDay=(h)=>h<6?(t('time_overnight')||'overnight'):h<12?(t('time_morning')||'morning'):h<17?(t('time_afternoon')||'afternoon'):(t('time_evening')||'evening');
+  // Find contiguous snow periods (>0.1cm/h) within the forecast
+  let stormStart=null,stormEnd=null,peakHour=null,peakVal=0,totalCm=0;
+  const now=new Date();
+  for(let i=0;i<times.length;i++){
+    const s=snow[i]||0;
+    if(s>0.1){
+      totalCm+=s;
+      if(!stormStart)stormStart=i;
+      stormEnd=i;
+      if(s>peakVal){peakVal=s;peakHour=i;}
+    } else if(stormStart&&i-stormEnd>6){
+      break; // gap >6h means storm ended
+    }
+  }
+  const totalIn=Math.round(totalCm*0.394);
+  if(!stormStart||totalIn<2)return null; // no meaningful snow in forecast
+  const startDate=new Date(times[stormStart]);
+  const peakDate=peakHour!==null?new Date(times[peakHour]):null;
+  const endDate=new Date(times[stormEnd]);
+  // Best window: first morning after snow stops
+  const bestDate=new Date(endDate);
+  bestDate.setHours(bestDate.getHours()+6);
+  if(bestDate.getHours()<6)bestDate.setHours(6);
+  const isPast=(d)=>d<now;
+  const startStr=isPast(startDate)?`${fmt(startDate)}, ${timeOfDay(startDate.getHours())} (${t('started')||'started'})`:`${fmt(startDate)}, ${timeOfDay(startDate.getHours())}`;
   return{
-    stormStart:`${fmt(stormStartDate)} ${t('time_evening')}`,
-    stormPeak:`${fmt(peakDate)}, ${t('time_midday')}`,
-    clearDay:`${fmt(clearDate)}, ${t('time_afternoon')}`,
-    bestWindow:`${fmt(bestDate)}, 6:00 AM \u2013 12:00 PM`
+    stormStart:startStr,
+    stormPeak:peakDate?`${fmt(peakDate)}, ${timeOfDay(peakDate.getHours())}`:'--',
+    clearDay:`${fmt(endDate)}, ${timeOfDay(endDate.getHours())}`,
+    bestWindow:`${fmt(bestDate)}, 6:00 AM – 12:00 PM`,
+    totalIn
   };
 }
 
@@ -1875,7 +1908,7 @@ function renderTopPicks(){
     const hlText=r.score>=80?t('epic_conditions'):r.score>=65?t('great_conditions'):t('worth_considering');
     const storm=getStormContext(r);
     const stormHTML=storm?`<div class="storm-context">
-      <div class="storm-label">${icon('cloud-snow',12)} ${t('storm_context')}</div>
+      <div class="storm-label">${icon('cloud-snow',12)} ${t('storm_context')} &middot; ${storm.totalIn}" total</div>
       <strong>${t('storm_started')}:</strong> ${storm.stormStart} &middot; <strong>${t('peaks_at')}:</strong> ${storm.stormPeak} &middot; <strong>${t('clears_at')}:</strong> ${storm.clearDay}<br>
       <strong>${t('best_window')}:</strong> ${storm.bestWindow}
     </div>`:'';
@@ -2055,7 +2088,7 @@ function renderTrip(){
       <div class="d-stat"><div class="d-stat-label">${icon('cloud-snow',10)} ${t('fresh')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getFresh24h(r)}"</a></div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('mountain',10)} ${t('base')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getBaseDepth(r)}"</a></div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('pin',10)} ${t('distance')}</div><div class="d-stat-val"><a href="${gmapsUrl}" target="_blank" class="d-stat-link">${realDist}<span style="font-size:11px;color:var(--text2)"> mi</span></a></div></div>
-      <div class="d-stat"><div class="d-stat-label">${icon('clock',10)} ${t('est_drive')}</div><div class="d-stat-val" style="font-size:12px"><a href="${gmapsUrl}" target="_blank" class="d-stat-link">${ti.flightStr||adjDriveStr}</a></div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon(ti.flightStr?'plane':'clock',10)} ${ti.flightStr?t('flight'):t('est_drive')}</div><div class="d-stat-val" style="font-size:${ti.flightStr?'11':'14'}px;line-height:1.3"><a href="${gmapsUrl}" target="_blank" class="d-stat-link">${ti.flightStr||adjDriveStr}</a></div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('bolt',10)} ${t('lifts')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${r.liftsOpen}/${r.lifts}</a></div></div>
     </div>
     <div style="font-size:10px;color:var(--text3);margin:-8px 0 16px;display:flex;align-items:center;gap:4px">${icon('alert-triangle',10)} ${t('actual_may_vary')} (+${bufferPct}% ${bufferNote}). <a href="${gmapsUrl}" target="_blank" style="color:var(--accent)">${t('view_on_google')}</a></div>
