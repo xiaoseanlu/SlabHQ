@@ -15,8 +15,6 @@
  * Only ONE alert per subscriber per day (highest priority wins)
  */
 
-const fs = require('fs');
-const path = require('path');
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.FROM_EMAIL || 'SlabHQ Alerts <alerts@slabhq.com>';
@@ -577,13 +575,23 @@ async function main() {
   const dow = new Date().getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
   console.log(`Day of week: ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dow]}`);
 
-  // Load subscribers
-  const subsPath = path.join(__dirname, '..', 'subscribers.json');
+  // Load subscribers from Cloudflare Worker KV (private storage)
   let subscribers = [];
+  const workerUrl = process.env.WORKER_URL || 'https://slabhq-subscribe.xiaoseanlu.workers.dev';
+  const subsToken = process.env.SUBSCRIBERS_TOKEN;
+  if (!subsToken) {
+    console.log('SUBSCRIBERS_TOKEN not set. Cannot fetch subscribers.');
+    return;
+  }
   try {
-    subscribers = JSON.parse(fs.readFileSync(subsPath, 'utf8'));
+    const subsRes = await fetch(`${workerUrl}/subscribers`, {
+      headers: { 'Authorization': `Bearer ${subsToken}` },
+    });
+    const subsData = await subsRes.json();
+    if (!subsData.ok) throw new Error(subsData.error || 'Failed to fetch');
+    subscribers = subsData.subscribers || [];
   } catch (e) {
-    console.log('No subscribers file found or empty.');
+    console.log('Failed to fetch subscribers from worker:', e.message);
     return;
   }
   if (subscribers.length === 0) { console.log('No subscribers. Exiting.'); return; }

@@ -1,11 +1,12 @@
 /**
  * SlabHQ Subscription Worker — Cloudflare Worker
  * Handles email subscription form submissions from the static site.
- * Stores subscribers by committing to the GitHub repo's subscribers.json.
+ * Stores subscribers in Cloudflare KV (private, not in git).
  *
- * Environment variables (set in Cloudflare dashboard):
- *   GITHUB_TOKEN  — GitHub Personal Access Token (fine-grained, repo write)
- *   GITHUB_REPO   — e.g. "xiaoseanlu/SlabHQ"
+ * Environment bindings:
+ *   SUBSCRIBERS      — KV namespace for subscriber data
+ *   RESEND_API_KEY   — Resend API key (secret)
+ *   SUBSCRIBERS_TOKEN — Auth token for GET /subscribers (secret)
  *
  * Deploy: npx wrangler deploy worker/subscribe-worker.js --name slabhq-subscribe
  */
@@ -292,6 +293,27 @@ export default {
       }
     }
 
+    // GET /subscribers — authenticated endpoint for alert script
+    if (request.method === 'GET' && (url.pathname === '/subscribers' || url.pathname === '/subscribers/')) {
+      const auth = request.headers.get('Authorization');
+      if (!env.SUBSCRIBERS_TOKEN || auth !== `Bearer ${env.SUBSCRIBERS_TOKEN}`) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401,
+          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+        });
+      }
+      try {
+        const data = await env.SUBSCRIBERS.get('subscribers', 'json');
+        return new Response(JSON.stringify({ ok: true, subscribers: data || [] }), {
+          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+        });
+      } catch (e) {
+        return new Response(JSON.stringify({ error: 'Failed to read subscribers' }), {
+          status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
     if (request.method !== 'POST') {
       return new Response(JSON.stringify({ error: 'Method not allowed' }), {
         status: 405,
@@ -310,27 +332,8 @@ export default {
         });
       }
 
-      // Fetch current subscribers.json from GitHub
-      const repo = env.GITHUB_REPO || 'xiaoseanlu/SlabHQ';
-      const token = env.GITHUB_TOKEN;
-
-      const fileRes = await fetch(`https://api.github.com/repos/${repo}/contents/subscribers.json`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'User-Agent': 'SlabHQ-Worker',
-        },
-      });
-
-      let subscribers = [];
-      let sha = null;
-
-      if (fileRes.ok) {
-        const fileData = await fileRes.json();
-        sha = fileData.sha;
-        const content = atob(fileData.content.replace(/\n/g, ''));
-        subscribers = JSON.parse(content);
-      }
+      // Read current subscribers from KV
+      let subscribers = (await env.SUBSCRIBERS.get('subscribers', 'json')) || [];
 
       // Check for duplicate
       if (subscribers.find(s => s.email.toLowerCase() === email.toLowerCase())) {
@@ -352,30 +355,8 @@ export default {
         });
       }
 
-      // Commit updated subscribers.json back to GitHub
-      const updateRes = await fetch(`https://api.github.com/repos/${repo}/contents/subscribers.json`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'User-Agent': 'SlabHQ-Worker',
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: `Add subscriber: ${email.replace(/@.*/, '@***')}`,
-          content: btoa(JSON.stringify(subscribers, null, 2)),
-          sha,
-        }),
-      });
-
-      if (!updateRes.ok) {
-        const err = await updateRes.text();
-        console.error('GitHub API error:', err);
-        return new Response(JSON.stringify({ error: 'Failed to save subscription' }), {
-          status: 500,
-          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
-        });
-      }
+      // Save to KV
+      await env.SUBSCRIBERS.put('subscribers', JSON.stringify(subscribers));
 
       // Send welcome email via Resend (if configured)
       if (env.RESEND_API_KEY) {
