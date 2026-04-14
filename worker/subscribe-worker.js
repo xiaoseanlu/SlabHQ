@@ -20,6 +20,114 @@ const ROAD_ROUTES = ['80', '50', '89', '88', '395', '203', '108', '120', '20', '
 const ROAD_CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 let roadCache = { data: null, ts: 0 };
 
+// ── YOY SEASONAL SNOWFALL (from Open-Meteo Historical API) ──
+const YOY_CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours (historical data changes slowly)
+let yoyCache = { data: null, ts: 0 };
+
+const YOY_RESORTS = [
+  { id: 'mammoth', lat: 37.6308, lng: -119.0326 },
+  { id: 'palisades', lat: 39.1965, lng: -120.2356 },
+  { id: 'june', lat: 37.7772, lng: -119.0786 },
+  { id: 'kirkwood', lat: 38.6847, lng: -120.0652 },
+  { id: 'heavenly', lat: 38.9333, lng: -119.9397 },
+  { id: 'northstar', lat: 39.2746, lng: -120.1211 },
+  { id: 'sierra', lat: 38.7988, lng: -120.0805 },
+  { id: 'bigbear', lat: 34.2274, lng: -116.8603 },
+  { id: 'steamboat', lat: 40.4572, lng: -106.8045 },
+  { id: 'aspen', lat: 39.1869, lng: -106.8131 },
+  { id: 'jackson', lat: 43.5877, lng: -110.8279 },
+  { id: 'deervalley', lat: 40.6375, lng: -111.4783 },
+  { id: 'snowbird', lat: 40.5830, lng: -111.6538 },
+  { id: 'brighton', lat: 40.5980, lng: -111.5831 },
+  { id: 'solitude', lat: 40.6199, lng: -111.5919 },
+  { id: 'alta', lat: 40.5884, lng: -111.6387 },
+  { id: 'winterpark', lat: 39.8841, lng: -105.7627 },
+  { id: 'copper', lat: 39.4804, lng: -106.1511 },
+  { id: 'telluride', lat: 37.9375, lng: -107.8123 },
+  { id: 'taos', lat: 36.5964, lng: -105.4542 },
+  { id: 'tremblant', lat: 46.2147, lng: -74.5856 },
+  { id: 'revelstoke', lat: 51.0275, lng: -118.1614 },
+  { id: 'niseko', lat: 42.8625, lng: 140.6989 },
+  { id: 'chamonix', lat: 45.9237, lng: 6.8694 },
+  { id: 'zermatt', lat: 46.0207, lng: 7.7491 },
+  { id: 'vallenevado', lat: -33.3568, lng: -70.2472 },
+  { id: 'thredbo', lat: -36.5053, lng: 148.3066 },
+];
+
+async function fetchYOYData() {
+  if (yoyCache.data && (Date.now() - yoyCache.ts) < YOY_CACHE_TTL) return yoyCache.data;
+
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth() + 1; // 1-12
+  // Season starts Nov — if before Nov, current season started last year
+  const seasonStartYear = currentMonth >= 11 ? currentYear : currentYear - 1;
+  const todayStr = now.toISOString().slice(0, 10);
+
+  const results = {};
+
+  // Fetch in parallel batches of 5 to avoid rate limits
+  for (let i = 0; i < YOY_RESORTS.length; i += 5) {
+    const batch = YOY_RESORTS.slice(i, i + 5);
+    const promises = batch.map(async (resort) => {
+      try {
+        // Southern hemisphere resorts have reversed seasons (Jun-Oct)
+        const isSouthern = resort.lat < 0;
+        const seasonStart = isSouthern ? `${seasonStartYear}-06-01` : `${seasonStartYear}-11-01`;
+        const seasonEnd = todayStr;
+        const lastStart = isSouthern ? `${seasonStartYear - 1}-06-01` : `${seasonStartYear - 1}-11-01`;
+        const lastEnd = isSouthern ? `${seasonStartYear - 1}-10-31` : `${seasonStartYear}-04-30`;
+        const tz = isSouthern ? 'auto' : 'America/Los_Angeles';
+
+        // Fetch this season + last season in parallel
+        const [thisRes, lastRes] = await Promise.all([
+          fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${resort.lat}&longitude=${resort.lng}&start_date=${seasonStart}&end_date=${seasonEnd}&daily=snowfall_sum&timezone=${tz}`),
+          fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${resort.lat}&longitude=${resort.lng}&start_date=${lastStart}&end_date=${lastEnd}&daily=snowfall_sum&timezone=${tz}`),
+        ]);
+
+        const [thisData, lastData] = await Promise.all([thisRes.json(), lastRes.json()]);
+
+        const sumSnow = (d) => {
+          if (!d.daily || !d.daily.snowfall_sum) return 0;
+          return d.daily.snowfall_sum.reduce((s, v) => s + (v || 0), 0);
+        };
+
+        const thisSeasonCm = sumSnow(thisData);
+        const lastSeasonCm = sumSnow(lastData);
+
+        // Compute 5-year average (fetch just totals for 3 more seasons)
+        let totalFiveYear = thisSeasonCm + lastSeasonCm;
+        let seasonCount = 2;
+        for (let y = 2; y < 5; y++) {
+          try {
+            const yStart = isSouthern ? `${seasonStartYear - y}-06-01` : `${seasonStartYear - y}-11-01`;
+            const yEnd = isSouthern ? `${seasonStartYear - y}-10-31` : `${seasonStartYear - y + 1}-04-30`;
+            const yRes = await fetch(`https://archive-api.open-meteo.com/v1/archive?latitude=${resort.lat}&longitude=${resort.lng}&start_date=${yStart}&end_date=${yEnd}&daily=snowfall_sum&timezone=${tz}`);
+            const yData = await yRes.json();
+            totalFiveYear += sumSnow(yData);
+            seasonCount++;
+          } catch (e) { /* skip failed seasons */ }
+        }
+
+        const toInches = (cm) => Math.round(cm * 0.394);
+        results[resort.id] = {
+          thisYear: toInches(thisSeasonCm),
+          lastYear: toInches(lastSeasonCm),
+          avg: Math.round(toInches(totalFiveYear / seasonCount)),
+          source: 'Open-Meteo Historical API',
+          seasonLabel: isSouthern ? `Jun ${seasonStartYear} – Oct ${seasonStartYear}` : `Nov ${seasonStartYear} – Apr ${seasonStartYear + 1}`,
+        };
+      } catch (e) {
+        results[resort.id] = { error: 'Failed to fetch', detail: e.message };
+      }
+    });
+    await Promise.all(promises);
+  }
+
+  yoyCache = { data: results, ts: Date.now() };
+  return results;
+}
+
 async function fetchRoadConditions() {
   if (roadCache.data && (Date.now() - roadCache.ts) < ROAD_CACHE_TTL) return roadCache.data;
 
@@ -85,6 +193,20 @@ export default {
         });
       } catch (e) {
         return new Response(JSON.stringify({ ok: false, error: 'Failed to fetch road conditions' }), {
+          status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+        });
+      }
+    }
+
+    // GET /yoy — seasonal snowfall year-over-year from Open-Meteo Historical API
+    if (request.method === 'GET' && (url.pathname === '/yoy' || url.pathname === '/yoy/')) {
+      try {
+        const data = await fetchYOYData();
+        return new Response(JSON.stringify({ ok: true, data, updatedAt: new Date().toISOString(), source: 'Open-Meteo Historical Weather API' }), {
+          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=3600' },
+        });
+      } catch (e) {
+        return new Response(JSON.stringify({ ok: false, error: 'Failed to fetch YOY data' }), {
           status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
         });
       }

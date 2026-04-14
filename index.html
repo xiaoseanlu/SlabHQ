@@ -27,11 +27,11 @@
 <meta name="twitter:description" content="Real-time snow conditions, personalized resort rankings, and storm tracking for 35+ Ikon Pass resorts.">
 <meta name="twitter:image" content="https://xiaoseanlu.github.io/SlabHQ/og-image.png">
 <!-- PWA / Mobile -->
-<meta name="theme-color" content="#c4956a">
+<meta name="theme-color" content="#2a5580">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SlabHQ">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%23c4956a'/%3E%3Cstop offset='1' stop-color='%238b6f47'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M16 4L28 26H4z' fill='url(%23g)'/%3E%3Cpath d='M16 4l6 11-3-1.5L16 16l-3-2.5L10 15z' fill='%23fff' opacity='.35'/%3E%3Cpath d='M8 26l4-7 3 3 3-5 3 4 3-2 4 7z' fill='%23f5f0eb'/%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='0' y2='1'%3E%3Cstop offset='0' stop-color='%232a7eb5'/%3E%3Cstop offset='1' stop-color='%231a3a5c'/%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M16 4L28 26H4z' fill='url(%23g)'/%3E%3Cpath d='M16 4l6 11-3-1.5L16 16l-3-2.5L10 15z' fill='%23fff' opacity='.45'/%3E%3Cpath d='M8 26l4-7 3 3 3-5 3 4 3-2 4 7z' fill='%23e8f0f8'/%3E%3C/svg%3E">
 <!-- Structured Data -->
 <script type="application/ld+json">
 {
@@ -95,28 +95,28 @@
 }
 
 [data-theme="light"] {
-  --bg: #f7f3ee;
-  --surface: #ede8e2;
+  --bg: #f0f4f8;
+  --surface: #e4eaf0;
   --card: #ffffff;
-  --card2: #f5f1ec;
-  --border: #ddd6cc;
-  --border2: #c8c0b5;
-  --accent: #8b5e3c;
-  --accent2: #a06d48;
-  --accent-soft: rgba(139,94,60,0.08);
-  --fresh: #2d8a3e;
-  --fresh-soft: rgba(45,138,62,0.08);
-  --warn: #a07828;
-  --warn-soft: rgba(160,120,40,0.06);
-  --danger: #b83a3a;
-  --danger-soft: rgba(184,58,58,0.06);
-  --sky: #3a7f9a;
-  --sky-soft: rgba(58,127,154,0.08);
-  --text: #2a2420;
-  --text2: #6a6058;
-  --text3: #736b63;
-  --white: #1a1614;
-  --overlay: rgba(247,243,238,0.7);
+  --card2: #f4f7fa;
+  --border: #d0d8e2;
+  --border2: #b8c4d0;
+  --accent: #3a6b8c;
+  --accent2: #4a7fa0;
+  --accent-soft: rgba(58,107,140,0.08);
+  --fresh: #1a8a4a;
+  --fresh-soft: rgba(26,138,74,0.08);
+  --warn: #b88420;
+  --warn-soft: rgba(184,132,32,0.06);
+  --danger: #c03838;
+  --danger-soft: rgba(192,56,56,0.06);
+  --sky: #2a7eb5;
+  --sky-soft: rgba(42,126,181,0.1);
+  --text: #1a2a38;
+  --text2: #4a5d6e;
+  --text3: #6a7d8e;
+  --white: #0f1a24;
+  --overlay: rgba(240,244,248,0.7);
 }
 
 /* ── RESET ── */
@@ -259,30 +259,30 @@ input{font-family:inherit}
 
 /* ── APP OVERVIEW HERO ── */
 .wx-overview{
-  background:linear-gradient(160deg,#3b2f24 0%,#5a3e2b 40%,#6b4c33 100%);color:#fff;
+  background:linear-gradient(160deg,#1a3a5c 0%,#2a5580 40%,#1e4a70 100%);color:#fff;
   border-radius:var(--r);padding:24px 20px 48px;margin:16px 0 24px;
   animation:reveal .5s var(--ease-out) .05s both;
   position:relative;overflow:hidden;
-  box-shadow:0 4px 20px rgba(90,62,43,.2);
+  box-shadow:0 4px 20px rgba(26,58,92,.25);
 }
 .wx-overview::before{
-  content:'';position:absolute;bottom:0;left:0;right:0;height:60px;
-  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 60' preserveAspectRatio='none'%3E%3Cpath d='M0 60V35l80-15 120 10 100-20 80 12 120-18 100 14 80-10 120 12V60z' fill='%23f5f0eb' opacity='.1'/%3E%3Cpath d='M0 60V45l100-8 150 5 120-12 100 8 130-10 100 6 100-5V60z' fill='%23f5f0eb' opacity='.07'/%3E%3Cpath d='M0 60v-8l200 3 200-5 200 4 200-2V60z' fill='%23f5f0eb' opacity='.04'/%3E%3C/svg%3E") no-repeat bottom/100% 60px;
+  content:'';position:absolute;bottom:0;left:0;right:0;height:70px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 70' preserveAspectRatio='none'%3E%3Cpath d='M0 70V30l60-12 100 8 80-18 120 10 100-20 80 15 100-8 60 12 100-10V70z' fill='%23ffffff' opacity='.12'/%3E%3Cpath d='M0 70V45l80-6 120 4 100-10 80 6 120-8 80 5 120-4 100 6V70z' fill='%23ffffff' opacity='.07'/%3E%3Cpath d='M0 70v-6l200 2 200-4 200 3 200-1V70z' fill='%23ffffff' opacity='.04'/%3E%3C/svg%3E") no-repeat bottom/100% 70px;
 }
 .wx-overview::after{
-  content:'';position:absolute;top:0;right:0;width:160px;height:160px;
-  background:radial-gradient(circle at 80% 20%,rgba(245,240,235,.1),transparent 70%);
+  content:'';position:absolute;top:-20px;right:-20px;width:200px;height:200px;
+  background:radial-gradient(circle at 70% 30%,rgba(255,255,255,.08),transparent 65%);
   pointer-events:none;
 }
-.wx-eyebrow{font-size:10px;color:#d4b896;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.wx-eyebrow{font-size:10px;color:#8ec5e8;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
 .wx-headline{font-family:var(--font-display);font-size:22px;color:#fff;line-height:1.3;margin-bottom:10px}
-.wx-summary{font-size:12px;color:#e8ddd0;line-height:1.6;margin-top:10px;position:relative;z-index:1}
+.wx-summary{font-size:12px;color:#c8ddef;line-height:1.6;margin-top:10px;position:relative;z-index:1}
 .wx-summary strong{color:#fff}
-.wx-summary a{color:#d4b896}
+.wx-summary a{color:#8ec5e8}
 .wx-source{font-size:10px;color:var(--text3);margin-top:8px}
 .wx-source a{color:var(--accent)}
-[data-theme="dark"] .wx-overview{background:linear-gradient(160deg,#0f0f1a 0%,#1a1525 40%,#221a2e 100%);box-shadow:0 4px 20px rgba(0,0,0,.3);border:1px solid rgba(196,149,106,.1)}
-[data-theme="dark"] .wx-eyebrow{color:var(--accent)}
+[data-theme="dark"] .wx-overview{background:linear-gradient(160deg,#0a1628 0%,#12253e 40%,#1a3050 100%);box-shadow:0 4px 20px rgba(0,0,0,.4);border:1px solid rgba(106,175,196,.12)}
+[data-theme="dark"] .wx-eyebrow{color:#6aafc4}
 
 /* ── NEXT TRIP OUTLOOK ── */
 .outlook-row{
@@ -755,6 +755,18 @@ input{font-family:inherit}
 .nav-icon svg{width:20px;height:20px}
 .nav-label{font-size:10px;letter-spacing:.5px}
 
+/* ── FOOTER ── */
+.site-footer{
+  margin-top:40px;padding:24px 16px 100px;
+  border-top:1px solid var(--border);
+  font-size:10px;color:var(--text3);line-height:1.8;
+  text-align:center;
+}
+.site-footer a{color:var(--accent);text-decoration:none}
+.site-footer a:hover{text-decoration:underline}
+.footer-links{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.footer-disclaimer{max-width:560px;margin:0 auto;opacity:.8}
+
 /* ═══ TAB VISIBILITY ═══ */
 .tab-section{display:none}
 .tab-section.active-tab{display:block}
@@ -941,6 +953,23 @@ input{font-family:inherit}
   </section>
 
 </div>
+
+<!-- FOOTER -->
+<footer class="site-footer">
+  <div class="footer-links">
+    <a href="https://open-meteo.com" target="_blank">Open-Meteo API</a>
+    <span>&middot;</span>
+    <a href="https://roads.dot.ca.gov" target="_blank">Caltrans Road Info</a>
+    <span>&middot;</span>
+    <a href="https://github.com/xiaoseanlu/SlabHQ" target="_blank">GitHub</a>
+  </div>
+  <div class="footer-disclaimer">
+    <strong>Disclaimer:</strong> SlabHQ is an independent tool and is not affiliated with, endorsed by, or sponsored by Alterra Mountain Company, Ikon Pass, or any resort listed. Resort names and trademarks belong to their respective owners.<br><br>
+    Snow forecasts, road conditions, and resort data are provided for informational purposes only and may not reflect real-time conditions. <strong>Always verify conditions directly with the resort and Caltrans before traveling.</strong> SlabHQ is not responsible for inaccurate data, travel delays, road closures, or any decisions made based on information displayed here.<br><br>
+    Weather data from <a href="https://open-meteo.com">Open-Meteo</a> (CC BY 4.0). Road data from <a href="https://roads.dot.ca.gov">Caltrans</a>. Operating hours, lift status, and trail counts are sourced from resort websites and may be outdated.<br><br>
+    &copy; ${new Date().getFullYear()} SlabHQ. Not for commercial use.
+  </div>
+</footer>
 
 <!-- RESORT DETAIL OVERLAY -->
 <div class="detail-overlay" id="detailOverlay" onclick="closeDetail(event)" role="dialog" aria-modal="true" aria-label="Resort details">
@@ -1777,11 +1806,11 @@ function renderWeatherOverview(){
       <div style="text-align:center;margin-bottom:14px">
         <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="opacity:.9">
           <path d="M28 8L48 42H8z" fill="url(#heroMtnG)" />
-          <path d="M28 8l10 18-5-2.5L28 28l-5-4.5L18 26z" fill="#fff" opacity=".25"/>
-          <path d="M14 42l6-10 5 5 5-8 5 6 5-3 8 10z" fill="#f5f0eb" opacity=".5"/>
-          <circle cx="44" cy="14" r="5" fill="#c4956a" opacity=".3"/>
-          <circle cx="42" cy="12" r="2" fill="#fff" opacity=".4"/>
-          <defs><linearGradient id="heroMtnG" x1="28" y1="8" x2="28" y2="42" gradientUnits="userSpaceOnUse"><stop stop-color="#c4956a"/><stop offset="1" stop-color="#8b6f47"/></linearGradient></defs>
+          <path d="M28 8l10 18-5-2.5L28 28l-5-4.5L18 26z" fill="#fff" opacity=".4"/>
+          <path d="M14 42l6-10 5 5 5-8 5 6 5-3 8 10z" fill="#e8f4ff" opacity=".6"/>
+          <circle cx="44" cy="14" r="3" fill="#fff" opacity=".5"/>
+          <path d="M38 14l1.5-1.5M44 8v2M50 14l-1.5-1.5M38 20l1.5 1.5" stroke="#fff" stroke-width=".6" opacity=".3"/>
+          <defs><linearGradient id="heroMtnG" x1="28" y1="8" x2="28" y2="42" gradientUnits="userSpaceOnUse"><stop stop-color="#5a9cc4"/><stop offset="1" stop-color="#2a5580"/></linearGradient></defs>
         </svg>
       </div>
       <div class="wx-eyebrow" style="justify-content:center">Know Before You Go</div>
@@ -1795,8 +1824,8 @@ function renderWeatherOverview(){
         <div style="padding:8px 10px;background:rgba(255,255,255,.06);border-radius:8px;font-size:11px;color:#d8e6f2;display:flex;align-items:flex-start;gap:6px">${icon('alert-triangle',11)} <span>Live Caltrans road conditions</span></div>
         <div style="padding:8px 10px;background:rgba(255,255,255,.06);border-radius:8px;font-size:11px;color:#d8e6f2;display:flex;align-items:flex-start;gap:6px">${icon('pin',11)} <span>Drive time from your location</span></div>
       </div>
-      <div style="margin-top:14px;padding:10px 14px;background:rgba(196,149,106,.12);border:1px solid rgba(196,149,106,.2);border-radius:8px;font-size:11px;line-height:1.6;color:#d8e6f2;text-align:center;position:relative;z-index:1">
-        <strong style="color:#fff">Personalize it</strong> — Head to the <a href="#" onclick="switchTab(2);return false" style="color:var(--accent);font-weight:600">Profile</a> tab to set your location, save favorites, and subscribe to email alerts.
+      <div style="margin-top:14px;padding:10px 14px;background:rgba(142,197,232,.12);border:1px solid rgba(142,197,232,.2);border-radius:8px;font-size:11px;line-height:1.6;color:#c8ddef;text-align:center;position:relative;z-index:1">
+        <strong style="color:#fff">Personalize it</strong> — Head to the <a href="#" onclick="switchTab(2);return false" style="color:#8ec5e8;font-weight:600">Profile</a> tab to set your location, save favorites, and subscribe to email alerts.
       </div>
     </div>`;
 }
@@ -2512,7 +2541,7 @@ function openDetail(id){
     </div>
 
     <div style="padding:10px 12px;background:var(--card);border-radius:var(--r-sm);border:1px solid var(--border);margin:12px 0;font-size:11px;color:var(--text2);line-height:1.6">
-      ${icon('clock',12)} ${t('open')}: <strong style="color:var(--fresh)">${r.open}</strong> \u2014 ${t('close_t')}: <strong style="color:var(--danger)">${r.close}</strong>
+      ${icon('clock',12)} ${t('open')}: <strong style="color:var(--fresh)">${r.open}</strong> \u2014 ${t('close_t')}: <strong style="color:var(--danger)">${r.close}</strong> <a href="${r.links.official}" target="_blank" style="font-size:9px;color:var(--accent);margin-left:4px">Verify hours</a>
       <br>${icon('plane',12)} ${r.airport}
       <br>${icon('pin',12)} ${t('from')} <strong>${origin.name||userLocation}</strong>: ${ti.flightStr||ti.driveStr} ${t('drive')} &middot; <a href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin.name||userLocation)}&destination=${encodeURIComponent(r.name+', '+r.loc)}&travelmode=driving" target="_blank" style="color:var(--accent)">${t('view_on_google')}</a>
     </div>
@@ -2585,8 +2614,8 @@ function openDetail(id){
     ${r.liftList.length?`<div style="border-top:1px solid var(--border);margin:20px 0 0"></div><div class="sec-label" style="margin-top:20px">${icon('bolt',12)} ${t('lift_status')} ${sourceTag('estimated')}</div><div style="font-size:9px;color:var(--text3);margin-bottom:6px">Check <a href="${r.links.snow}" target="_blank" style="color:var(--accent)">${r.name}</a> for real-time lift status.</div>${r.liftList.map(l=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px"><div style="width:7px;height:7px;border-radius:50%;background:${l.s==='on'?'var(--fresh)':l.s==='hold'?'var(--warn)':'var(--danger)'}"></div><div style="flex:1;color:var(--text)">${l.n}</div><div style="font-size:10px;color:var(--text3)">${l.t}</div></div>`).join('')}`:''}
 
     <div class="yoy-section">
-      <div class="yoy-title">${icon('mountain',12)} ${t('season_total')} \u2014 ${t('yoy_inches')} ${sourceTag('estimated')}</div>
-      <div style="font-size:9px;color:var(--text3);margin-bottom:6px">Source: <a href="${r.links.snow}" target="_blank" style="color:var(--accent)">${r.name} snow report</a>. Updated periodically, may not reflect latest totals.</div>
+      <div class="yoy-title">${icon('mountain',12)} ${t('season_total')} \u2014 ${t('yoy_inches')} ${sourceTag(r.yoyLive?'live':'estimated')}</div>
+      <div style="font-size:9px;color:var(--text3);margin-bottom:6px">${r.yoyLive?'Source: <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" style="color:var(--accent)">Open-Meteo Historical API</a>. Measured at resort coordinates — summit gauges may differ.'+(r.yoy.seasonLabel?' Season: '+r.yoy.seasonLabel:''):'Source: <a href="'+r.links.snow+'" target="_blank" style="color:var(--accent)">'+r.name+' snow report</a>. Updated periodically, may not reflect latest totals.'}</div>
       <div class="yoy-row"><div class="yoy-label">${t('this_year')}</div><div class="yoy-bar"><div class="yoy-fill" style="width:${r.yoy.thisYear/maxYOY*100}%;background:var(--accent);display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-size:10px;color:var(--bg);font-weight:600;min-width:fit-content">${r.yoy.thisYear}"</div></div><div class="yoy-val" style="color:var(--accent)">${r.yoy.thisYear}"</div></div>
       <div class="yoy-row"><div class="yoy-label">${t('last_year')}</div><div class="yoy-bar"><div class="yoy-fill" style="width:${r.yoy.lastYear/maxYOY*100}%;background:var(--sky);display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-size:10px;color:var(--bg);font-weight:600;min-width:fit-content">${r.yoy.lastYear}"</div></div><div class="yoy-val" style="color:var(--sky)">${r.yoy.lastYear}"</div></div>
       <div class="yoy-row"><div class="yoy-label">${t('average')}</div><div class="yoy-bar"><div class="yoy-fill" style="width:${r.yoy.avg/maxYOY*100}%;background:var(--text3);display:flex;align-items:center;justify-content:flex-end;padding-right:4px;font-size:10px;color:var(--bg);font-weight:600;min-width:fit-content">${r.yoy.avg}"</div></div><div class="yoy-val">${r.yoy.avg}"</div></div>
@@ -2597,8 +2626,13 @@ function openDetail(id){
       ${r.yoy.thisYear>r.yoy.avg?`${t('tracking')} <strong>${Math.round((r.yoy.thisYear/r.yoy.avg-1)*100)}% ${t('above_avg')}</strong> ${t('excellent_year')}`:`${r.yoy.thisYear<r.yoy.avg?t('below_avg'):t('near_avg')}`}
     </div>
 
-    <div class="data-source" style="margin:12px 0 4px">${icon('external-link',10)} Forecast: <a href="https://open-meteo.com" target="_blank" style="color:var(--accent)">Open-Meteo API</a> &middot; Snow report: <a href="${r.links.snow}" target="_blank">${r.name} ${icon('external-link',10)}</a></div>
-    <div class="data-source">${getCachedWeather(r.id)?`${icon('check',10)} Fresh snow &amp; base depth from <strong>live API</strong> &middot; Trails, lifts, quality from <a href="${r.links.snow}" target="_blank" style="color:var(--accent)">${r.name} snow report</a>`:`${icon('alert-triangle',10)} All data estimated &mdash; verify at <a href="${r.links.snow}" target="_blank" style="color:var(--accent)">${r.name} snow report</a>`}</div>
+    <div class="data-source" style="margin:16px 0 4px;border-top:1px solid var(--border);padding-top:12px">
+      <strong>Data sources:</strong><br>
+      ${icon('check',10)} Forecast &amp; fresh snow: <a href="https://open-meteo.com" target="_blank" style="color:var(--accent)">Open-Meteo API</a> (LIVE)<br>
+      ${r.yoyLive?icon('check',10)+' Season totals: <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" style="color:var(--accent)">Open-Meteo Historical</a> (LIVE)':icon('alert-triangle',10)+' Season totals: <a href="'+r.links.snow+'" target="_blank" style="color:var(--accent)">'+r.name+'</a> (EST)'}<br>
+      ${roadConditions?icon('check',10)+' Road conditions: <a href="https://roads.dot.ca.gov" target="_blank" style="color:var(--accent)">Caltrans</a> (LIVE)':''}
+      ${icon('alert-triangle',10)} Hours, lifts, trails, quality: <a href="${r.links.snow}" target="_blank" style="color:var(--accent)">${r.name} snow report</a> (EST)
+    </div>
 
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">
       <a href="${r.links.official}" target="_blank" class="ghost-btn" style="flex:1;min-width:100px">${icon('external-link',12)} ${t('official_site')}</a>
@@ -2718,6 +2752,7 @@ document.addEventListener('click',e=>{if(!e.target.closest('.lang-wrap'))closeLa
 // Subscription endpoint — update this after deploying the Cloudflare Worker
 const SUBSCRIBE_URL='https://slabhq-subscribe.xiaoseanlu.workers.dev';
 const ROADS_URL=SUBSCRIBE_URL+'/roads';
+const YOY_URL=SUBSCRIBE_URL+'/yoy';
 
 // Resort → Caltrans route numbers for road conditions
 // Includes primary route + key alternates from major CA metro areas
@@ -2793,6 +2828,29 @@ function roadStatusDetail(resortId){
 
 // Fetch road conditions on page load, then re-render to show badges
 fetchRoadConditions().then(()=>{if(roadConditions){renderTopPicks();renderNextTrip();}});
+
+// ── LIVE YOY SEASONAL SNOWFALL ──
+let yoyData=null;
+let yoyUpdatedAt=null;
+async function fetchYOYData(){
+  try{
+    const res=await fetch(YOY_URL);
+    const data=await res.json();
+    if(data.ok){
+      yoyData=data.data;
+      yoyUpdatedAt=data.updatedAt;
+      // Update resort objects with live YOY data
+      RESORTS.forEach(r=>{
+        if(yoyData[r.id]&&!yoyData[r.id].error){
+          r.yoy={...yoyData[r.id]};
+          r.yoyLive=true;
+        }
+      });
+      console.log('YOY data loaded for',Object.keys(yoyData).length,'resorts');
+    }
+  }catch(e){console.warn('YOY fetch failed:',e)}
+}
+fetchYOYData();
 
 async function submitEmail(e){
   e.preventDefault();
