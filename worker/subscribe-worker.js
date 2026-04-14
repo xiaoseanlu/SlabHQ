@@ -12,15 +12,82 @@
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
+const ROAD_ROUTES = ['80', '50', '89', '88', '395', '203', '108', '120', '20', '267', '158', '207', '18', '38', '330'];
+const ROAD_CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+let roadCache = { data: null, ts: 0 };
+
+async function fetchRoadConditions() {
+  if (roadCache.data && (Date.now() - roadCache.ts) < ROAD_CACHE_TTL) return roadCache.data;
+
+  const conditions = {};
+  for (const num of ROAD_ROUTES) {
+    try {
+      const url = `https://roads.dot.ca.gov/roadscell.php?roadnumber=${num}`;
+      const res = await fetch(url, { headers: { 'User-Agent': 'SlabHQ-Worker' } });
+      const html = await res.text();
+      const text = html.replace(/<[^>]+>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
+      const routeName = num === '80' ? 'I-80' : num === '50' ? 'US-50' : num === '395' ? 'US-395' : `SR-${num}`;
+
+      let status = 'clear';
+      let detail = 'No restrictions reported';
+
+      if (/\bclosed\b/i.test(text)) {
+        status = 'closed';
+        // Match "closed from X to Y" or "closed at X" patterns, allow digits/decimals in road segments
+        const m = text.match(/\bclosed\b[^.!]{0,300}[.!]/i) || text.match(/\bclosed\b.{0,200}/i);
+        detail = m ? m[0].replace(/\s+/g, ' ').trim() : 'Road closed';
+        if (detail.length < 10) detail = 'Road closed — check Caltrans for details';
+      } else if (/chain control|chains? (are |or snow tires )?required|chains? (are )?mandatory|R-[123]/i.test(text)) {
+        status = 'chains';
+        const m = text.match(/(chains?[^.]{0,200}\.)/i);
+        detail = m ? m[0].trim() : 'Chain controls in effect';
+        if (/R-3|chains required on all/i.test(text)) status = 'chains_r3';
+        else if (/R-2|chains.*except.*4.?wheel/i.test(text)) status = 'chains_r2';
+        else if (/R-1|chains.*or.*snow tires/i.test(text)) status = 'chains_r1';
+      } else if (/wind|advisory/i.test(text)) {
+        status = 'advisory';
+        const m = text.match(/(wind[^.]{0,150}\.|advisory[^.]{0,150}\.)/i);
+        detail = m ? m[0].trim() : 'Weather advisory in effect';
+      } else if (/no traffic restrictions/i.test(text)) {
+        status = 'clear';
+        detail = 'No traffic restrictions are reported';
+      }
+
+      conditions[num] = { route: routeName, status, detail: detail.slice(0, 300) };
+    } catch (e) {
+      conditions[num] = { route: `Route ${num}`, status: 'unknown', detail: 'Unable to fetch' };
+    }
+  }
+
+  roadCache = { data: conditions, ts: Date.now() };
+  return conditions;
+}
+
 export default {
   async fetch(request, env) {
+    const url = new URL(request.url);
+
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
       return new Response(null, { headers: CORS_HEADERS });
+    }
+
+    // GET /roads — live road conditions from Caltrans
+    if (request.method === 'GET' && (url.pathname === '/roads' || url.pathname === '/roads/')) {
+      try {
+        const conditions = await fetchRoadConditions();
+        return new Response(JSON.stringify({ ok: true, conditions, updatedAt: new Date().toISOString() }), {
+          headers: { ...CORS_HEADERS, 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=300' },
+        });
+      } catch (e) {
+        return new Response(JSON.stringify({ ok: false, error: 'Failed to fetch road conditions' }), {
+          status: 500, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     if (request.method !== 'POST') {

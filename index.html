@@ -872,7 +872,7 @@ input{font-family:inherit}
       <div class="header-date" id="dateDisplay"></div>
       <div class="header-meta">
         <div class="header-time" id="timeDisplay"></div>
-        <div class="header-demo" id="dataBadge" data-i18n="demo_data">Demo Data</div>
+        <div class="header-demo" id="dataBadge" style="color:var(--sky);background:var(--sky-soft)">Updating...</div>
       </div>
     </div>
 
@@ -1427,7 +1427,7 @@ async function fetchSnowDepth(lat, lng) {
 
 function getCachedWeather(resortId) {
   const c = weatherCache[resortId];
-  if (c && (Date.now() - c.ts) < WEATHER_CACHE_TTL) return c.data;
+  if (c && (Date.now() - c.ts) < WEATHER_CACHE_TTL) return { ...c.data, fetchedAt: c.ts };
   return null;
 }
 
@@ -1440,10 +1440,11 @@ function weatherCodeToIcon(code) {
   return 'w-cloudy';
 }
 
+let anyWeatherLoaded=false;
 async function loadWeatherForResorts(resorts) {
-  // Update badge to "Updating..."
   const badge = document.getElementById('dataBadge');
-  if (badge) { badge.textContent = t('updating'); badge.style.color = 'var(--sky)'; badge.style.background = 'var(--sky-soft)'; }
+  // Only show "Updating..." if not already showing "Live Data"
+  if (badge && !anyWeatherLoaded) { badge.textContent = t('updating'); badge.style.color = 'var(--sky)'; badge.style.background = 'var(--sky-soft)'; }
 
   const promises = resorts.map(async (r) => {
     if (getCachedWeather(r.id)) return;
@@ -1460,16 +1461,15 @@ async function loadWeatherForResorts(resorts) {
 
   await Promise.allSettled(promises);
 
-  // Update badge to "Live Data"
+  // Update badge — once Live, never regress
   if (badge) {
     const anyLoaded = resorts.some(r => getCachedWeather(r.id));
     if (anyLoaded) {
+      anyWeatherLoaded=true;
       badge.textContent = t('live_data');
       badge.style.color = 'var(--fresh)';
       badge.style.background = 'var(--fresh-soft)';
-      badge.style.animation = 'none';
-      const dot = badge.querySelector('::before');
-    } else {
+    } else if (!anyWeatherLoaded) {
       badge.textContent = t('demo_data');
     }
   }
@@ -1526,13 +1526,11 @@ function getFresh24h(r) {
   if (!cached) return r.fresh;
   const w = cached.weather;
   if (!w.hourly || !w.hourly.snowfall) return r.fresh;
-  const now = new Date();
   let total = 0;
   for (let i = Math.max(0, w.hourly.snowfall.length - 24); i < w.hourly.snowfall.length; i++) {
     total += (w.hourly.snowfall[i] || 0);
   }
-  const inches = Math.round(total * 0.394);
-  return inches > 0 ? inches : r.fresh; // fallback to demo if API returns 0
+  return Math.round(total * 0.394);
 }
 
 function getBaseDepth(r) {
@@ -1543,12 +1541,34 @@ function getBaseDepth(r) {
   const depths = sd.hourly.snow_depth.filter(v => v !== null && v !== undefined);
   if (depths.length === 0) return r.base;
   const latestCm = depths[depths.length - 1];
-  const inches = Math.round(latestCm * 0.394);
-  return inches > 0 ? inches : r.base; // fallback to demo if 0
+  return Math.round(latestCm * 0.394);
 }
 
 function isLiveData(r) {
   return !!getCachedWeather(r.id);
+}
+
+function getFreshDisplay(r){
+  const live=isLiveData(r);
+  return {value:getFresh24h(r),source:live?'live':'estimated'};
+}
+function getBaseDisplay(r){
+  const cached=getCachedWeather(r.id);
+  const live=!!(cached&&cached.snowDepth&&cached.snowDepth.hourly&&cached.snowDepth.hourly.snow_depth);
+  return {value:getBaseDepth(r),source:live?'live':'estimated'};
+}
+function getLastUpdated(r){
+  const cached=getCachedWeather(r.id);
+  if(!cached||!cached.fetchedAt)return null;
+  return new Date(cached.fetchedAt);
+}
+function sourceTag(src){
+  return src==='live'?'<span style="font-size:8px;font-weight:700;color:var(--fresh);margin-left:3px;vertical-align:super">LIVE</span>':'<span style="font-size:8px;font-weight:700;color:var(--warn);margin-left:3px;vertical-align:super">EST</span>';
+}
+
+function getWeekSnowfall(r){
+  const forecast=getWeatherForecast(r);
+  return Math.round(forecast.reduce((sum,d)=>sum+(d.snowfall||0),0)*10)/10;
 }
 
 // ── ROUTE CACHE (Fix 7) ──
@@ -1771,41 +1791,52 @@ function renderNextTrip(){
   if(ntSub)ntSub.textContent=t('best_windows');
   const scored=RESORTS.filter(r=>r.status!=='CLOSED').map(r=>({...r,score:scoreResort(r,origin)})).sort((a,b)=>b.score-a.score);
   const weeks=[];
-  for(let w=1;w<=3;w++){
-    const weekStart=new Date(now);weekStart.setDate(weekStart.getDate()+w*7);
-    const weekEnd=new Date(weekStart);weekEnd.setDate(weekEnd.getDate()+6);
-    const loc=lang==='zh'?'zh-CN':lang==='ja'?'ja-JP':'en-US';
+  // Align weeks to Monday-Sunday
+  const dow=now.getDay(); // 0=Sun,1=Mon,...
+  const daysToNextMon=dow===0?1:(8-dow); // days until next Monday
+  const loc=lang==='zh'?'zh-CN':lang==='ja'?'ja-JP':'en-US';
+  for(let w=0;w<3;w++){
+    const weekStart=new Date(now);
+    weekStart.setDate(weekStart.getDate()+daysToNextMon+w*7);
+    weekStart.setHours(0,0,0,0);
+    const weekEnd=new Date(weekStart);weekEnd.setDate(weekEnd.getDate()+6); // Sunday
+    const weekSat=new Date(weekStart);weekSat.setDate(weekSat.getDate()+5);
+    const weekSun=new Date(weekStart);weekSun.setDate(weekSun.getDate()+6);
     const startStr=weekStart.toLocaleDateString(loc,{month:'short',day:'numeric'});
     const endStr=weekEnd.toLocaleDateString(loc,{month:'short',day:'numeric'});
-    // Week 1: use real 7-day forecast data if available
-    let snowChance, expectedSnow, trend;
-    if(w===1){
-      // Compute from actual Open-Meteo 7-day forecast for top resort
+    const satStr=weekSat.toLocaleDateString(loc,{weekday:'short',month:'short',day:'numeric'});
+    const sunStr=weekSun.toLocaleDateString(loc,{weekday:'short',month:'short',day:'numeric'});
+    let snowChance,expectedSnow,weekendSnow,trend;
+    if(w===0){
+      // Week 1: use real 7-day forecast if available
       const topR=scored[0];
       const forecast=getWeatherForecast(topR);
       const snowDays=forecast.filter(d=>d.snowfall>0).length;
       const totalSnow=forecast.reduce((s,d)=>s+d.snowfall,0);
       snowChance=Math.round((snowDays/Math.max(forecast.length,1))*100);
       expectedSnow=totalSnow>0?`${Math.round(totalSnow*0.7)}-${Math.round(totalSnow*1.3)}"`:t('trace');
+      // Weekend snow from forecast days that fall on Sat/Sun
+      const wkendSnow=forecast.filter(d=>{const dd=new Date(d.date||0);return dd.getDay()===0||dd.getDay()===6}).reduce((s,d)=>s+d.snowfall,0);
+      weekendSnow=Math.round(wkendSnow*10)/10;
       trend=totalSnow>=8?'up':totalSnow>=3?'steady':'down';
-    } else {
-      // Weeks 2-3: projection based on seasonal averages (no API data available beyond 7 days)
-      snowChance=w===2?45:30;
-      expectedSnow=w===2?'4-8"':'2-6"';
-      trend=w===2?'steady':'down';
+    }else{
+      snowChance=w===1?45:30;
+      expectedSnow=w===1?'4-8"':'2-6"';
+      weekendSnow=w===1?'2-4':'1-3';
+      trend=w===1?'steady':'down';
     }
     const trendIcon=trend==='up'?icon('chevron-up',12):trend==='down'?icon('chevron-down',12):'\u2192';
     const trendColor=trend==='up'?'var(--fresh)':trend==='down'?'var(--warn)':'var(--text2)';
-    const top3=scored.slice(w===1?0:w===2?1:2, w===1?3:w===2?4:5);
-    const isLive=w===1&&scored.length>0&&getCachedWeather(scored[0].id);
-    weeks.push({weekLabel:`${t('week')}${lang==='en'?' ':''}${w}`,dateRange:`${startStr} \u2013 ${endStr}`,snowChance,expectedSnow,trend,trendIcon,trendColor,top3,isLive,weekNum:w});
+    const top3=scored.slice(w===0?0:w===1?1:2, w===0?3:w===1?4:5);
+    const isLive=w===0&&scored.length>0&&getCachedWeather(scored[0].id);
+    weeks.push({weekLabel:`${t('week')}${lang==='en'?' ':''}${w+1}`,dateRange:`${startStr} \u2013 ${endStr}`,weekendLabel:`${satStr} \u2013 ${sunStr}`,snowChance,expectedSnow,weekendSnow,trend,trendIcon,trendColor,top3,isLive,weekNum:w+1});
   }
   document.getElementById('nextTripContent').innerHTML=weeks.map(w=>`
     <div class="outlook-row" style="flex-wrap:wrap">
       <div class="outlook-week">${w.weekLabel}</div>
       <div class="outlook-info">
-        <div class="outlook-title">${w.dateRange}${w.isLive?' <span style="font-size:10px;color:var(--fresh);font-weight:600">LIVE ~85%</span>':w.weekNum===2?' <span style="font-size:10px;color:var(--text3);font-weight:500">~60% '+t("accuracy")+'</span>':w.weekNum===3?' <span style="font-size:10px;color:var(--text3);font-weight:500">~40% '+t("accuracy")+'</span>':''}</div>
-        <div class="outlook-detail">${w.snowChance}% ${t('snow_chance')} &middot; ${w.expectedSnow} ${t('expected')}</div>
+        <div class="outlook-title">${w.dateRange} <span style="font-size:9px;color:var(--text3)">(Mon\u2013Sun)</span>${w.isLive?' <span style="font-size:10px;color:var(--fresh);font-weight:600">LIVE</span>':w.weekNum===2?' <span style="font-size:10px;color:var(--text3);font-weight:500">~60% '+t("accuracy")+'</span>':w.weekNum===3?' <span style="font-size:10px;color:var(--text3);font-weight:500">~40% '+t("accuracy")+'</span>':''}</div>
+        <div class="outlook-detail">${w.snowChance}% ${t('snow_chance')} &middot; ${w.expectedSnow} ${t('expected')} &middot; Weekend: ${typeof w.weekendSnow==='number'?w.weekendSnow+'"':w.weekendSnow+'"'}</div>
         <div style="margin-top:6px">
           ${w.top3.map(r=>{
             const regionTag=r.region==='ca'?'CA':r.region==='us'?'US':'INTL';
@@ -1813,7 +1844,7 @@ function renderNextTrip(){
             return `<div class="outlook-resort-row" onclick="scrollToResort('${r.id}');event.stopPropagation()">
               <span class="outlook-region-tag ${tagClass}">${regionTag}</span>
               <a href="${r.links.snow}" target="_blank" onclick="event.stopPropagation()" style="color:var(--white);text-decoration:none;font-weight:700">${r.name}</a>
-              <span>&middot; ${t('score_label')} ${r.score} &middot; ${getFresh24h(r)}" ${t('fresh')}</span>
+              <span>&middot; ${t('score_label')} ${r.score} &middot; ${getWeekSnowfall(r)}" wk${roadStatusLine(r.id)?' &middot; '+roadStatusLine(r.id):''}</span>
             </div>`;
           }).join('')}
         </div>
@@ -1863,7 +1894,8 @@ function renderTopPicks(){
         <div class="rec-info">
           <div class="rec-category ${catClass}">${catLabel}</div>
           <div class="rec-name">${r.name}</div>
-          <div class="rec-sub">${icon('cloud-snow',12)} ${getFresh24h(r)}" ${t('fresh')} &middot; ${travelLine}${r.travel.hasChain?' &middot; '+icon('chain',12):''}${r.id==='brighton'?' &middot; '+t('night_skiing'):''}</div>
+          <div class="rec-sub">${icon('cloud-snow',12)} ${getFresh24h(r)}" ${t('fresh')} &middot; ${getWeekSnowfall(r)}" this week &middot; ${travelLine}${r.travel.hasChain?' &middot; '+icon('chain',12):''}${r.id==='brighton'?' &middot; '+t('night_skiing'):''}</div>
+          ${roadStatusLine(r.id)?`<div style="margin-top:3px;font-size:10px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">${icon('alert-triangle',10)} ${roadStatusLine(r.id)}</div>`:''}
           <div class="rec-highlight ${hlClass}">${icon('star',10)} ${hlText}</div>
         </div>
         <div class="rec-score">${r.score}</div>
@@ -1990,7 +2022,7 @@ function renderResortRow(r){
   const bgClass=r.status==='EPIC'?'status-bg-epic':r.status==='PRIME'?'status-bg-prime':r.status==='GOOD'?'status-bg-good':r.status==='LIMITED'?'status-bg-limited':'status-bg-closed';
   const travelLine=r.travel.flightStr?icon('plane',10)+' '+r.travel.flightStr:r.travel.driveStr;
   return`<div class="resort-row ${bgClass}${r.status==='CLOSED'?' closed-resort':''}" data-resort-id="${r.id}" onclick="openDetail('${r.id}')">
-    <div class="rr-info"><div class="rr-name">${r.name}</div><div class="rr-meta">${icon('cloud-snow',10)} ${getFresh24h(r)}" ${t('fresh')} &middot; ${travelLine} &middot; Ikon: ${r.ikonDays}</div></div>
+    <div class="rr-info"><div class="rr-name">${r.name}</div><div class="rr-meta">${icon('cloud-snow',10)} ${getFresh24h(r)}" ${t('fresh')} &middot; ${getWeekSnowfall(r)}" wk &middot; ${travelLine}${roadStatusLine(r.id)?' &middot; '+roadStatusLine(r.id):''}</div></div>
     <div class="rr-chip ${chipClass}">${t(r.status.toLowerCase())}</div>
     <div class="rr-score"${r.status==='CLOSED'?' style="color:var(--text3)"':''}>${r.status==='CLOSED'?'\u2014':r.score}</div>
   </div>`;
@@ -2066,6 +2098,7 @@ function initTripMap(el,r){
   const origin=getOrigin(userLocation);
   const dark=document.documentElement.getAttribute('data-theme')==='dark';
   const map=L.map(el,{center:[(origin.lat+r.lat)/2,(origin.lng+r.lng)/2],zoom:7,zoomControl:false,attributionControl:false});
+  mapInstances['trip-'+r.id]=map;
   L.tileLayer(dark?'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png':'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:18}).addTo(map);
   L.circleMarker([origin.lat,origin.lng],{radius:6,fillColor:'#c4956a',color:'#fff',weight:2,fillOpacity:1}).addTo(map).bindPopup(getOrigin(userLocation).name);
   L.circleMarker([r.lat,r.lng],{radius:7,fillColor:'#6aafc4',color:'#fff',weight:2,fillOpacity:1}).addTo(map).bindPopup(r.name);
@@ -2075,14 +2108,17 @@ function initTripMap(el,r){
       const coords=data.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
       L.polyline(coords,{color:'#c4956a',weight:3,opacity:.8}).addTo(map);
       map.fitBounds(L.polyline(coords).getBounds(),{padding:[20,20]});
+      setTimeout(()=>map.invalidateSize(),200);
     } else {
       tripFallback(map,origin,r);
     }
   }).catch(()=>tripFallback(map,origin,r));
+  setTimeout(()=>map.invalidateSize(),300);
   function tripFallback(map,origin,r){
     const mid=[(origin.lat+r.lat)/2+.15,(origin.lng+r.lng)/2-.2];
     L.polyline([[origin.lat,origin.lng],mid,[r.lat,r.lng]],{color:'#c4956a',weight:3,opacity:.8,dashArray:'8 4'}).addTo(map);
     map.fitBounds([[Math.min(origin.lat,r.lat)-.5,Math.min(origin.lng,r.lng)-.5],[Math.max(origin.lat,r.lat)+.5,Math.max(origin.lng,r.lng)+.5]],{padding:[20,20]});
+    setTimeout(()=>map.invalidateSize(),200);
   }
 }
 
@@ -2410,25 +2446,17 @@ function removeFav(idx){
 // Close fav dropdowns on outside click
 document.addEventListener('click',e=>{if(!e.target.closest('.fav-slot')){document.querySelectorAll('.fav-dropdown').forEach(d=>d.classList.remove('show'))}});
 
-// ── DESTROY MAPS (for re-render on location change) ──
+// ── MAP REGISTRY & DESTROY ──
+const mapInstances={};
 function destroyMaps(){
+  Object.keys(mapInstances).forEach(key=>{
+    try{mapInstances[key].remove();}catch(e){}
+    delete mapInstances[key];
+  });
   document.querySelectorAll('[id^="map-"],[id^="trip-map"]').forEach(el=>{
     if(el._leaflet_id){
-      // Find the Leaflet map instance and remove it
-      // Leaflet stores the map on the container
-      const mapInst=Object.values(el).find(v=>v&&typeof v==='object'&&v._leaflet_id);
-      try{
-        // Use L.DomUtil to find the map
-        if(el._leaflet){el._leaflet.remove();}
-        else{
-          // Brute force: clear the element and remove leaflet id
-          el.innerHTML='';
-          delete el._leaflet_id;
-        }
-      }catch(e){
-        el.innerHTML='';
-        delete el._leaflet_id;
-      }
+      el.innerHTML='';
+      delete el._leaflet_id;
     }
   });
 }
@@ -2447,15 +2475,16 @@ function openDetail(id){
 
   document.getElementById('detailContent').innerHTML=`
     <div style="font-family:var(--font-display);font-size:24px;color:var(--white);margin-bottom:4px">${r.name}</div>
-    <div style="font-size:11px;color:var(--text2);margin-bottom:16px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">${icon('pin',12)} ${r.loc} &middot; ${r.elev.toLocaleString()} ft &middot; ${r.acres.toLocaleString()} acres &middot; Ikon: ${r.ikonDays}</div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">${icon('pin',12)} ${r.loc} &middot; ${r.elev.toLocaleString()} ft &middot; ${r.acres.toLocaleString()} acres &middot; Ikon: ${r.ikonDays}</div>
+    ${(()=>{const upd=getLastUpdated(r);if(upd){const h=upd.getHours(),m=upd.getMinutes();const ampm=h>=12?'PM':'AM';const h12=h%12||12;return `<div style="font-size:10px;color:var(--fresh);margin-bottom:12px;display:flex;align-items:center;gap:4px">${icon('check',10)} Last updated: ${h12}:${m.toString().padStart(2,'0')} ${ampm} today &middot; <strong>LIVE</strong></div>`}return `<div style="font-size:10px;color:var(--warn);margin-bottom:12px;display:flex;align-items:center;gap:4px">${icon('alert-triangle',10)} Using estimated data &middot; <strong>EST</strong></div>`})()}
 
     <div class="detail-stats">
       <div class="d-stat"><div class="d-stat-label">${icon('star',10)} ${t('score_label_detail')}</div><div class="d-stat-val" style="color:${score>=80?'var(--fresh)':score>=65?'var(--sky)':'var(--warn)'}">${score}</div></div>
-      <div class="d-stat"><div class="d-stat-label">${icon('cloud-snow',10)} ${t('fresh')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getFresh24h(r)}"</a></div></div>
-      <div class="d-stat"><div class="d-stat-label">${icon('mountain',10)} ${t('base')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getBaseDepth(r)}"</a></div></div>
-      <div class="d-stat"><div class="d-stat-label">${icon('arrow-right',10)} ${t('trails')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${r.trailsOpen}/${r.trails}</a></div></div>
-      <div class="d-stat"><div class="d-stat-label">${icon('bolt',10)} ${t('lifts')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${r.liftsOpen}/${r.lifts}</a></div></div>
-      <div class="d-stat"><div class="d-stat-label">${icon('eye',10)} ${t('quality')}</div><div class="d-stat-val" style="font-size:12px"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${tq(r.quality)}</a></div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('cloud-snow',10)} ${t('fresh')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getFreshDisplay(r).value}"</a>${sourceTag(getFreshDisplay(r).source)}</div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('mountain',10)} ${t('base')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getBaseDisplay(r).value}"</a>${sourceTag(getBaseDisplay(r).source)}</div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('arrow-right',10)} ${t('trails')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${r.trailsOpen}/${r.trails}</a>${sourceTag('estimated')}</div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('bolt',10)} ${t('lifts')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${r.liftsOpen}/${r.lifts}</a>${sourceTag('estimated')}</div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('eye',10)} ${t('quality')}</div><div class="d-stat-val" style="font-size:12px"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${tq(r.quality)}</a>${sourceTag('estimated')}</div></div>
     </div>
 
     <div style="padding:10px 12px;background:var(--card);border-radius:var(--r-sm);border:1px solid var(--border);margin:12px 0;font-size:11px;color:var(--text2);line-height:1.6">
@@ -2463,6 +2492,8 @@ function openDetail(id){
       <br>${icon('plane',12)} ${r.airport}
       <br>${icon('pin',12)} ${t('from')} <strong>${origin.name||userLocation}</strong>: ${ti.flightStr||ti.driveStr} ${t('drive')} &middot; <a href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin.name||userLocation)}&destination=${encodeURIComponent(r.name+', '+r.loc)}&travelmode=driving" target="_blank" style="color:var(--accent)">${t('view_on_google')}</a>
     </div>
+
+    ${roadStatusDetail(r.id)}
 
     ${r.ann?`<div style="padding:10px 12px;background:var(--accent-soft);border:1px solid rgba(196,149,106,0.15);border-radius:var(--r-sm);margin:10px 0;font-size:11px;color:var(--text2);line-height:1.6">${icon('bolt',12)} <span data-translate="${r.ann.replace(/"/g,'&quot;')}">${r.ann}</span></div>`:''}
 
@@ -2498,7 +2529,7 @@ function openDetail(id){
         </div>`;
       }).join('')}
     </div>
-    <div class="data-source">${t('forecast_data')}: <a href="${r.links.snow}" target="_blank">${r.name} ${t('snow_report')}</a> &middot; <a href="https://openweathermap.org" target="_blank">OpenWeather</a></div>
+    <div class="data-source">${t('forecast_data')}: <a href="${r.links.snow}" target="_blank">${r.name} ${t('snow_report')}</a> &middot; <a href="https://open-meteo.com" target="_blank">Open-Meteo</a></div>
 
     <!-- HOURLY TODAY -->
     <div style="border-top:1px solid var(--border);margin:20px 0 0"></div>
@@ -2513,7 +2544,7 @@ function openDetail(id){
         </div>`).join('')}
       </div>
     </div>
-    <div class="data-source">${t('forecast_data')}: <a href="${r.links.snow}" target="_blank">${r.name} ${t('snow_report')}</a> &middot; <a href="https://openweathermap.org" target="_blank">OpenWeather</a></div>
+    <div class="data-source">${t('forecast_data')}: <a href="${r.links.snow}" target="_blank">${r.name} ${t('snow_report')}</a> &middot; <a href="https://open-meteo.com" target="_blank">Open-Meteo</a></div>
 
     <!-- 3-WEEK OUTLOOK -->
     <div style="border-top:1px solid var(--border);margin:20px 0 0"></div>
@@ -2525,7 +2556,7 @@ function openDetail(id){
         <div class="wr-trend ${w.trend}">${w.trend==='up'?icon('chevron-up',12)+' '+t('more_snow'):w.trend==='down'?icon('chevron-down',12)+' '+t('drying'):icon('arrow-right',12)+' '+t('steady')}</div>
       </div>`).join('')}
     </div>
-    <div class="data-source">${t('forecast_data')}: <a href="${r.links.snow}" target="_blank">${r.name} ${t('snow_report')}</a> &middot; <a href="https://openweathermap.org" target="_blank">OpenWeather</a></div>
+    <div class="data-source">${t('forecast_data')}: <a href="${r.links.snow}" target="_blank">${r.name} ${t('snow_report')}</a> &middot; <a href="https://open-meteo.com" target="_blank">Open-Meteo</a></div>
 
     ${r.liftList.length?`<div style="border-top:1px solid var(--border);margin:20px 0 0"></div><div class="sec-label" style="margin-top:20px">${icon('bolt',12)} ${t('lift_status')}</div>${r.liftList.map(l=>`<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px"><div style="width:7px;height:7px;border-radius:50%;background:${l.s==='on'?'var(--fresh)':l.s==='hold'?'var(--warn)':'var(--danger)'}"></div><div style="flex:1;color:var(--text)">${l.n}</div><div style="font-size:10px;color:var(--text3)">${l.t}</div></div>`).join('')}`:''}
 
@@ -2541,8 +2572,8 @@ function openDetail(id){
       ${r.yoy.thisYear>r.yoy.avg?`${t('tracking')} <strong>${Math.round((r.yoy.thisYear/r.yoy.avg-1)*100)}% ${t('above_avg')}</strong> ${t('excellent_year')}`:`${r.yoy.thisYear<r.yoy.avg?t('below_avg'):t('near_avg')}`}
     </div>
 
-    <div class="data-source" style="margin:12px 0 4px">${icon('external-link',10)} ${t('forecast_data')}: <a href="${r.links.snow}" target="_blank">${r.name} ${t('snow_report')} ${icon('external-link',10)}</a></div>
-    <div class="data-source">${getCachedWeather(r.id)?`${icon('check',10)} ${t('weather_live_source')} &middot; ${t('snow_sample_source')} &middot; <a href="${r.links.snow}" target="_blank" style="color:var(--accent)">${t('verify_source')}</a>`:`${icon('alert-triangle',10)} ${t('all_sample_source')} &middot; <a href="${r.links.snow}" target="_blank" style="color:var(--accent)">${t('verify_source')}</a>`}</div>
+    <div class="data-source" style="margin:12px 0 4px">${icon('external-link',10)} Forecast: <a href="https://open-meteo.com" target="_blank" style="color:var(--accent)">Open-Meteo API</a> &middot; Snow report: <a href="${r.links.snow}" target="_blank">${r.name} ${icon('external-link',10)}</a></div>
+    <div class="data-source">${getCachedWeather(r.id)?`${icon('check',10)} Fresh snow &amp; base depth from <strong>live API</strong> &middot; Trails, lifts, quality from <a href="${r.links.snow}" target="_blank" style="color:var(--accent)">${r.name} snow report</a>`:`${icon('alert-triangle',10)} All data estimated &mdash; verify at <a href="${r.links.snow}" target="_blank" style="color:var(--accent)">${r.name} snow report</a>`}</div>
 
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px">
       <a href="${r.links.official}" target="_blank" class="ghost-btn" style="flex:1;min-width:100px">${icon('external-link',12)} ${t('official_site')}</a>
@@ -2591,6 +2622,7 @@ function initResortMap(el){
   const origin=getOrigin(userLocation);
   const dark=document.documentElement.getAttribute('data-theme')==='dark';
   const map=L.map(el,{center:[38.5,-120],zoom:7,zoomControl:false,attributionControl:false});
+  mapInstances['map-'+id]=map;
   L.tileLayer(dark?'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png':'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:18}).addTo(map);
 
   // Origin and resort markers
@@ -2608,6 +2640,7 @@ function initResortMap(el){
       const coords=data.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
       L.polyline(coords,{color:'#c4956a',weight:3,opacity:.8}).addTo(map);
       map.fitBounds(L.polyline(coords).getBounds(),{padding:[20,20]});
+      setTimeout(()=>map.invalidateSize(),200);
     } else {
       drawFallbackLine(map,origin,r);
     }
@@ -2615,10 +2648,14 @@ function initResortMap(el){
     drawFallbackLine(map,origin,r);
   });
 
+  // Ensure map renders correctly in containers that may not be fully visible yet
+  setTimeout(()=>map.invalidateSize(),300);
+
   function drawFallbackLine(map,origin,r){
     const mid=[(origin.lat+r.lat)/2+.15,(origin.lng+r.lng)/2-.2];
     L.polyline([[origin.lat,origin.lng],mid,[r.lat,r.lng]],{color:'#c4956a',weight:3,opacity:.8,dashArray:'8 4'}).addTo(map);
     map.fitBounds([[Math.min(origin.lat,r.lat)-.5,Math.min(origin.lng,r.lng)-.5],[Math.max(origin.lat,r.lat)+.5,Math.max(origin.lng,r.lng)+.5]],{padding:[20,20]});
+    setTimeout(()=>map.invalidateSize(),200);
   }
 }
 
@@ -2655,6 +2692,82 @@ document.addEventListener('click',e=>{if(!e.target.closest('.lang-wrap'))closeLa
 // ── EMAIL ──
 // Subscription endpoint — update this after deploying the Cloudflare Worker
 const SUBSCRIBE_URL='https://slabhq-subscribe.xiaoseanlu.workers.dev';
+const ROADS_URL=SUBSCRIBE_URL+'/roads';
+
+// Resort → Caltrans route numbers for road conditions
+// Includes primary route + key alternates from major CA metro areas
+const RESORT_ROUTES={
+  mammoth:['395','203','120'],        // US-395 from north/south, SR-203 into Mammoth, SR-120 Tioga alt
+  palisades:['80','89','20','267'],   // I-80 primary, SR-89 lakeside, SR-20 alt when 80 closed, SR-267
+  june:['395','158'],                 // US-395, SR-158 June Lake Loop
+  kirkwood:['88','50'],               // SR-88 primary, US-50 to Picketts Jct alt
+  heavenly:['50','89','207'],         // US-50 primary, SR-89 from north, SR-207 Kingsbury Grade
+  northstar:['80','89','267','20'],   // I-80, SR-89, SR-267 from Tahoe, SR-20 alt
+  sierra:['50'],                      // US-50 primary
+  bigbear:['18','38','330'],          // SR-18, SR-38, SR-330 from SoCal
+};
+
+let roadConditions=null;
+let roadConditionsUpdatedAt=null;
+async function fetchRoadConditions(){
+  try{
+    const res=await fetch(ROADS_URL);
+    const data=await res.json();
+    if(data.ok){
+      roadConditions=data.conditions;
+      roadConditionsUpdatedAt=data.updatedAt;
+      console.log('Road conditions loaded',Object.keys(data.conditions).length,'routes');
+    }
+  }catch(e){console.warn('Road conditions fetch failed:',e)}
+}
+function getRoadStatus(resortId){
+  if(!roadConditions)return null;
+  const routes=RESORT_ROUTES[resortId];
+  if(!routes||routes.length===0)return null;
+  const results=routes.map(num=>{
+    const rc=roadConditions[num];
+    if(!rc)return null;
+    return rc;
+  }).filter(Boolean);
+  if(results.length===0)return null;
+  // Return worst status
+  const priority={closed:4,chains_r3:3,chains_r2:2,chains:2,chains_r1:1,advisory:0.5,clear:0,unknown:-1};
+  results.sort((a,b)=>(priority[b.status]||0)-(priority[a.status]||0));
+  return results;
+}
+function roadStatusBadge(rc){
+  if(!rc)return '';
+  const s=rc.status;
+  if(s==='closed')return '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:var(--danger);color:#fff">CLOSED</span>';
+  if(s.startsWith('chains'))return '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:var(--warn);color:#fff">CHAINS</span>';
+  if(s==='advisory')return '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:#d4a03a;color:#fff">ADVISORY</span>';
+  if(s==='clear')return '<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:var(--fresh);color:#fff">CLEAR</span>';
+  return '';
+}
+function roadStatusLine(resortId){
+  const roads=getRoadStatus(resortId);
+  if(!roads)return '';
+  return roads.map(rc=>`${rc.route} ${roadStatusBadge(rc)}`).join(' &middot; ');
+}
+function roadStatusDetail(resortId){
+  const roads=getRoadStatus(resortId);
+  if(!roads||roads.length===0)return '';
+  return `<div style="padding:10px 12px;background:var(--card);border-radius:var(--r-sm);border:1px solid var(--border);margin:10px 0">
+    <div style="font-size:10px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">${icon('alert-triangle',10)} ROAD CONDITIONS (LIVE)</div>
+    ${roads.map(rc=>{
+      const statusColor=rc.status==='closed'?'var(--danger)':rc.status.startsWith('chains')?'var(--warn)':rc.status==='advisory'?'#d4a03a':'var(--fresh)';
+      return `<div style="display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px">
+        <div style="font-weight:600;color:var(--text);min-width:48px">${rc.route}</div>
+        ${roadStatusBadge(rc)}
+        <div style="flex:1;color:var(--text2);line-height:1.4">${rc.detail}</div>
+      </div>`;
+    }).join('')}
+    <div style="font-size:9px;color:var(--text3);margin-top:6px">Source: <a href="https://roads.dot.ca.gov" target="_blank" style="color:var(--accent)">Caltrans</a>${roadConditionsUpdatedAt?' &middot; Updated '+new Date(roadConditionsUpdatedAt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):''}</div>
+  </div>`;
+}
+
+// Fetch road conditions on page load, then re-render to show badges
+fetchRoadConditions().then(()=>{if(roadConditions){renderTopPicks();renderNextTrip();}});
 
 async function submitEmail(e){
   e.preventDefault();
@@ -2712,6 +2825,11 @@ function renderNavIcons(){
   navItems[0].querySelector('.nav-icon').innerHTML=icon('mountain',20);
   navItems[1].querySelector('.nav-icon').innerHTML=icon('calendar',20);
   navItems[2].querySelector('.nav-icon').innerHTML=icon('user',20);
+  // Desktop top nav icons
+  const deskBtns=document.querySelectorAll('.top-desktop-nav button');
+  if(deskBtns[0])deskBtns[0].innerHTML=icon('mountain',14)+' Home';
+  if(deskBtns[1])deskBtns[1].innerHTML=icon('calendar',14)+' Trip';
+  if(deskBtns[2])deskBtns[2].innerHTML=icon('user',14)+' Profile';
   // Close button
   document.querySelector('.sheet-close').innerHTML=icon('x-close',16);
 }
@@ -2762,9 +2880,9 @@ function applyLiveGPS(lat,lng){
   // Update geocodedOrigin so getOrigin() returns accurate coordinates
   geocodedOrigin={lat,lng,name:userLocation,query:(userLocation||'').toLowerCase().trim()};
   localStorage.setItem('sbGeocodedOrigin',JSON.stringify(geocodedOrigin));
-  // Refresh distance/route if detail sheet is open
-  const detailSheet=document.getElementById('detailSheet');
-  if(detailSheet&&detailSheet.classList.contains('open')){
+  // Refresh distance/route if detail overlay is open
+  const detailOverlay=document.getElementById('detailOverlay');
+  if(detailOverlay&&detailOverlay.classList.contains('open')){
     destroyMaps();
     openDetail(activeResort);
   }
