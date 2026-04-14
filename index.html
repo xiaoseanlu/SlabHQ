@@ -876,7 +876,7 @@ input{font-family:inherit}
       </div>
     </div>
 
-    <!-- 1. WEATHER OVERVIEW — storm timeline -->
+    <!-- 1. APP OVERVIEW -->
     <div id="weatherOverview"></div>
 
     <!-- 2. GO THIS WEEKEND — top 3 expanded picks -->
@@ -1744,41 +1744,22 @@ function switchTab(tab){
 
 // ── RENDER: WEATHER OVERVIEW ──
 function renderWeatherOverview(){
-  const now=new Date();const dow=now.getDay();
-  const origin=getOrigin(userLocation);
-  const topResort=RESORTS.filter(r=>r.status!=='CLOSED').sort((a,b)=>scoreResort(b,origin)-scoreResort(a,origin))[0];
-  if(!topResort||topResort.fresh<3){
-    document.getElementById('weatherOverview').innerHTML=`
-      <div class="wx-overview">
-        <div class="wx-eyebrow">${icon('sun',12)} ${t('weather_update')}</div>
-        <div class="wx-headline">${t('clear_skies')}</div>
-        <div class="wx-summary">${t('no_significant_snow')} ${topResort?topResort.name+' '+topResort.base+'" '+t('packed_base_for_groomers'):t('all_resorts_quiet')} ${t('check_back')}</div>
-      </div>`;
-    return;
-  }
-  const fmtShort=(d)=>d.toLocaleDateString(lang==='zh'?'zh-CN':lang==='ja'?'ja-JP':'en-US',{weekday:'short',month:'short',day:'numeric'});
-  const stormStartDate=new Date(now);stormStartDate.setDate(stormStartDate.getDate()-1);
-  const peakDate=new Date(now);
-  const clearDate=new Date(now);clearDate.setDate(clearDate.getDate()+1);
-  const phases=[
-    {label:t('started'),day:fmtShort(stormStartDate),state:'past'},
-    {label:t('peaks'),day:fmtShort(peakDate),state:'active'},
-    {label:t('clears'),day:fmtShort(clearDate),state:''},
-    {label:t('powder_day'),day:fmtShort(clearDate)+' AM',state:''}
-  ];
   document.getElementById('weatherOverview').innerHTML=`
     <div class="wx-overview">
-      <div class="wx-eyebrow">${icon('cloud-snow',12)} ${t('storm_briefing')} · ${t('updated_today')}</div>
-      <div class="wx-headline">${topResort.fresh}" ${t('storm_hitting')} ${topResort.name}</div>
-      <div class="wx-timeline">
-        ${phases.map(p=>`<div class="wx-phase">
-          <div class="wx-phase-label">${p.label}</div>
-          <div class="wx-phase-dot ${p.state}"></div>
-          <div class="wx-phase-day">${p.day}</div>
-        </div>`).join('')}
+      <div class="wx-eyebrow">${icon('mountain',12)} Know Before You Go</div>
+      <div class="wx-headline">Your Personal Ski Trip Command Center</div>
+      <div class="wx-summary" style="line-height:1.8">
+        Live snow forecasts, road conditions, and resort data — so you don't have to check 10 different sites.
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:4px;font-size:11px">
+          <div>${icon('star',10)} Resorts ranked by snow, weather, travel, and your location</div>
+          <div>${icon('calendar',10)} 7-day forecast + 3-week outlook for every resort</div>
+          <div>${icon('alert-triangle',10)} Live road conditions from Caltrans — chains, closures, advisories</div>
+          <div>${icon('pin',10)} Drive time calculated from your starting point</div>
+        </div>
+        <div style="margin-top:12px;padding:10px 12px;background:var(--accent-soft);border-radius:var(--r-sm);font-size:11px;line-height:1.6">
+          <strong>Personalize it</strong> — Head to the <a href="#" onclick="switchTab(2);return false" style="color:var(--accent);font-weight:600">Profile</a> tab to set your starting location, save favorite resorts, and subscribe to email alerts. We'll notify you when conditions are worth the drive, tell you the best day to go, and whether the roads are clear.
+        </div>
       </div>
-      <div class="wx-summary">${topResort.fresh}" of ${tq(topResort.quality).toLowerCase()} expected. ${topResort.liftsOpen}/${topResort.lifts} lifts running, ${topResort.trailsOpen} trails open. Best window for fresh tracks: <strong>${fmtShort(clearDate)} morning</strong> after the storm clears.</div>
-      <div class="wx-source">${icon('external-link',10)} <a href="${topResort.links.snow}" target="_blank">${topResort.name} ${t('snow_report')}</a> &middot; <a href="https://open-meteo.com" target="_blank">Open-Meteo</a></div>
     </div>`;
 }
 
