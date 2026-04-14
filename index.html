@@ -230,17 +230,9 @@ input{font-family:inherit}
 @media(max-width:380px){.detail-stats{grid-template-columns:repeat(2,1fr)}}
 
 /* ═══ HEADER / DATE ═══ */
-.page-header{padding:24px 0 8px}
-.header-date{font-family:var(--font-display);font-size:26px;color:var(--white)}
-.header-meta{display:flex;align-items:center;gap:10px;margin-top:4px}
-.header-time{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px}
-.header-demo{
-  display:inline-flex;align-items:center;gap:5px;
-  font-size:10px;color:var(--warn);background:var(--warn-soft);
-  padding:3px 8px;border-radius:4px;
-}
-.header-demo::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--warn);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes shimmer{0%{background-position:-200px 0}100%{background-position:200px 0}}
+.loading-val{color:transparent!important;background:linear-gradient(90deg,var(--border) 25%,rgba(255,255,255,.08) 50%,var(--border) 75%);background-size:400px 100%;animation:shimmer 1.5s infinite;border-radius:4px;display:inline-block;min-width:40px}
 
 /* ═══ SECTION LABELS ═══ */
 .sec-label{
@@ -287,20 +279,25 @@ input{font-family:inherit}
 /* ── NEXT TRIP OUTLOOK ── */
 .outlook-row{
   display:flex;flex-wrap:wrap;align-items:flex-start;gap:8px;
-  padding:14px;background:var(--card);border:1px solid var(--border);
+  padding:12px;background:var(--card);border:1px solid var(--border);
   border-radius:var(--r-sm);margin-bottom:8px;cursor:pointer;
   transition:all .15s;
 }
 .outlook-row:hover{border-color:var(--accent)}
-.outlook-week{font-size:10px;color:var(--accent);font-weight:600;min-width:50px;padding-top:2px}
-.outlook-info{flex:1;min-width:180px}
+.outlook-week{font-size:10px;color:var(--accent);font-weight:600;min-width:46px;padding-top:2px}
+.outlook-info{flex:1;min-width:0}
 .outlook-title{font-size:12px;font-weight:500;color:var(--white);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .outlook-detail{font-size:10px;color:var(--text2);margin-top:4px}
 .outlook-trend{font-size:11px;font-weight:500;min-width:40px;text-align:right}
-.outlook-region-tag{font-size:8px;letter-spacing:.5px;padding:2px 6px;border-radius:3px;margin-left:4px}
+.outlook-region-tag{font-size:8px;letter-spacing:.5px;padding:2px 5px;border-radius:3px;flex-shrink:0}
 @media(max-width:420px){.outlook-trend{width:100%;text-align:left;border-top:1px solid var(--border);padding-top:8px;margin-top:4px}}
-.outlook-resort-row{display:flex;align-items:center;gap:8px;padding:8px 0;font-size:10px;color:var(--text2);min-height:44px}
-.outlook-resort-row:hover{color:var(--accent);cursor:pointer}
+.outlook-resort-row{display:flex;align-items:center;gap:8px;padding:8px 6px;font-size:11px;color:var(--text2);border-bottom:1px solid var(--border);transition:background .15s}
+.outlook-resort-row:last-child{border-bottom:none}
+.outlook-resort-row:hover{background:rgba(106,175,196,.06);cursor:pointer}
+.outlook-resort-name{font-weight:700;color:var(--white);font-size:12px;text-decoration:none}
+.outlook-resort-name:hover{color:var(--accent)}
+.outlook-resort-meta{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:2px;font-size:10px;color:var(--text3)}
+.outlook-resort-stats{margin-left:auto;text-align:right;white-space:nowrap;font-size:11px;font-weight:600;color:var(--white)}
 
 /* ═══ RECOMMENDATION CARDS ═══ */
 .rec-card{
@@ -827,7 +824,8 @@ input{font-family:inherit}
 
 /* ── TRIP MAP ── */
 .trip-map-wrap{border-radius:var(--r-sm);overflow:hidden;border:1px solid var(--border);margin:12px 0}
-.trip-map-el{height:240px}
+.trip-map-el{height:240px;background:var(--card)}
+.trip-map-el:empty{background:linear-gradient(90deg,var(--card) 25%,rgba(255,255,255,.04) 50%,var(--card) 75%);background-size:400px 100%;animation:shimmer 1.5s infinite}
 
 /* ── YOY BARS (more prominent) ── */
 .yoy-bar{height:8px;background:var(--border);border-radius:4px}
@@ -881,14 +879,6 @@ input{font-family:inherit}
 
   <!-- ═══ HOME SECTION ═══ -->
   <section id="home" class="tab-section active-tab">
-    <div class="page-header">
-      <div class="header-date" id="dateDisplay"></div>
-      <div class="header-meta">
-        <div class="header-time" id="timeDisplay"></div>
-        <div class="header-demo" id="dataBadge" style="color:var(--sky);background:var(--sky-soft)">Updating...</div>
-      </div>
-    </div>
-
     <!-- 1. APP OVERVIEW -->
     <div id="weatherOverview"></div>
 
@@ -967,7 +957,7 @@ input{font-family:inherit}
     <strong>Disclaimer:</strong> SlabHQ is an independent tool and is not affiliated with, endorsed by, or sponsored by Alterra Mountain Company, Ikon Pass, or any resort listed. Resort names and trademarks belong to their respective owners.<br><br>
     Snow forecasts, road conditions, and resort data are provided for informational purposes only and may not reflect real-time conditions. <strong>Always verify conditions directly with the resort and Caltrans before traveling.</strong> SlabHQ is not responsible for inaccurate data, travel delays, road closures, or any decisions made based on information displayed here.<br><br>
     Weather data from <a href="https://open-meteo.com">Open-Meteo</a> (CC BY 4.0). Road data from <a href="https://roads.dot.ca.gov">Caltrans</a>. Operating hours, lift status, and trail counts are sourced from resort websites and may be outdated.<br><br>
-    &copy; ${new Date().getFullYear()} SlabHQ. Not for commercial use.
+    &copy; <span id="footerYear"></span> SlabHQ. Not for commercial use.
   </div>
 </footer>
 
@@ -1090,7 +1080,48 @@ const RESORTS=[
   {id:'chamonix',name:'Chamonix Mont-Blanc',loc:'Chamonix, France',region:'intl',lat:45.9237,lng:6.8694,elev:12605,acres:2500,ikonDays:'7 days',open:'8:30 AM',close:'4:30 PM',fresh:4,base:70,quality:'Spring Snow',trails:80,trailsOpen:40,lifts:49,liftsOpen:22,status:'GOOD',links:{official:'https://www.chamonix.com',snow:'https://en.chamonix.com/infos-live',ig:'https://www.instagram.com/chamonixmontblanc/'},airport:'GVA 1.5h.',ann:'Vallee Blanche spring conditions. High alpine still skiable. Lower areas closing.',yoy:{thisYear:320,lastYear:290,avg:310},nextSeason:'Dec 2026',liftList:[{n:'Aiguille du Midi',t:'Cable Car',s:'on'},{n:'Grands Montets Gondola',t:'Gondola',s:'on'},{n:'Brevent Gondola',t:'Gondola',s:'on'}]},
   {id:'zermatt',name:'Zermatt',loc:'Zermatt, Switzerland',region:'intl',lat:46.0207,lng:7.7491,elev:12739,acres:1420,ikonDays:'7 days',open:'8:30 AM',close:'4:15 PM',fresh:2,base:65,quality:'Spring Snow',trails:145,trailsOpen:80,lifts:52,liftsOpen:28,status:'GOOD',links:{official:'https://www.zermatt.ch',snow:'https://www.zermatt.ch/en/snow-report',ig:'https://www.instagram.com/zaboreal/'},airport:'GVA 3.5h. ZRH 3.5h.',ann:'Year-round glacier skiing. Matterhorn Glacier Paradise open. Spring cruising.',yoy:{thisYear:280,lastYear:260,avg:270},nextSeason:'Year-round',liftList:[{n:'Matterhorn Glacier Paradise',t:'Cable Car',s:'on'},{n:'Sunnegga Express',t:'Funicular',s:'on'},{n:'Gornergrat Railway',t:'Cog Rail',s:'on'}]},
   {id:'vallenevado',name:'Valle Nevado',loc:'Santiago, Chile',region:'intl',lat:-33.3614,lng:-70.2478,elev:12045,acres:2225,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:40,trailsOpen:0,lifts:14,liftsOpen:0,status:'CLOSED',links:{official:'https://www.vallenevado.com',snow:'https://www.vallenevado.com/en/snow-report/',ig:'https://www.instagram.com/vallenevado/'},airport:'SCL 1.5h.',ann:'Southern hemisphere. Season runs June-October. Off-season now.',yoy:{thisYear:0,lastYear:180,avg:170},nextSeason:'Jun 2026',liftList:[]},
-  {id:'thredbo',name:'Thredbo',loc:'Kosciuszko NP, Australia',region:'intl',lat:-36.5054,lng:148.3069,elev:6726,acres:1235,ikonDays:'5 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:50,trailsOpen:0,lifts:14,liftsOpen:0,status:'CLOSED',links:{official:'https://www.thredbo.com.au',snow:'https://www.thredbo.com.au/snow-report/',ig:'https://www.instagram.com/thredboresort/'},airport:'SYD 5h. CBR 3h.',ann:'Southern hemisphere. Season runs June-October. Off-season now.',yoy:{thisYear:0,lastYear:120,avg:110},nextSeason:'Jun 2026',liftList:[]}
+  {id:'thredbo',name:'Thredbo',loc:'Kosciuszko NP, Australia',region:'intl',lat:-36.5054,lng:148.3069,elev:6726,acres:1235,ikonDays:'5 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:50,trailsOpen:0,lifts:14,liftsOpen:0,status:'CLOSED',links:{official:'https://www.thredbo.com.au',snow:'https://www.thredbo.com.au/snow-report/',ig:'https://www.instagram.com/thredboresort/'},airport:'SYD 5h. CBR 3h.',ann:'Southern hemisphere. Season runs June-October. Off-season now.',yoy:{thisYear:0,lastYear:120,avg:110},nextSeason:'Jun 2026',liftList:[]},
+
+  // === ADDITIONAL US WEST ===
+  {id:'snowbasin',name:'Snowbasin',loc:'Huntsville, UT',region:'us',lat:41.2072,lng:-111.8512,elev:9350,acres:3000,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:104,trailsOpen:0,lifts:13,liftsOpen:0,status:'CLOSED',links:{official:'https://www.snowbasin.com',snow:'https://www.snowbasin.com/the-mountain/mountain-report/',ig:'https://www.instagram.com/snowbasinresort/'},airport:'SLC 45 min.',ann:'Season ended. 2002 Olympic venue. Returns November 2026.',yoy:{thisYear:320,lastYear:290,avg:300},nextSeason:'Nov 2026',liftList:[]},
+  {id:'schweitzer',name:'Schweitzer',loc:'Sandpoint, ID',region:'us',lat:48.368,lng:-116.6227,elev:6400,acres:2900,ikonDays:'Unlimited',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:92,trailsOpen:0,lifts:10,liftsOpen:0,status:'CLOSED',links:{official:'https://www.schweitzer.com',snow:'https://www.schweitzer.com/the-mountain/snow-report/',ig:'https://www.instagram.com/schweitzer_mountain/'},airport:'GEG (Spokane) 1h 45m.',ann:'Season ended. Idaho\'s largest ski area. Returns November 2026.',yoy:{thisYear:300,lastYear:270,avg:285},nextSeason:'Nov 2026',liftList:[]},
+  {id:'alyeska',name:'Alyeska Resort',loc:'Girdwood, AK',region:'us',lat:60.9705,lng:-149.0982,elev:3939,acres:1610,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:76,trailsOpen:0,lifts:7,liftsOpen:0,status:'CLOSED',links:{official:'https://www.alyeskaresort.com',snow:'https://www.alyeskaresort.com/mountain-report/',ig:'https://www.instagram.com/resortalyeska/'},airport:'ANC 40 min.',ann:'Season ended. Alaska\'s largest ski area, ocean views. Returns November 2026.',yoy:{thisYear:550,lastYear:500,avg:520},nextSeason:'Nov 2026',liftList:[]},
+  {id:'snoqualmie',name:'Summit at Snoqualmie',loc:'Snoqualmie Pass, WA',region:'us',lat:47.424,lng:-121.416,elev:5420,acres:1914,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:89,trailsOpen:0,lifts:24,liftsOpen:0,status:'CLOSED',links:{official:'https://www.summitatsnoqualmie.com',snow:'https://www.summitatsnoqualmie.com/mountain-conditions/snow-report',ig:'https://www.instagram.com/summitatsnoqualmie/'},airport:'SEA 50 min.',ann:'Season ended. Includes Alpental. Seattle\'s closest ski area. Returns November 2026.',yoy:{thisYear:360,lastYear:320,avg:340},nextSeason:'Nov 2026',liftList:[]},
+
+  // === ADDITIONAL US EAST ===
+  {id:'sundayriver',name:'Sunday River',loc:'Newry, ME',region:'us',lat:44.47,lng:-70.8547,elev:3140,acres:884,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:139,trailsOpen:0,lifts:19,liftsOpen:0,status:'CLOSED',links:{official:'https://www.sundayriver.com',snow:'https://www.sundayriver.com/mountain-report',ig:'https://www.instagram.com/sundayriver/'},airport:'PWM 1h 45m. BOS 3h.',ann:'Season ended. 8 peaks, massive snowmaking. Returns October 2026.',yoy:{thisYear:160,lastYear:140,avg:150},nextSeason:'Oct 2026',liftList:[]},
+  {id:'pico',name:'Pico Mountain',loc:'Killington, VT',region:'us',lat:43.671,lng:-72.8487,elev:3967,acres:468,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:58,trailsOpen:0,lifts:7,liftsOpen:0,status:'CLOSED',links:{official:'https://www.picomountain.com',snow:'https://www.picomountain.com/mountain-report/',ig:'https://www.instagram.com/picomtn/'},airport:'BTV 1h 40m.',ann:'Season ended. Killington\'s sibling. Shared Ikon days with Killington. Returns November 2026.',yoy:{thisYear:140,lastYear:120,avg:130},nextSeason:'Nov 2026',liftList:[]},
+  {id:'snowshoe',name:'Snowshoe Mountain',loc:'Snowshoe, WV',region:'us',lat:38.403,lng:-79.9972,elev:4848,acres:257,ikonDays:'Unlimited',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:60,trailsOpen:0,lifts:14,liftsOpen:0,status:'CLOSED',links:{official:'https://www.snowshoemtn.com',snow:'https://www.snowshoemtn.com/mountain-report/',ig:'https://www.instagram.com/snowshoemtn/'},airport:'LWB 1.5h. CKB 2h.',ann:'Season ended. Southeast\'s premier resort. Returns November 2026.',yoy:{thisYear:100,lastYear:90,avg:95},nextSeason:'Nov 2026',liftList:[]},
+  {id:'bluemtpa',name:'Blue Mountain',loc:'Palmerton, PA',region:'us',lat:40.8109,lng:-75.5208,elev:1600,acres:171,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:40,trailsOpen:0,lifts:15,liftsOpen:0,status:'CLOSED',links:{official:'https://www.skibluemt.com',snow:'https://www.skibluemt.com/mountain-conditions/',ig:'https://www.instagram.com/bluemtresort/'},airport:'ABE 30 min. PHL 1.5h.',ann:'Season ended. PA\'s highest vertical at 1,082 ft. Returns November 2026.',yoy:{thisYear:60,lastYear:50,avg:55},nextSeason:'Nov 2026',liftList:[]},
+  {id:'camelback',name:'Camelback Mountain',loc:'Tannersville, PA',region:'us',lat:41.0523,lng:-75.3464,elev:2133,acres:166,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:39,trailsOpen:0,lifts:16,liftsOpen:0,status:'CLOSED',links:{official:'https://www.camelbackresort.com',snow:'https://www.camelbackresort.com/mountain-conditions/',ig:'https://www.instagram.com/skicamelback/'},airport:'AVP 45 min. ABE 45 min.',ann:'Season ended. Poconos\' largest. Night skiing available. Returns November 2026.',yoy:{thisYear:55,lastYear:45,avg:50},nextSeason:'Nov 2026',liftList:[]},
+
+  // === ADDITIONAL US MIDWEST ===
+  {id:'boynemtn',name:'Boyne Mountain',loc:'Boyne Falls, MI',region:'us',lat:45.167,lng:-84.924,elev:1120,acres:415,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:65,trailsOpen:0,lifts:10,liftsOpen:0,status:'CLOSED',links:{official:'https://www.boynemountain.com',snow:'https://www.boynemountain.com/mountain-stats',ig:'https://www.instagram.com/boyne.mountain/'},airport:'PLN 40 min. TVC 1h 20m.',ann:'Season ended. Michigan\'s premier ski resort. Returns December 2026.',yoy:{thisYear:90,lastYear:80,avg:85},nextSeason:'Dec 2026',liftList:[]},
+  {id:'highlands',name:'The Highlands',loc:'Harbor Springs, MI',region:'us',lat:45.434,lng:-84.93,elev:1325,acres:435,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:55,trailsOpen:0,lifts:8,liftsOpen:0,status:'CLOSED',links:{official:'https://www.highlandsharborsprings.com',snow:'https://www.highlandsharborsprings.com/mountain-report',ig:'https://www.instagram.com/highlandsharborsprings/'},airport:'PLN 15 min. TVC 45 min.',ann:'Season ended. Northern Michigan gem. Returns December 2026.',yoy:{thisYear:85,lastYear:75,avg:80},nextSeason:'Dec 2026',liftList:[]},
+  {id:'lutsen',name:'Lutsen Mountains',loc:'Lutsen, MN',region:'us',lat:47.6471,lng:-90.6749,elev:1650,acres:424,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:95,trailsOpen:0,lifts:7,liftsOpen:0,status:'CLOSED',links:{official:'https://www.lutsen.com',snow:'https://www.lutsen.com/mountain-info/snow-report/',ig:'https://www.instagram.com/lutsenmountains/'},airport:'DLH 2h.',ann:'Season ended. Midwest\'s largest ski area. Lake Superior views. Returns November 2026.',yoy:{thisYear:90,lastYear:80,avg:85},nextSeason:'Nov 2026',liftList:[]},
+  {id:'granitepe',name:'Granite Peak',loc:'Wausau, WI',region:'us',lat:44.91,lng:-89.64,elev:1942,acres:200,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:75,trailsOpen:0,lifts:7,liftsOpen:0,status:'CLOSED',links:{official:'https://www.skigranitepeak.com',snow:'https://www.skigranitepeak.com/mountain-info/snow-report',ig:'https://www.instagram.com/granitepeakskiarea/'},airport:'CWA 20 min.',ann:'Season ended. Wisconsin\'s largest ski area. 700 ft vertical. Returns November 2026.',yoy:{thisYear:50,lastYear:40,avg:45},nextSeason:'Nov 2026',liftList:[]},
+  {id:'snowriver',name:'Snowriver Mountain',loc:'Bessemer, MI',region:'us',lat:46.49,lng:-89.97,elev:1750,acres:400,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:56,trailsOpen:0,lifts:6,liftsOpen:0,status:'CLOSED',links:{official:'https://www.snowriver.com',snow:'https://www.snowriver.com/mountain-info/trail-map-mountain-stats',ig:'https://www.instagram.com/snowrivermountain/'},airport:'IWD 20 min. MSP 4.5h.',ann:'Season ended. UP Michigan, formerly Big Snow. Returns November 2026.',yoy:{thisYear:80,lastYear:70,avg:75},nextSeason:'Nov 2026',liftList:[]},
+
+  // === ADDITIONAL CANADA ===
+  {id:'sunshine',name:'Banff Sunshine',loc:'Banff, Alberta, Canada',region:'intl',lat:51.115,lng:-115.764,elev:8954,acres:3358,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:134,trailsOpen:0,lifts:12,liftsOpen:0,status:'CLOSED',links:{official:'https://www.skibanff.com',snow:'https://www.skibanff.com/conditions/snow-report',ig:'https://www.instagram.com/skibanff/'},airport:'YYC (Calgary) 1.5h.',ann:'Season ended. SkiBig3, one of North America\'s longest seasons. Returns November 2026.',yoy:{thisYear:280,lastYear:260,avg:360},nextSeason:'Nov 2026',liftList:[]},
+  {id:'lakelouise',name:'Lake Louise',loc:'Lake Louise, Alberta, Canada',region:'intl',lat:51.445,lng:-116.177,elev:8652,acres:4200,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:170,trailsOpen:0,lifts:13,liftsOpen:0,status:'CLOSED',links:{official:'https://www.skilouise.com',snow:'https://www.skilouise.com/conditions/snow-report',ig:'https://www.instagram.com/skilouise/'},airport:'YYC (Calgary) 2h.',ann:'Season ended. Canada\'s largest ski area, 4 mountain faces. Returns November 2026.',yoy:{thisYear:260,lastYear:240,avg:355},nextSeason:'Nov 2026',liftList:[]},
+  {id:'norquay',name:'Mt. Norquay',loc:'Banff, Alberta, Canada',region:'intl',lat:51.203,lng:-115.599,elev:8054,acres:190,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:60,trailsOpen:0,lifts:7,liftsOpen:0,status:'CLOSED',links:{official:'https://www.banffnorquay.com',snow:'https://www.banffnorquay.com/conditions/snow-report',ig:'https://www.instagram.com/mtnorquay/'},airport:'YYC (Calgary) 1h 40m.',ann:'Season ended. Banff\'s first ski area, night skiing. Returns November 2026.',yoy:{thisYear:80,lastYear:70,avg:100},nextSeason:'Nov 2026',liftList:[]},
+  {id:'cypress',name:'Cypress Mountain',loc:'West Vancouver, BC, Canada',region:'intl',lat:49.326,lng:-122.804,elev:4751,acres:600,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:61,trailsOpen:0,lifts:6,liftsOpen:0,status:'CLOSED',links:{official:'https://www.cypressmountain.com',snow:'https://www.cypressmountain.com/conditions/snow-report',ig:'https://www.instagram.com/cypressmtn/'},airport:'YVR (Vancouver) 50 min.',ann:'Season ended. 2010 Olympic venue. Returns December 2026.',yoy:{thisYear:200,lastYear:180,avg:241},nextSeason:'Dec 2026',liftList:[]},
+  {id:'panorama',name:'Panorama Mountain',loc:'Panorama, BC, Canada',region:'intl',lat:50.46,lng:-116.24,elev:8038,acres:2975,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:144,trailsOpen:0,lifts:11,liftsOpen:0,status:'CLOSED',links:{official:'https://www.panoramaresort.com',snow:'https://www.panoramaresort.com/conditions/snow-report',ig:'https://www.instagram.com/panoramaresort/'},airport:'YXC (Cranbrook) 2h.',ann:'Season ended. 4,265 ft vertical, one of biggest in Canada. Returns December 2026.',yoy:{thisYear:140,lastYear:130,avg:180},nextSeason:'Dec 2026',liftList:[]},
+  {id:'silverstar',name:'SilverStar Mountain',loc:'Vernon, BC, Canada',region:'intl',lat:50.358,lng:-119.064,elev:6283,acres:3304,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:133,trailsOpen:0,lifts:12,liftsOpen:0,status:'CLOSED',links:{official:'https://www.skisilverstar.com',snow:'https://www.skisilverstar.com/conditions/snow-report',ig:'https://www.instagram.com/silverstarmtnresort/'},airport:'YLW (Kelowna) 1h.',ann:'Season ended. Champagne powder. Returns December 2026.',yoy:{thisYear:220,lastYear:200,avg:275},nextSeason:'Dec 2026',liftList:[]},
+  {id:'sunpeaks',name:'Sun Peaks Resort',loc:'Sun Peaks, BC, Canada',region:'intl',lat:50.884,lng:-119.886,elev:7060,acres:4400,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:137,trailsOpen:0,lifts:13,liftsOpen:0,status:'CLOSED',links:{official:'https://www.sunpeaksresort.com',snow:'https://www.sunpeaksresort.com/ski-ride/snow-conditions',ig:'https://www.instagram.com/sunpeaksresort/'},airport:'YKA (Kamloops) 45 min.',ann:'Season ended. Canada\'s 2nd largest ski area, 3 peaks. Returns December 2026.',yoy:{thisYear:190,lastYear:170,avg:236},nextSeason:'Dec 2026',liftList:[]},
+  {id:'redmtn',name:'Red Mountain',loc:'Rossland, BC, Canada',region:'intl',lat:49.103,lng:-117.826,elev:6808,acres:3850,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:119,trailsOpen:0,lifts:8,liftsOpen:0,status:'CLOSED',links:{official:'https://www.redresort.com',snow:'https://www.redresort.com/conditions/snow-report',ig:'https://www.instagram.com/redresort/'},airport:'YCG (Castlegar) 35 min.',ann:'Season ended. 5 peaks, independent spirit. Returns November 2026.',yoy:{thisYear:240,lastYear:220,avg:300},nextSeason:'Nov 2026',liftList:[]},
+  {id:'lemassif',name:'Le Massif de Charlevoix',loc:'Petite-Rivière-Saint-François, QC',region:'intl',lat:47.283,lng:-70.617,elev:2644,acres:406,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:53,trailsOpen:0,lifts:8,liftsOpen:0,status:'CLOSED',links:{official:'https://www.lemassif.com/en',snow:'https://www.lemassif.com/en/conditions',ig:'https://www.instagram.com/lemassif/'},airport:'YQB (Quebec City) 1h 15m.',ann:'Season ended. Highest vertical east of the Rockies, St. Lawrence views. Returns November 2026.',yoy:{thisYear:200,lastYear:180,avg:254},nextSeason:'Nov 2026',liftList:[]},
+
+  // === ADDITIONAL INTERNATIONAL ===
+  {id:'furano',name:'Furano',loc:'Furano, Hokkaido, Japan',region:'intl',lat:43.282,lng:142.473,elev:3524,acres:479,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:28,trailsOpen:0,lifts:9,liftsOpen:0,status:'CLOSED',links:{official:'https://www.snowfurano.com',snow:'https://www.snowfurano.com/snow-report',ig:'https://www.instagram.com/furanoski_official/'},airport:'AKJ (Asahikawa) 40 min.',ann:'Season ended. Famous Hokkaido dry powder. Returns December 2026.',yoy:{thisYear:280,lastYear:260,avg:354},nextSeason:'Dec 2026',liftList:[]},
+  {id:'lottearai',name:'Lotte Arai Resort',loc:'Myoko, Niigata, Japan',region:'intl',lat:36.93,lng:138.58,elev:4199,acres:487,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:14,trailsOpen:0,lifts:5,liftsOpen:0,status:'CLOSED',links:{official:'https://www.lottehotel.com/arai-resort/en',snow:'https://www.lottehotel.com/arai-resort/en/ski/snow-report.html',ig:'https://www.instagram.com/lottearairesort/'},airport:'NRT 4h via Shinkansen.',ann:'Season ended. Premium powder resort, extensive off-piste. Returns December 2026.',yoy:{thisYear:460,lastYear:420,avg:590},nextSeason:'Dec 2026',liftList:[]},
+  {id:'coronetpeak',name:'Coronet Peak',loc:'Queenstown, New Zealand',region:'intl',lat:-44.916,lng:168.74,elev:5410,acres:692,ikonDays:'5 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:49,trailsOpen:0,lifts:8,liftsOpen:0,status:'CLOSED',links:{official:'https://www.coronetpeak.co.nz',snow:'https://www.coronetpeak.co.nz/weather-report',ig:'https://www.instagram.com/coronetpeak/'},airport:'ZQN (Queenstown) 30 min.',ann:'Southern hemisphere. Season opens June 2026. Night skiing available.',yoy:{thisYear:0,lastYear:100,avg:138},nextSeason:'Jun 2026',liftList:[]},
+  {id:'remarkables',name:'The Remarkables',loc:'Queenstown, New Zealand',region:'intl',lat:-45.053,lng:168.815,elev:6375,acres:543,ikonDays:'5 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:48,trailsOpen:0,lifts:7,liftsOpen:0,status:'CLOSED',links:{official:'https://www.theremarkables.co.nz',snow:'https://www.theremarkables.co.nz/plan/snow-report',ig:'https://www.instagram.com/theremarkables/'},airport:'ZQN (Queenstown) 45 min.',ann:'Southern hemisphere. Season opens June 2026. Iconic Lake Wakatipu views.',yoy:{thisYear:0,lastYear:90,avg:118},nextSeason:'Jun 2026',liftList:[]},
+  {id:'mthutt',name:'Mt. Hutt',loc:'Methven, Canterbury, New Zealand',region:'intl',lat:-43.471,lng:171.526,elev:6844,acres:902,ikonDays:'5 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:25,trailsOpen:0,lifts:5,liftsOpen:0,status:'CLOSED',links:{official:'https://www.mthutt.co.nz',snow:'https://www.mthutt.co.nz/weather-report',ig:'https://www.instagram.com/mthuttnz/'},airport:'CHC (Christchurch) 1.5h.',ann:'Southern hemisphere. Season opens June 2026. NZ\'s Best Ski Resort 10 years running.',yoy:{thisYear:0,lastYear:110,avg:145},nextSeason:'Jun 2026',liftList:[]},
+  {id:'mtbuller',name:'Mt. Buller',loc:'Victoria, Australia',region:'intl',lat:-37.147,lng:146.426,elev:5922,acres:741,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:80,trailsOpen:0,lifts:22,liftsOpen:0,status:'CLOSED',links:{official:'https://www.mtbuller.com.au',snow:'https://www.mtbuller.com.au/winter/snow-report',ig:'https://www.instagram.com/mt_buller/'},airport:'MEL (Melbourne) 3h.',ann:'Southern hemisphere. Season opens June 2026. Australia\'s most accessible large resort.',yoy:{thisYear:0,lastYear:40,avg:51},nextSeason:'Jun 2026',liftList:[]},
+  {id:'grandvalira',name:'Grandvalira',loc:'Andorra',region:'intl',lat:42.57,lng:1.68,elev:8661,acres:3000,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:118,trailsOpen:0,lifts:65,liftsOpen:0,status:'CLOSED',links:{official:'https://www.grandvalira.com/en',snow:'https://www.grandvalira.com/en/resort/weather',ig:'https://www.instagram.com/grandvalira/'},airport:'BCN (Barcelona) 3h. TLS (Toulouse) 2h 15m.',ann:'Season ended. Largest ski area in the Pyrenees. Returns December 2026.',yoy:{thisYear:150,lastYear:140,avg:192},nextSeason:'Dec 2026',liftList:[]},
+  {id:'ischgl',name:'Ischgl',loc:'Tyrol, Austria',region:'intl',lat:47.012,lng:10.291,elev:9429,acres:1272,ikonDays:'7 days',open:'\u2014',close:'\u2014',fresh:0,base:0,quality:'\u2014',trails:78,trailsOpen:0,lifts:45,liftsOpen:0,status:'CLOSED',links:{official:'https://www.ischgl.com',snow:'https://www.ischgl.com/en/winter/snow-report',ig:'https://www.instagram.com/ischgl_com/'},airport:'INN (Innsbruck) 1h 20m.',ann:'Season ended. Cross-border skiing into Switzerland. Returns November 2026.',yoy:{thisYear:120,lastYear:110,avg:157},nextSeason:'Nov 2026',liftList:[]}
 ];
 
 // ── ORIGINS ──
@@ -1449,6 +1480,13 @@ function getCachedWeather(resortId) {
   return null;
 }
 
+function updateDataBadge(){
+  const badge=document.getElementById('dataBadge');
+  if(!badge)return;
+  if(anyWeatherLoaded){badge.innerHTML='&bull; '+t('live_data');badge.style.color='var(--fresh)';}
+  else{badge.textContent=t('updating');badge.style.color='var(--sky)';}
+}
+
 function weatherCodeToIcon(code) {
   if (code <= 1) return 'w-sunny';
   if (code <= 3) return 'w-partly-cloudy';
@@ -1462,7 +1500,7 @@ let anyWeatherLoaded=false;
 async function loadWeatherForResorts(resorts) {
   const badge = document.getElementById('dataBadge');
   // Only show "Updating..." if not already showing "Live Data"
-  if (badge && !anyWeatherLoaded) { badge.textContent = t('updating'); badge.style.color = 'var(--sky)'; badge.style.background = 'var(--sky-soft)'; }
+  if (badge && !anyWeatherLoaded) { badge.textContent = t('updating'); badge.style.color = 'var(--sky)'; }
 
   const promises = resorts.map(async (r) => {
     if (getCachedWeather(r.id)) return;
@@ -1479,20 +1517,10 @@ async function loadWeatherForResorts(resorts) {
 
   await Promise.allSettled(promises);
 
-  // Update badge — once Live, never regress
-  if (badge) {
-    const anyLoaded = resorts.some(r => getCachedWeather(r.id));
-    if (anyLoaded) {
-      anyWeatherLoaded=true;
-      badge.textContent = t('live_data');
-      badge.style.color = 'var(--fresh)';
-      badge.style.background = 'var(--fresh-soft)';
-    } else if (!anyWeatherLoaded) {
-      badge.textContent = t('no_live_data');
-      badge.style.color = 'var(--warn)';
-      badge.style.background = 'var(--warn-soft,rgba(212,160,58,.1))';
-    }
-  }
+  // Update badge — once Live, never regress (re-query in case DOM was rebuilt)
+  const anyLoaded = resorts.some(r => getCachedWeather(r.id));
+  if (anyLoaded) anyWeatherLoaded=true;
+  updateDataBadge();
 }
 
 function getWeatherForecast(r) {
@@ -1595,25 +1623,52 @@ function getWeekSnowfall(r){
   return Math.round(forecast.reduce((sum,d)=>sum+(d.snowfall||0),0)*10)/10;
 }
 
-// ── ROUTE CACHE (Fix 7) ──
+function resortMapUrl(r){return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(r.name+', '+r.loc)}`}
+function locLink(r,size){return `<a href="${resortMapUrl(r)}" target="_blank" onclick="event.stopPropagation()" style="color:var(--text2);text-decoration:none;font-size:${size||10}px;display:inline-flex;align-items:center;gap:3px">${icon('pin',size||10)} ${r.loc}</a>`}
+
+// ── ROUTE CACHE + VALHALLA ROUTING ──
 const routeCache = {};
+
+function decodePolyline6(str){
+  const coords=[];let index=0,lat=0,lng=0;
+  while(index<str.length){
+    let b,shift=0,result=0;
+    do{b=str.charCodeAt(index++)-63;result|=(b&0x1f)<<shift;shift+=5}while(b>=0x20);
+    lat+=(result&1)?~(result>>1):(result>>1);
+    shift=0;result=0;
+    do{b=str.charCodeAt(index++)-63;result|=(b&0x1f)<<shift;shift+=5}while(b>=0x20);
+    lng+=(result&1)?~(result>>1):(result>>1);
+    coords.push([lat/1e6,lng/1e6]);
+  }
+  return coords;
+}
+
+async function fetchValhallaRoute(origin, dest) {
+  const json = JSON.stringify({locations:[{lat:origin.lat,lon:origin.lng},{lat:dest.lat,lon:dest.lng}],costing:'auto',directions_options:{units:'miles'}});
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    const res = await fetch(`https://valhalla1.openstreetmap.de/route?json=${encodeURIComponent(json)}`, { signal: controller.signal });
+    clearTimeout(timer);
+    const data = await res.json();
+    if (data.trip && data.trip.legs && data.trip.legs[0]) {
+      const summary = data.trip.summary;
+      const secs = Math.round(summary.time);
+      const hours = Math.floor(secs / 3600);
+      const mins = Math.round((secs % 3600) / 60);
+      const miles = Math.round(summary.length);
+      const coords = decodePolyline6(data.trip.legs[0].shape);
+      return { duration: secs, hours, mins, miles, driveStr: `${hours}h ${mins}m`, coords };
+    }
+  } catch (e) { clearTimeout(timer); console.warn('Valhalla route failed', e); }
+  return null;
+}
 
 async function fetchRoute(origin, dest) {
   const key = `${origin.lat},${origin.lng}-${dest.lat},${dest.lng}`;
   if (routeCache[key]) return routeCache[key];
-  try {
-    const url = `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${dest.lng},${dest.lat}?overview=full&geometries=geojson`;
-    const res = await fetch(url);
-    const data = await res.json();
-    if (data.routes && data.routes[0]) {
-      const route = data.routes[0];
-      const hours = Math.floor(route.duration / 3600);
-      const mins = Math.round((route.duration % 3600) / 60);
-      const miles = Math.round(route.distance * 0.000621371);
-      routeCache[key] = { duration: route.duration, hours, mins, miles, driveStr: `${hours}h ${mins}m`, geometry: route.geometry };
-      return routeCache[key];
-    }
-  } catch (e) { console.warn('Route fetch failed', e); }
+  const result = await fetchValhallaRoute(origin, dest);
+  if (result) { routeCache[key] = result; return result; }
   return null;
 }
 
@@ -1816,16 +1871,19 @@ function renderWeatherOverview(){
       <div class="wx-eyebrow" style="justify-content:center">Know Before You Go</div>
       <div class="wx-headline" style="text-align:center">Your Personal Ski Trip<br>Command Center</div>
       <div class="wx-summary" style="line-height:1.8;text-align:center">
-        Live snow forecasts, road conditions, and resort data<br>so you don't have to check 10 different sites.
+        Live snow forecasts, road conditions, and resort data so you don't have to check 10 different sites.
+      </div>
+      <div style="text-align:center;margin-top:8px;font-size:10px;color:rgba(200,221,239,.6);display:flex;align-items:center;justify-content:center;gap:6px">
+        <span id="dateDisplay"></span> <span id="timeDisplay"></span> <span id="dataBadge" style="color:var(--sky);font-weight:600">Updating...</span>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px;position:relative;z-index:1">
-        <div style="padding:8px 10px;background:rgba(255,255,255,.06);border-radius:8px;font-size:11px;color:#d8e6f2;display:flex;align-items:flex-start;gap:6px">${icon('star',11)} <span>Resorts ranked by snow, weather &amp; your location</span></div>
-        <div style="padding:8px 10px;background:rgba(255,255,255,.06);border-radius:8px;font-size:11px;color:#d8e6f2;display:flex;align-items:flex-start;gap:6px">${icon('calendar',11)} <span>7-day forecast + 3-week outlook</span></div>
-        <div style="padding:8px 10px;background:rgba(255,255,255,.06);border-radius:8px;font-size:11px;color:#d8e6f2;display:flex;align-items:flex-start;gap:6px">${icon('alert-triangle',11)} <span>Live Caltrans road conditions</span></div>
-        <div style="padding:8px 10px;background:rgba(255,255,255,.06);border-radius:8px;font-size:11px;color:#d8e6f2;display:flex;align-items:flex-start;gap:6px">${icon('pin',11)} <span>Drive time from your location</span></div>
+        <div style="padding:8px 10px;background:rgba(255,255,255,.06);border-radius:8px;font-size:11px;line-height:1.5;color:#d8e6f2;display:flex;align-items:flex-start;gap:8px"><span style="flex-shrink:0;margin-top:2px">${icon('star',12)}</span> <span>Resorts ranked by snow, weather &amp; your location</span></div>
+        <div style="padding:8px 10px;background:rgba(255,255,255,.06);border-radius:8px;font-size:11px;line-height:1.5;color:#d8e6f2;display:flex;align-items:flex-start;gap:8px"><span style="flex-shrink:0;margin-top:2px">${icon('calendar',12)}</span> <span>7-day forecast + 3-week outlook</span></div>
+        <div style="padding:8px 10px;background:rgba(255,255,255,.06);border-radius:8px;font-size:11px;line-height:1.5;color:#d8e6f2;display:flex;align-items:flex-start;gap:8px"><span style="flex-shrink:0;margin-top:2px">${icon('alert-triangle',12)}</span> <span>Live Caltrans road conditions</span></div>
+        <div style="padding:8px 10px;background:rgba(255,255,255,.06);border-radius:8px;font-size:11px;line-height:1.5;color:#d8e6f2;display:flex;align-items:flex-start;gap:8px"><span style="flex-shrink:0;margin-top:2px">${icon('pin',12)}</span> <span>Drive time from your location</span></div>
       </div>
       <div style="margin-top:14px;padding:10px 14px;background:rgba(142,197,232,.12);border:1px solid rgba(142,197,232,.2);border-radius:8px;font-size:11px;line-height:1.6;color:#c8ddef;text-align:center;position:relative;z-index:1">
-        <strong style="color:#fff">Personalize it</strong> — Head to the <a href="#" onclick="switchTab(2);return false" style="color:#8ec5e8;font-weight:600">Profile</a> tab to set your location, save favorites, and subscribe to email alerts.
+        <strong style="color:#fff">Personalize it</strong> — Head to the <a href="#" onclick="switchTab('profile');return false" style="color:#8ec5e8;font-weight:600">Profile</a> tab to set your location, save favorites, and subscribe to email alerts.
       </div>
     </div>`;
 }
@@ -1902,10 +1960,17 @@ function renderNextTrip(){
           ${w.top3.map(r=>{
             const regionTag=r.region==='ca'?'CA':r.region==='us'?'US':'INTL';
             const tagClass=r.region==='ca'?'cat-ca':r.region==='us'?'cat-us':'cat-intl';
+            const roads=roadStatusLine(r.id);
             return `<div class="outlook-resort-row" onclick="scrollToResort('${r.id}');event.stopPropagation()">
               <span class="outlook-region-tag ${tagClass}">${regionTag}</span>
-              <a href="${r.links.snow}" target="_blank" onclick="event.stopPropagation()" style="color:var(--white);text-decoration:none;font-weight:700">${r.name}</a>
-              <span>&middot; ${t('score_label')} ${r.score} &middot; ${getWeekSnowfall(r)}" wk${roadStatusLine(r.id)?' &middot; '+roadStatusLine(r.id):''}</span>
+              <div style="flex:1;min-width:0">
+                <a href="${r.links.snow}" target="_blank" onclick="event.stopPropagation()" class="outlook-resort-name">${r.name}</a>
+                <div class="outlook-resort-meta">${locLink(r,9)}${roads?' &middot; '+roads:''}</div>
+              </div>
+              <div class="outlook-resort-stats">
+                <div>${r.score}<span style="font-size:9px;color:var(--text3);font-weight:400"> score</span></div>
+                <div style="font-size:10px;color:var(--text3);font-weight:400">${getWeekSnowfall(r)}" wk</div>
+              </div>
             </div>`;
           }).join('')}
         </div>
@@ -1955,7 +2020,7 @@ function renderTopPicks(){
         <div class="rec-info">
           <div class="rec-category ${catClass}">${catLabel}</div>
           <div class="rec-name">${r.name}</div>
-          <div class="rec-sub">${icon('cloud-snow',12)} ${getFresh24h(r)}" ${t('fresh')} &middot; ${getWeekSnowfall(r)}" this week &middot; ${travelLine}${r.travel.hasChain?' &middot; '+icon('chain',12):''}${r.id==='brighton'?' &middot; '+t('night_skiing'):''}</div>
+          <div class="rec-sub">${locLink(r,11)} &middot; ${icon('cloud-snow',11)} ${getFresh24h(r)}" ${t('fresh')} &middot; ${getWeekSnowfall(r)}" wk &middot; ${travelLine}${r.travel.hasChain?' &middot; '+icon('chain',11):''}${r.id==='brighton'?' &middot; '+t('night_skiing'):''}</div>
           ${roadStatusLine(r.id)?`<div style="margin-top:3px;font-size:10px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">${icon('alert-triangle',10)} ${roadStatusLine(r.id)}</div>`:''}
           <div class="rec-highlight ${hlClass}">${icon('star',10)} ${hlText}</div>
         </div>
@@ -1972,8 +2037,8 @@ function renderTopPicks(){
         </div>
         ${r.travel.dist<800?`<div class="map-wrap"><div class="map-el" id="map-${r.id}"></div></div>`:''}
         <div class="drive-row">
-          <div class="drive-cell"><div class="drive-label">${icon('pin',12)} ${t('distance')}</div><div class="drive-val"><a href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin.name||userLocation)}&destination=${encodeURIComponent(r.name+', '+r.loc)}&travelmode=driving" target="_blank" class="d-stat-link">${r.travel.dist}<span style="font-size:11px;color:var(--text2)"> mi</span></a></div></div>
-          <div class="drive-cell"><div class="drive-label">${r.travel.flightStr?icon('plane',12):icon('clock',12)} ${r.travel.flightStr?t('flight'):t('drive')}</div><div class="drive-val" style="color:${r.travel.driveHours>8?'var(--danger)':r.travel.hasChain?'var(--warn)':'var(--fresh)'}"><a href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin.name||userLocation)}&destination=${encodeURIComponent(r.name+', '+r.loc)}&travelmode=driving" target="_blank" class="d-stat-link" style="color:inherit">${r.travel.flightStr||r.travel.driveStr}</a></div>${r.travel.hasChain?'<div class="drive-note">+30 min for chains</div>':''}</div>
+          <div class="drive-cell"><div class="drive-label">${icon('pin',12)} ${t('distance')}</div><div class="drive-val" id="cardDist-${r.id}"><a href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin.name||userLocation)}&destination=${encodeURIComponent(r.name+', '+r.loc)}&travelmode=driving" target="_blank" class="d-stat-link"><span${!routeCache[`${origin.lat},${origin.lng}-${r.lat},${r.lng}`]&&r.region!=='intl'?' class="loading-val"':''}>${routeCache[`${origin.lat},${origin.lng}-${r.lat},${r.lng}`]?routeCache[`${origin.lat},${origin.lng}-${r.lat},${r.lng}`].miles:r.travel.dist}</span><span style="font-size:11px;color:var(--text2)"> mi</span></a></div></div>
+          <div class="drive-cell"><div class="drive-label">${r.travel.flightStr?icon('plane',12):icon('clock',12)} ${r.travel.flightStr?t('flight'):t('drive')}</div><div class="drive-val" id="cardDrive-${r.id}" style="color:${r.travel.driveHours>8?'var(--danger)':r.travel.hasChain?'var(--warn)':'var(--fresh)'}"><a href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin.name||userLocation)}&destination=${encodeURIComponent(r.name+', '+r.loc)}&travelmode=driving" target="_blank" class="d-stat-link" style="color:inherit"><span${!routeCache[`${origin.lat},${origin.lng}-${r.lat},${r.lng}`]&&r.region!=='intl'&&!r.travel.flightStr?' class="loading-val"':''}>${r.travel.flightStr||(routeCache[`${origin.lat},${origin.lng}-${r.lat},${r.lng}`]?routeCache[`${origin.lat},${origin.lng}-${r.lat},${r.lng}`].driveStr:r.travel.driveStr)}</span></a></div>${r.travel.hasChain?'<div class="drive-note">+30 min for chains</div>':''}</div>
         </div>
         <div style="font-size:10px;color:var(--text3);margin:-4px 0 8px;display:flex;align-items:center;gap:4px">${icon('pin',10)} ${t('from')} ${origin.name||userLocation} &middot; <a href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin.name||userLocation)}&destination=${encodeURIComponent(r.name+', '+r.loc)}&travelmode=driving" target="_blank" style="color:var(--accent)">${t('view_on_google')}</a></div>
         ${r.travel.hasChain?getChainAlertHTML(r):''}
@@ -2075,7 +2140,7 @@ function renderResortRow(r){
   const bgClass=r.status==='EPIC'?'status-bg-epic':r.status==='PRIME'?'status-bg-prime':r.status==='GOOD'?'status-bg-good':r.status==='LIMITED'?'status-bg-limited':'status-bg-closed';
   const travelLine=r.travel.flightStr?icon('plane',10)+' '+r.travel.flightStr:r.travel.driveStr;
   return`<div class="resort-row ${bgClass}${r.status==='CLOSED'?' closed-resort':''}" data-resort-id="${r.id}" onclick="openDetail('${r.id}')">
-    <div class="rr-info"><div class="rr-name">${r.name}</div><div class="rr-meta">${icon('cloud-snow',10)} ${getFresh24h(r)}" ${t('fresh')} &middot; ${getWeekSnowfall(r)}" wk &middot; ${travelLine}${roadStatusLine(r.id)?' &middot; '+roadStatusLine(r.id):''}</div></div>
+    <div class="rr-info"><div class="rr-name">${r.name}</div><div class="rr-meta">${locLink(r)} &middot; ${icon('cloud-snow',10)} ${getFresh24h(r)}" ${t('fresh')} &middot; ${getWeekSnowfall(r)}" wk &middot; ${travelLine}${roadStatusLine(r.id)?' &middot; '+roadStatusLine(r.id):''}</div></div>
     <div class="rr-chip ${chipClass}">${t(r.status.toLowerCase())}</div>
     <div class="rr-score"${r.status==='CLOSED'?' style="color:var(--text3)"':''}>${r.status==='CLOSED'?'\u2014':r.score}</div>
   </div>`;
@@ -2089,15 +2154,16 @@ function renderTrip(){
   const score=scoreResort(r,origin);
   const gmapsUrl=`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin.name||userLocation)}&destination=${encodeURIComponent(r.name+', '+r.loc)}&travelmode=driving`;
   const routeData=routeCache[`${origin.lat},${origin.lng}-${r.lat},${r.lng}`];
-  const realDriveStr=routeData?routeData.driveStr:ti.driveStr;
-  const realDist=routeData?routeData.miles:ti.dist;
+  const hasRoute=!!routeData;
+  const realDist=hasRoute?routeData.miles:ti.dist;
   // Add 15-25% buffer for mountain conditions
   const bufferPct=ti.hasChain?25:15;
   const bufferNote=ti.hasChain?'chain control + mountain roads':'mountain roads & conditions';
-  const baseMins=routeData?Math.round(routeData.duration/60):Math.round(ti.driveHours*60);
+  const baseMins=hasRoute?Math.round(routeData.duration/60):Math.round(ti.driveHours*60);
   const adjMins=Math.round(baseMins*(1+bufferPct/100));
   const adjH=Math.floor(adjMins/60);const adjM=adjMins%60;
   const adjDriveStr=`${adjH}h ${adjM}m`;
+  const loadingCls=!hasRoute&&r.region!=='intl'?' class="loading-val"':'';
   document.getElementById('tripContent').innerHTML=`
     <div class="level-card" style="margin-bottom:20px">
       <div class="level-label">${icon('mountain',12)} ${t('selected_resort')}</div>
@@ -2117,8 +2183,8 @@ function renderTrip(){
       <div class="d-stat"><div class="d-stat-label">${icon('star',10)} ${t('score_label')}</div><div class="d-stat-val" style="color:${score>=80?'var(--fresh)':score>=65?'var(--sky)':'var(--warn)'}">${r.status==='CLOSED'?'\u2014':score}</div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('cloud-snow',10)} ${t('fresh')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getFresh24h(r)}"</a></div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('mountain',10)} ${t('base')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getBaseDepth(r)}"</a></div></div>
-      <div class="d-stat"><div class="d-stat-label">${icon('pin',10)} ${t('distance')}</div><div class="d-stat-val"><a href="${gmapsUrl}" target="_blank" class="d-stat-link">${realDist}<span style="font-size:11px;color:var(--text2)"> mi</span></a></div></div>
-      <div class="d-stat"><div class="d-stat-label">${icon(ti.flightStr?'plane':'clock',10)} ${ti.flightStr?t('flight'):t('est_drive')}</div><div class="d-stat-val" style="font-size:${ti.flightStr?'11':'14'}px;line-height:1.3"><a href="${gmapsUrl}" target="_blank" class="d-stat-link">${ti.flightStr||adjDriveStr}</a></div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('pin',10)} ${t('distance')}</div><div class="d-stat-val" id="tripDistVal"><a href="${gmapsUrl}" target="_blank" class="d-stat-link"><span${loadingCls}>${realDist}</span><span style="font-size:11px;color:var(--text2)"> mi</span></a></div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon(ti.flightStr?'plane':'clock',10)} ${ti.flightStr?t('flight'):t('est_drive')}</div><div class="d-stat-val" id="tripDriveVal" style="font-size:${ti.flightStr?'11':'14'}px;line-height:1.3"><a href="${gmapsUrl}" target="_blank" class="d-stat-link"><span${loadingCls}>${ti.flightStr||adjDriveStr}</span></a></div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('bolt',10)} ${t('lifts')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${r.liftsOpen}/${r.lifts}</a></div></div>
     </div>
     <div style="font-size:10px;color:var(--text3);margin:-8px 0 16px;display:flex;align-items:center;gap:4px">${icon('alert-triangle',10)} ${t('actual_may_vary')} (+${bufferPct}% ${bufferNote}). <a href="${gmapsUrl}" target="_blank" style="color:var(--accent)">${t('view_on_google')}</a></div>
@@ -2140,11 +2206,29 @@ function renderTrip(){
        [t('equipment'),t('equipment_items')],
        [t('misc'),t('misc_items')]
     ].map(([cat,items])=>`<div style="margin-bottom:12px"><div style="font-size:10px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">${cat}</div><div style="font-size:11px;color:var(--text2);line-height:1.8">${items}</div></div>`).join('')}`;
+  // Fetch real driving route and update distance/time after DOM is ready
+  if(!routeData&&r.region!=='intl'){
+    fetchRoute(origin,{lat:r.lat,lng:r.lng}).then(rd=>{
+      if(rd){
+        updateTripStats(rd,ti,gmapsUrl);
+      }
+    });
+  }
   // Init trip map
   setTimeout(()=>{
     const el=document.getElementById('trip-map');
     if(el&&!el._leaflet_id)initTripMap(el,r);
   },300);
+}
+
+function updateTripStats(rd,ti,gmapsUrl){
+  const bp=ti.hasChain?25:15;
+  const am=Math.round((rd.duration/60)*(1+bp/100));
+  const ah=Math.floor(am/60),amm=am%60;
+  const tripDist=document.getElementById('tripDistVal');
+  const tripDrive=document.getElementById('tripDriveVal');
+  if(tripDist)tripDist.innerHTML=`<a href="${gmapsUrl}" target="_blank" class="d-stat-link">${rd.miles}<span style="font-size:11px;color:var(--text2)"> mi</span></a>`;
+  if(tripDrive)tripDrive.innerHTML=`<a href="${gmapsUrl}" target="_blank" class="d-stat-link">${ah}h ${amm}m</a>`;
 }
 
 function initTripMap(el,r){
@@ -2155,13 +2239,15 @@ function initTripMap(el,r){
   L.tileLayer(dark?'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png':'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:18}).addTo(map);
   L.circleMarker([origin.lat,origin.lng],{radius:6,fillColor:'#c4956a',color:'#fff',weight:2,fillOpacity:1}).addTo(map).bindPopup(getOrigin(userLocation).name);
   L.circleMarker([r.lat,r.lng],{radius:7,fillColor:'#6aafc4',color:'#fff',weight:2,fillOpacity:1}).addTo(map).bindPopup(r.name);
-  const osrmUrl=`https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${r.lng},${r.lat}?overview=full&geometries=geojson`;
-  fetch(osrmUrl).then(res=>res.json()).then(data=>{
-    if(data.code==='Ok'&&data.routes&&data.routes[0]){
-      const coords=data.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
-      L.polyline(coords,{color:'#c4956a',weight:3,opacity:.8}).addTo(map);
-      map.fitBounds(L.polyline(coords).getBounds(),{padding:[20,20]});
+  const ti=getTravelInfo(origin,r);
+  const gmapsUrl=`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin.name||userLocation)}&destination=${encodeURIComponent(r.name+', '+r.loc)}&travelmode=driving`;
+  fetchRoute(origin,{lat:r.lat,lng:r.lng}).then(rd=>{
+    if(rd&&rd.coords&&rd.coords.length>1){
+      L.polyline(rd.coords,{color:'#c4956a',weight:3,opacity:.8}).addTo(map);
+      map.fitBounds(L.polyline(rd.coords).getBounds(),{padding:[20,20]});
       setTimeout(()=>map.invalidateSize(),200);
+      // Also update distance/drive stats with real route data
+      updateTripStats(rd,ti,gmapsUrl);
     } else {
       tripFallback(map,origin,r);
     }
@@ -2528,7 +2614,7 @@ function openDetail(id){
 
   document.getElementById('detailContent').innerHTML=`
     <div style="font-family:var(--font-display);font-size:24px;color:var(--white);margin-bottom:4px">${r.name}</div>
-    <div style="font-size:11px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">${icon('pin',12)} ${r.loc} &middot; ${r.elev.toLocaleString()} ft &middot; ${r.acres.toLocaleString()} acres &middot; Ikon: ${r.ikonDays}</div>
+    <div style="font-size:11px;color:var(--text2);margin-bottom:8px;display:flex;align-items:center;gap:4px;flex-wrap:wrap"><a href="${resortMapUrl(r)}" target="_blank" style="color:var(--text2);text-decoration:none;display:inline-flex;align-items:center;gap:3px">${icon('pin',12)} ${r.loc}</a> &middot; ${r.elev.toLocaleString()} ft &middot; ${r.acres.toLocaleString()} acres &middot; Ikon: ${r.ikonDays}</div>
     ${(()=>{const upd=getLastUpdated(r);if(upd){const h=upd.getHours(),m=upd.getMinutes();const ampm=h>=12?'PM':'AM';const h12=h%12||12;return `<div style="font-size:10px;color:var(--fresh);margin-bottom:12px;display:flex;align-items:center;gap:4px">${icon('check',10)} Last updated: ${h12}:${m.toString().padStart(2,'0')} ${ampm} today &middot; <strong>LIVE</strong></div>`}return `<div style="font-size:10px;color:var(--warn);margin-bottom:12px;display:flex;align-items:center;gap:4px">${icon('alert-triangle',10)} Using estimated data &middot; <strong>EST</strong></div>`})()}
 
     <div class="detail-stats">
@@ -2543,7 +2629,7 @@ function openDetail(id){
     <div style="padding:10px 12px;background:var(--card);border-radius:var(--r-sm);border:1px solid var(--border);margin:12px 0;font-size:11px;color:var(--text2);line-height:1.6">
       ${icon('clock',12)} ${t('open')}: <strong style="color:var(--fresh)">${r.open}</strong> \u2014 ${t('close_t')}: <strong style="color:var(--danger)">${r.close}</strong> <a href="${r.links.official}" target="_blank" style="font-size:9px;color:var(--accent);margin-left:4px">Verify hours</a>
       <br>${icon('plane',12)} ${r.airport}
-      <br>${icon('pin',12)} ${t('from')} <strong>${origin.name||userLocation}</strong>: ${ti.flightStr||ti.driveStr} ${t('drive')} &middot; <a href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin.name||userLocation)}&destination=${encodeURIComponent(r.name+', '+r.loc)}&travelmode=driving" target="_blank" style="color:var(--accent)">${t('view_on_google')}</a>
+      <br>${icon('pin',12)} ${t('from')} <strong>${origin.name||userLocation}</strong>: <span id="detailDriveSpan">${ti.flightStr||ti.driveStr} ${t('drive')}</span> &middot; <a href="https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin.name||userLocation)}&destination=${encodeURIComponent(r.name+', '+r.loc)}&travelmode=driving" target="_blank" style="color:var(--accent)">${t('view_on_google')}</a>
     </div>
 
     ${roadStatusDetail(r.id)}
@@ -2642,6 +2728,19 @@ function openDetail(id){
 
   document.getElementById('detailOverlay').classList.add('open');
   document.body.style.overflow='hidden';
+  // Fetch OSRM route for accurate drive time in detail overlay
+  if(r.region!=='intl'&&!routeCache[`${origin.lat},${origin.lng}-${r.lat},${r.lng}`]){
+    fetchRoute(origin,{lat:r.lat,lng:r.lng}).then(rd=>{
+      if(rd){
+        const span=document.getElementById('detailDriveSpan');
+        if(span)span.textContent=`${rd.driveStr} (${rd.miles} mi) ${t('drive')}`;
+      }
+    });
+  } else if(routeCache[`${origin.lat},${origin.lng}-${r.lat},${r.lng}`]){
+    const rd=routeCache[`${origin.lat},${origin.lng}-${r.lat},${r.lng}`];
+    const span=document.getElementById('detailDriveSpan');
+    if(span)span.textContent=`${rd.driveStr} (${rd.miles} mi) ${t('drive')}`;
+  }
   // Translate dynamic content in detail modal
   if(lang!=='en'){
     document.querySelectorAll('#detailContent [data-translate]').forEach(el=>{
@@ -2692,16 +2791,24 @@ function initResortMap(el){
   const chainZones={mammoth:[[37.66,-119.02,'SR-203']],palisades:[[39.1,-120.31,'I-80']],june:[[37.78,-119.05,'US-395']],snowbird:[[40.58,-111.72,'Little Cottonwood']],brighton:[[40.6,-111.62,'Big Cottonwood']],solitude:[[40.61,-111.60,'Big Cottonwood']],alta:[[40.58,-111.66,'Little Cottonwood']]};
   if(chainZones[id]){chainZones[id].forEach(([lt,ln,name])=>{L.circleMarker([lt,ln],{radius:8,fillColor:'#d4a03a',color:'#fff',weight:2,fillOpacity:.9}).addTo(map).bindPopup(`<b>${icon('chain',12)} Chain Control</b><br>${name}`)})}
 
-  // Attempt OSRM route
-  const osrmUrl=`https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${r.lng},${r.lat}?overview=full&geometries=geojson`;
-  fetch(osrmUrl).then(res=>res.json()).then(data=>{
-    if(data.code==='Ok'&&data.routes&&data.routes[0]){
-      const coords=data.routes[0].geometry.coordinates.map(c=>[c[1],c[0]]);
-      L.polyline(coords,{color:'#c4956a',weight:3,opacity:.8}).addTo(map);
-      map.fitBounds(L.polyline(coords).getBounds(),{padding:[20,20]});
+  // Attempt Valhalla route (uses cache from fetchRoute)
+  const gmapsUrl=`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(origin.name||userLocation)}&destination=${encodeURIComponent(r.name+', '+r.loc)}&travelmode=driving`;
+  fetchRoute(origin,{lat:r.lat,lng:r.lng}).then(rd=>{
+    if(rd&&rd.coords&&rd.coords.length>1){
+      L.polyline(rd.coords,{color:'#c4956a',weight:3,opacity:.8}).addTo(map);
+      map.fitBounds(L.polyline(rd.coords).getBounds(),{padding:[20,20]});
       setTimeout(()=>map.invalidateSize(),200);
     } else {
       drawFallbackLine(map,origin,r);
+    }
+    // Update distance/drive stats on expanded card and detail overlay
+    if(rd){
+      const distEl=document.getElementById('cardDist-'+id);
+      const driveEl=document.getElementById('cardDrive-'+id);
+      if(distEl)distEl.innerHTML=`<a href="${gmapsUrl}" target="_blank" class="d-stat-link">${rd.miles}<span style="font-size:11px;color:var(--text2)"> mi</span></a>`;
+      if(driveEl){const a=driveEl.querySelector('a');if(a){a.innerHTML=rd.driveStr;}}
+      const detailSpan=document.getElementById('detailDriveSpan');
+      if(detailSpan)detailSpan.textContent=`${rd.driveStr} (${rd.miles} mi) drive`;
     }
   }).catch(()=>{
     drawFallbackLine(map,origin,r);
@@ -2920,8 +3027,10 @@ function renderNavIcons(){
 // ── CLOCK ──
 function tick(){
   const n=new Date();
-  document.getElementById('dateDisplay').textContent=n.toLocaleDateString(lang==='zh'?'zh-CN':lang==='ja'?'ja-JP':'en-US',{weekday:'long',month:'long',day:'numeric'});
-  document.getElementById('timeDisplay').innerHTML=`${icon('clock',12)} ${n.toLocaleTimeString(lang==='zh'?'zh-CN':lang==='ja'?'ja-JP':'en-US',{hour:'numeric',minute:'2-digit'})}`;
+  const de=document.getElementById('dateDisplay');
+  const te=document.getElementById('timeDisplay');
+  if(de)de.textContent=n.toLocaleDateString(lang==='zh'?'zh-CN':lang==='ja'?'ja-JP':'en-US',{weekday:'long',month:'long',day:'numeric'});
+  if(te)te.textContent=n.toLocaleTimeString(lang==='zh'?'zh-CN':lang==='ja'?'ja-JP':'en-US',{hour:'numeric',minute:'2-digit'});
 }
 
 // ── SNOW PARTICLES ──
@@ -2929,7 +3038,8 @@ function tick(){
 
 // ── RENDER ALL ──
 function renderAll(){
-  tick();renderWeatherOverview();renderTopPicks();renderNextTrip();renderAllResorts();renderTrip();renderProfile();
+  renderWeatherOverview();tick();updateDataBadge();renderTopPicks();renderNextTrip();renderAllResorts();renderTrip();renderProfile();
+  const fy=document.getElementById('footerYear');if(fy)fy.textContent=new Date().getFullYear();
   document.querySelectorAll('[data-i18n]').forEach(el=>{const v=t(el.dataset.i18n);if(v)el.textContent=v});
   // Dynamically translate data-translate elements when not English
   if(lang!=='en'){
@@ -3019,11 +3129,11 @@ if(navigator.geolocation){
   // Load top 3 first for fast initial render
   await loadWeatherForResorts(top3);
   // Re-render with live data
-  renderWeatherOverview();
+  renderWeatherOverview();tick();updateDataBadge();
   renderTopPicks();
   // Load remaining open resorts in background so detail pages have fresh data
   const rest=allOpen.slice(3);
-  if(rest.length)loadWeatherForResorts(rest).then(()=>{renderAll()});
+  if(rest.length)loadWeatherForResorts(rest).then(()=>{const sy=window.scrollY;renderAll();window.scrollTo(0,sy)});
   // Also load routes for top 3
   const origin2=getOrigin(userLocation);
   const top3WithTravel=top3.map(r=>({...r,travel:getTravelInfo(origin2,r)}));

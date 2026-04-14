@@ -25,33 +25,82 @@ const YOY_CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours (historical data changes sl
 let yoyCache = { data: null, ts: 0 };
 
 const YOY_RESORTS = [
+  // California
   { id: 'mammoth', lat: 37.6308, lng: -119.0326 },
   { id: 'palisades', lat: 39.1965, lng: -120.2356 },
   { id: 'june', lat: 37.7772, lng: -119.0786 },
-  { id: 'kirkwood', lat: 38.6847, lng: -120.0652 },
-  { id: 'heavenly', lat: 38.9333, lng: -119.9397 },
-  { id: 'northstar', lat: 39.2746, lng: -120.1211 },
-  { id: 'sierra', lat: 38.7988, lng: -120.0805 },
-  { id: 'bigbear', lat: 34.2274, lng: -116.8603 },
+  { id: 'sierra', lat: 38.7966, lng: -120.0802 },
+  { id: 'bigbear', lat: 34.2154, lng: -116.8909 },
+  // Utah
+  { id: 'snowbird', lat: 40.5833, lng: -111.6551 },
+  { id: 'brighton', lat: 40.5975, lng: -111.5833 },
+  { id: 'solitude', lat: 40.6203, lng: -111.5919 },
+  { id: 'deervalley', lat: 40.6374, lng: -111.478 },
+  { id: 'alta', lat: 40.5884, lng: -111.6386 },
+  { id: 'snowbasin', lat: 41.2072, lng: -111.8512 },
+  // Wyoming / Montana
+  { id: 'jacksonhole', lat: 43.5877, lng: -110.828 },
+  { id: 'bigsky', lat: 45.2833, lng: -111.4014 },
+  // Colorado
   { id: 'steamboat', lat: 40.4572, lng: -106.8045 },
-  { id: 'aspen', lat: 39.1869, lng: -106.8131 },
-  { id: 'jackson', lat: 43.5877, lng: -110.8279 },
-  { id: 'deervalley', lat: 40.6375, lng: -111.4783 },
-  { id: 'snowbird', lat: 40.5830, lng: -111.6538 },
-  { id: 'brighton', lat: 40.5980, lng: -111.5831 },
-  { id: 'solitude', lat: 40.6199, lng: -111.5919 },
-  { id: 'alta', lat: 40.5884, lng: -111.6387 },
-  { id: 'winterpark', lat: 39.8841, lng: -105.7627 },
-  { id: 'copper', lat: 39.4804, lng: -106.1511 },
-  { id: 'telluride', lat: 37.9375, lng: -107.8123 },
-  { id: 'taos', lat: 36.5964, lng: -105.4542 },
-  { id: 'tremblant', lat: 46.2147, lng: -74.5856 },
-  { id: 'revelstoke', lat: 51.0275, lng: -118.1614 },
-  { id: 'niseko', lat: 42.8625, lng: 140.6989 },
+  { id: 'winterpark', lat: 39.8841, lng: -105.7625 },
+  { id: 'copper', lat: 39.5022, lng: -106.1497 },
+  { id: 'eldora', lat: 39.9375, lng: -105.5831 },
+  { id: 'aspensnowmass', lat: 39.2084, lng: -106.9499 },
+  { id: 'abasin', lat: 39.6425, lng: -105.8719 },
+  // Idaho / NM / WA / OR
+  { id: 'taos', lat: 36.5966, lng: -105.4543 },
+  { id: 'sunvalley', lat: 43.6977, lng: -114.3514 },
+  { id: 'schweitzer', lat: 48.368, lng: -116.6227 },
+  { id: 'crystalmt', lat: 46.9349, lng: -121.5045 },
+  { id: 'bachelor', lat: 43.9792, lng: -121.689 },
+  { id: 'snoqualmie', lat: 47.424, lng: -121.416 },
+  { id: 'alyeska', lat: 60.9705, lng: -149.0982 },
+  // East US
+  { id: 'killington', lat: 43.6045, lng: -72.8201 },
+  { id: 'sugarbush', lat: 44.1358, lng: -72.8954 },
+  { id: 'stratton', lat: 43.1134, lng: -72.9079 },
+  { id: 'loon', lat: 44.0369, lng: -71.6218 },
+  { id: 'sugarloaf', lat: 45.0314, lng: -70.3131 },
+  { id: 'sundayriver', lat: 44.47, lng: -70.8547 },
+  { id: 'pico', lat: 43.671, lng: -72.8487 },
+  { id: 'snowshoe', lat: 38.403, lng: -79.9972 },
+  { id: 'bluemtpa', lat: 40.8109, lng: -75.5208 },
+  { id: 'camelback', lat: 41.0523, lng: -75.3464 },
+  // Midwest
+  { id: 'boynemtn', lat: 45.167, lng: -84.924 },
+  { id: 'highlands', lat: 45.434, lng: -84.93 },
+  { id: 'lutsen', lat: 47.6471, lng: -90.6749 },
+  { id: 'granitepe', lat: 44.91, lng: -89.64 },
+  { id: 'snowriver', lat: 46.49, lng: -89.97 },
+  // Canada
+  { id: 'tremblant', lat: 46.2146, lng: -74.5855 },
+  { id: 'bluemountain', lat: 44.5018, lng: -80.3161 },
+  { id: 'revelstoke', lat: 50.9577, lng: -118.1649 },
+  { id: 'sunshine', lat: 51.115, lng: -115.764 },
+  { id: 'lakelouise', lat: 51.445, lng: -116.177 },
+  { id: 'norquay', lat: 51.203, lng: -115.599 },
+  { id: 'cypress', lat: 49.326, lng: -122.804 },
+  { id: 'panorama', lat: 50.46, lng: -116.24 },
+  { id: 'silverstar', lat: 50.358, lng: -119.064 },
+  { id: 'sunpeaks', lat: 50.884, lng: -119.886 },
+  { id: 'redmtn', lat: 49.103, lng: -117.826 },
+  { id: 'lemassif', lat: 47.283, lng: -70.617 },
+  // International
+  { id: 'niseko', lat: 42.8625, lng: 140.6988 },
+  { id: 'furano', lat: 43.282, lng: 142.473 },
+  { id: 'lottearai', lat: 36.93, lng: 138.58 },
   { id: 'chamonix', lat: 45.9237, lng: 6.8694 },
   { id: 'zermatt', lat: 46.0207, lng: 7.7491 },
-  { id: 'vallenevado', lat: -33.3568, lng: -70.2472 },
-  { id: 'thredbo', lat: -36.5053, lng: 148.3066 },
+  { id: 'grandvalira', lat: 42.57, lng: 1.68 },
+  { id: 'ischgl', lat: 47.012, lng: 10.291 },
+  // Southern hemisphere
+  { id: 'vallenevado', lat: -33.3614, lng: -70.2478 },
+  { id: 'thredbo', lat: -36.5054, lng: 148.3069 },
+  { id: 'coronetpeak', lat: -44.916, lng: 168.74 },
+  { id: 'remarkables', lat: -45.053, lng: 168.815 },
+  { id: 'mthutt', lat: -43.471, lng: 171.526 },
+  { id: 'mtbuller', lat: -37.147, lng: 146.426 },
 ];
 
 async function fetchYOYData() {
@@ -74,16 +123,23 @@ async function fetchYOYData() {
     return d.daily.snowfall_sum.reduce((s, v) => s + (v || 0), 0);
   };
 
-  // Batch all northern resorts into 5 API calls (this + last + 3 more years)
+  // Batch resorts into groups of 25 for Open-Meteo API, then merge results
   // Open-Meteo supports comma-separated coordinates, returns array
   async function fetchBatch(resorts, seasonStart, seasonEnd, tz) {
-    const lats = resorts.map(r => r.lat).join(',');
-    const lngs = resorts.map(r => r.lng).join(',');
-    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lats}&longitude=${lngs}&start_date=${seasonStart}&end_date=${seasonEnd}&daily=snowfall_sum&timezone=${tz}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    // Single resort returns object, multiple returns array
-    return Array.isArray(data) ? data : [data];
+    const CHUNK = 25;
+    const chunks = [];
+    for (let i = 0; i < resorts.length; i += CHUNK) chunks.push(resorts.slice(i, i + CHUNK));
+    const results = [];
+    for (const chunk of chunks) {
+      const lats = chunk.map(r => r.lat).join(',');
+      const lngs = chunk.map(r => r.lng).join(',');
+      const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lats}&longitude=${lngs}&start_date=${seasonStart}&end_date=${seasonEnd}&daily=snowfall_sum&timezone=${tz}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      const arr = Array.isArray(data) ? data : [data];
+      results.push(...arr);
+    }
+    return results;
   }
 
   try {
