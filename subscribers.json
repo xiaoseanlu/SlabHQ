@@ -1,13 +1,15 @@
 [
   {
     "email": "xiaoseanlu@gmail.com",
-    "location": "Livermore, CA",
-    "favorites": "palisades, mammoth",
+    "location": "Livermore, California",
+    "favorites": "palisades, mammoth, snowbird",
     "prefs": [
       "powder_8in",
       "storm_12in",
-      "epic_85"
+      "epic_85",
+      "weekly_digest"
     ],
-    "subscribedAt": "2026-04-12T08:12:39.403Z"
+    "subscribedAt": "2026-04-12T08:12:39.403Z",
+    "updatedAt": "2026-04-14T07:41:25.829Z"
   }
 ]
