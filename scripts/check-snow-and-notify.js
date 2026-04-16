@@ -20,7 +20,7 @@ const crypto = require('crypto');
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.FROM_EMAIL || 'SlabHQ Alerts <alerts@slabhq.com>';
-const SITE_URL = 'https://xiaoseanlu.github.io/SlabHQ/';
+const SITE_URL = 'https://slabhq.fyi/';
 const WORKER_BASE_URL = process.env.WORKER_URL || 'https://slabhq-subscribe.xiaoseanlu.workers.dev';
 const SUBSCRIBERS_SECRET = process.env.SUBSCRIBERS_TOKEN || '';
 

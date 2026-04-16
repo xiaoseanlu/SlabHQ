@@ -484,11 +484,11 @@ function buildWelcomeEmail(email, location, favorites, unsubUrl) {
     </div>
 
     <div style="text-align:center;margin-top:24px">
-      <a href="https://xiaoseanlu.github.io/SlabHQ/" style="display:inline-block;background:#8b6f47;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">Open SlabHQ &rarr;</a>
+      <a href="https://slabhq.fyi/" style="display:inline-block;background:#8b6f47;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">Open SlabHQ &rarr;</a>
     </div>
 
     <div style="text-align:center;font-size:10px;color:#a09890;margin-top:32px;line-height:1.6">
-      <a href="https://xiaoseanlu.github.io/SlabHQ/" style="color:#8b6f47;text-decoration:none">SlabHQ</a> &middot; Know before you go.
+      <a href="https://slabhq.fyi/" style="color:#8b6f47;text-decoration:none">SlabHQ</a> &middot; Know before you go.
       ${unsubUrl ? `<br><a href="${unsubUrl}" style="color:#a09890;text-decoration:underline">Unsubscribe</a>` : ''}
     </div>
 
@@ -508,7 +508,7 @@ function unsubPage(message, success) {
     <div style="font-size:40px;margin-bottom:16px">${success ? '&#10003;' : '&#9888;'}</div>
     <div style="font-size:16px;color:#1a1a2e;font-weight:600;margin-bottom:8px">${success ? 'Unsubscribed' : 'Oops'}</div>
     <div style="font-size:13px;color:#7a8fa8;line-height:1.6;margin-bottom:24px">${message}</div>
-    <a href="https://xiaoseanlu.github.io/SlabHQ/" style="display:inline-block;background:#8b6f47;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">Back to SlabHQ</a>
+    <a href="https://slabhq.fyi/" style="display:inline-block;background:#8b6f47;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">Back to SlabHQ</a>
   </div>
 </body>
 </html>`;
