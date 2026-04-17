@@ -389,9 +389,10 @@ export default {
 
       // Read current subscribers from KV
       let subscribers = (await env.SUBSCRIBERS.get('subscribers', 'json')) || [];
+      const isNew = !subscribers.find(s => s.email.toLowerCase() === email.toLowerCase());
 
       // Check for duplicate
-      if (subscribers.find(s => s.email.toLowerCase() === email.toLowerCase())) {
+      if (!isNew) {
         // Update existing subscriber's preferences
         subscribers = subscribers.map(s => {
           if (s.email.toLowerCase() === email.toLowerCase()) {
@@ -412,25 +413,44 @@ export default {
 
       // Save to KV
       await env.SUBSCRIBERS.put('subscribers', JSON.stringify(subscribers));
+      const totalCount = subscribers.length;
 
-      // Send welcome email via Resend (if configured)
       if (env.RESEND_API_KEY) {
+        const unsubToken = await makeUnsubToken(email, env.SUBSCRIBERS_TOKEN);
+        const unsubLink = unsubscribeUrl(workerBaseUrl, email, unsubToken);
+
+        // Send welcome email to subscriber
         try {
           await fetch('https://api.resend.com/emails', {
             method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${env.RESEND_API_KEY}`,
-              'Content-Type': 'application/json',
-            },
+            headers: { 'Authorization': `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
             body: JSON.stringify({
               from: env.FROM_EMAIL || 'SlabHQ Alerts <alerts@slabhq.com>',
               to: [email],
               subject: 'Welcome to SlabHQ Powder Alerts',
-              html: buildWelcomeEmail(email, location, favorites, unsubscribeUrl(workerBaseUrl, email, await makeUnsubToken(email, env.SUBSCRIBERS_TOKEN))),
+              html: buildWelcomeEmail(email, location, favorites, unsubLink),
             }),
           });
         } catch (e) {
           console.error('Welcome email failed:', e);
+        }
+
+        // Notify admin of new signup
+        if (env.ADMIN_EMAIL) {
+          try {
+            await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                from: env.FROM_EMAIL || 'SlabHQ Alerts <alerts@slabhq.com>',
+                to: [env.ADMIN_EMAIL],
+                subject: `SlabHQ: ${isNew ? 'New subscriber' : 'Subscriber updated'} — ${totalCount} total`,
+                html: buildAdminNotifEmail(email, location, favorites, prefs, isNew, totalCount, subscribers),
+              }),
+            });
+          } catch (e) {
+            console.error('Admin notification failed:', e);
+          }
         }
       }
 
@@ -490,6 +510,60 @@ function buildWelcomeEmail(email, location, favorites, unsubUrl) {
     <div style="text-align:center;font-size:10px;color:#a09890;margin-top:32px;line-height:1.6">
       <a href="https://slabhq.fyi/" style="color:#8b6f47;text-decoration:none">SlabHQ</a> &middot; Know before you go.
       ${unsubUrl ? `<br><a href="${unsubUrl}" style="color:#a09890;text-decoration:underline">Unsubscribe</a>` : ''}
+    </div>
+
+  </div>
+</body>
+</html>`;
+}
+
+function buildAdminNotifEmail(email, location, favorites, prefs, isNew, totalCount, allSubscribers) {
+  const prefLabels = (prefs || []).map(p =>
+    p === 'powder_8in' ? 'Powder 8"' : p === 'storm_12in' ? 'Storm 12"' : p === 'epic_85' ? 'Epic 85+' : p === 'weekly_digest' ? 'Weekly digest' : p
+  ).join(', ');
+
+  const recentFive = [...allSubscribers]
+    .sort((a, b) => new Date(b.subscribedAt) - new Date(a.subscribedAt))
+    .slice(0, 5);
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f0eb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <div style="max-width:480px;margin:0 auto;padding:24px 16px">
+
+    <div style="text-align:center;margin-bottom:20px">
+      <div style="font-size:22px;font-weight:800;color:#1a1a2e;letter-spacing:-0.5px">Slab<span style="color:#8b6f47">HQ</span></div>
+      <div style="font-size:10px;color:#7a8fa8;letter-spacing:2px;text-transform:uppercase;margin-top:2px">${isNew ? 'NEW SUBSCRIBER' : 'SUBSCRIBER UPDATED'}</div>
+    </div>
+
+    <div style="background:#1a1a2e;border-radius:12px;padding:20px;margin-bottom:12px;color:#fff">
+      <div style="font-size:24px;font-weight:700;margin-bottom:4px">${totalCount}</div>
+      <div style="font-size:11px;color:#7a8fa8;text-transform:uppercase;letter-spacing:1px">Total subscribers</div>
+    </div>
+
+    <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:12px;border:1px solid #e5ddd4">
+      <div style="font-size:10px;color:#7a8fa8;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px">${isNew ? 'NEW SIGNUP' : 'UPDATED PREFERENCES'}</div>
+      <div style="font-size:14px;font-weight:600;color:#1a1a2e;margin-bottom:8px">${email}</div>
+      ${location ? `<div style="font-size:12px;color:#7a8fa8;margin-bottom:4px">Location: ${location}</div>` : ''}
+      ${favorites ? `<div style="font-size:12px;color:#7a8fa8;margin-bottom:4px">Tracking: ${favorites}</div>` : ''}
+      <div style="font-size:12px;color:#7a8fa8">Alerts: ${prefLabels || 'none'}</div>
+    </div>
+
+    <div style="background:#fff;border-radius:12px;padding:20px;border:1px solid #e5ddd4">
+      <div style="font-size:10px;color:#7a8fa8;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:12px">RECENT SUBSCRIBERS</div>
+      ${recentFive.map((s, i) => `
+        <div style="display:flex;align-items:center;padding:8px 0;${i < recentFive.length - 1 ? 'border-bottom:1px solid #f0ebe5;' : ''}">
+          <div style="flex:1">
+            <div style="font-size:12px;font-weight:500;color:#1a1a2e">${s.email}</div>
+            ${s.location ? `<div style="font-size:10px;color:#a09890">${s.location}</div>` : ''}
+          </div>
+          <div style="font-size:10px;color:#a09890;white-space:nowrap">${new Date(s.subscribedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+        </div>`).join('')}
+    </div>
+
+    <div style="text-align:center;font-size:10px;color:#a09890;margin-top:20px">
+      <a href="https://slabhq.fyi/" style="color:#8b6f47;text-decoration:none">SlabHQ</a>
     </div>
 
   </div>
