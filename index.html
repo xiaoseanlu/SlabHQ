@@ -2140,7 +2140,7 @@ function renderResortRow(r){
   const bgClass=r.status==='EPIC'?'status-bg-epic':r.status==='PRIME'?'status-bg-prime':r.status==='GOOD'?'status-bg-good':r.status==='LIMITED'?'status-bg-limited':'status-bg-closed';
   const travelLine=r.travel.flightStr?icon('plane',10)+' '+r.travel.flightStr:r.travel.driveStr;
   return`<div class="resort-row ${bgClass}${r.status==='CLOSED'?' closed-resort':''}" data-resort-id="${r.id}" onclick="openDetail('${r.id}')">
-    <div class="rr-info"><div class="rr-name">${r.name}</div><div class="rr-meta">${locLink(r)} &middot; ${icon('cloud-snow',10)} ${getFresh24h(r)}" ${t('fresh')} &middot; ${getWeekSnowfall(r)}" wk &middot; ${travelLine}${roadStatusLine(r.id)?' &middot; '+roadStatusLine(r.id):''}</div></div>
+    <div class="rr-info"><div class="rr-name">${r.name}</div><div class="rr-meta">${locLink(r)} &middot; ${icon('cloud-snow',10)} ${getFresh24h(r)}" ${t('fresh')} &middot; ${getWeekSnowfall(r)}" wk &middot; ${travelLine}${roadStatusRowIcon(r.id)}</div></div>
     <div class="rr-chip ${chipClass}">${t(r.status.toLowerCase())}</div>
     <div class="rr-score"${r.status==='CLOSED'?' style="color:var(--text3)"':''}>${r.status==='CLOSED'?'\u2014':r.score}</div>
   </div>`;
@@ -2923,6 +2923,25 @@ function roadStatusLine(resortId){
   const roads=getRoadStatus(resortId);
   if(!roads)return '';
   return roads.map(rc=>`${rc.route} ${roadStatusBadge(rc)}`).join(' &middot; ');
+}
+// Compact indicator for the all-resorts list row. The full pill badges
+// (CHAINS/ADVISORY/CLOSED) were getting truncated by the single-line meta
+// row, showing up as "CH" / "A…" / a red sliver with no text — confusing
+// for users who don't know what those mean. This returns a single small
+// colored icon with a tooltip instead; full road details still appear in
+// the expanded detail view via roadStatusDetail().
+function roadStatusRowIcon(resortId){
+  const roads=getRoadStatus(resortId);
+  if(!roads||roads.length===0)return '';
+  const worst=roads[0];
+  const s=worst.status;
+  if(s==='clear'||s==='unknown')return '';
+  let color,ico,label;
+  if(s==='closed'){color='var(--danger)';ico='alert-triangle';label=`${worst.route} closed`}
+  else if(s.startsWith('chains')){color='var(--warn)';ico='chain';label=`${worst.route} chain control`}
+  else if(s==='advisory'){color='#d4a03a';ico='alert-triangle';label=`${worst.route} advisory`}
+  else return '';
+  return ` &middot; <span title="${label}" aria-label="${label}" style="color:${color};display:inline-flex;align-items:center;vertical-align:-2px">${icon(ico,11)}</span>`;
 }
 function roadStatusDetail(resortId){
   const roads=getRoadStatus(resortId);
