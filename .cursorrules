@@ -1,0 +1,58 @@
+# SlabHQ — Cursor project rules
+
+This repo powers https://slabhq.fyi — real-time snow / trip intelligence for
+Ikon Pass resorts. Hosted free on GitHub Pages + Cloudflare Workers + GitHub
+Actions. Owner: @xiaoseanlu.
+
+## Stack & layout
+
+- `index.html` — entire frontend as a single static file (vanilla HTML/CSS/JS,
+  Leaflet, no build step). This is the main artifact GitHub Pages serves.
+- `CNAME` — must stay as `slabhq.fyi`. Don't remove or rename.
+- `.nojekyll` — must stay (disables Jekyll on Pages). Don't remove.
+- `worker/` — Cloudflare Worker for email subscription (`wrangler.toml`,
+  `subscribe-worker.js`). Deployed separately via `npx wrangler deploy`.
+- `scripts/check-snow-and-notify.js` — Node script run by GitHub Actions cron
+  (6am PST daily) to send powder / storm / epic alerts via Resend.
+- `.github/workflows/snow-alert.yml` — the cron workflow.
+- `prototypes/` — design explorations; do NOT ship these to Pages.
+- `deploy.py` — legacy helper from an older machine; ignore / don't rely on it.
+
+## Local dev
+
+- Frontend: open `index.html` directly, or `npx serve -l 8080 -s` from repo
+  root.
+- Worker: `cd worker && npx wrangler dev`.
+- Alerts script: `node scripts/check-snow-and-notify.js` (needs env vars — see
+  `SETUP-EMAIL-ALERTS.md`).
+- No `package.json` at the root on purpose — keep the root a zero-build static
+  site so GitHub Pages stays trivially reliable.
+
+## Git / collaboration workflow
+
+- Default branch: `main`. Pushing to `main` auto-deploys to
+  https://slabhq.fyi via GitHub Pages.
+- **Ask before every `git commit` and every `git push`.** Summarize the diff
+  first, wait for confirmation, then run.
+- Prefer small, focused commits with imperative subjects
+  (e.g. `fix: storm window rounding`, `feat: add Niseko resort card`).
+- For anything risky (DNS, `CNAME`, workflows, secrets, large `index.html`
+  rewrites), open a branch like `change/<topic>` and prepare a PR instead of
+  pushing to `main`.
+
+## Things to not do
+
+- Don't add a build step, bundler, or framework to the root app without
+  explicit approval — the "single file, zero build" property is a feature.
+- Don't commit secrets (Resend keys, Cloudflare tokens, GitHub tokens). They
+  live in GitHub Actions secrets and Cloudflare Worker secrets.
+- Don't commit `subscribers.json`, `node_modules/`, `.DS_Store`, `.claude/`
+  (already gitignored — keep it that way).
+- Don't change `CNAME`, `.nojekyll`, or Pages-relevant repo settings without
+  flagging it as a deploy-affecting change.
+- Don't edit files under `prototypes/` when the task is about the live app.
+
+## When in doubt
+
+Ask. This is a solo side-project that's already live in production, so
+reliability > speed.
