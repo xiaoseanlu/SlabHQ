@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<script>/* No-FOUC: apply saved theme before first paint so dark-mode users don't see a light flash. */(function(){try{var t=localStorage.getItem('sbTheme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 <title>SlabHQ — Know Before You Go | Snow Trip Intelligence</title>
 <meta name="description" content="Real-time snow conditions, personalized resort rankings, storm tracking, and trip planning for Ikon Pass riders. 35+ resorts scored by snow, weather, distance, and your skill level.">
 <meta name="keywords" content="snow report, ski conditions, snowboard trip planner, Ikon Pass, powder alerts, resort rankings, storm tracking, snow forecast, ski resort, snowboard, winter sports">
@@ -306,6 +307,11 @@ input{font-family:inherit}
   animation:reveal .4s var(--ease-out) both;
 }
 @keyframes reveal{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+/* Only play entrance animations on initial paint. After first render, html.ready
+   is set and these re-renders stop flashing/shaking when live data arrives. */
+html.ready .wx-overview,
+html.ready .rec-card,
+html.ready .empty-state{animation:none!important}
 .rec-card:nth-child(2){animation-delay:.1s}
 .rec-card:nth-child(3){animation-delay:.15s}
 .rec-card:hover{border-color:var(--accent);transform:translateY(-1px)}
@@ -3084,6 +3090,9 @@ updateThemeIcon();
 // Clear weather cache on every page load so data is always fresh
 Object.keys(weatherCache).forEach(k=>delete weatherCache[k]);
 renderAll(); // Stage 1: render immediately with hardcoded data
+// After first paint, mark root as ready so entrance animations don't re-run
+// when sections re-render with live weather data (prevents landing flicker).
+requestAnimationFrame(()=>document.documentElement.classList.add('ready'));
 setInterval(tick,1000);
 
 // Live location: lat/lng of user's current GPS position (updated continuously while app is open)
@@ -3152,12 +3161,19 @@ if(navigator.geolocation){
   const top3=allOpen.slice(0,3);
   // Load top 3 first for fast initial render
   await loadWeatherForResorts(top3);
-  // Re-render with live data
-  renderWeatherOverview();tick();updateDataBadge();
+  // Re-render with live data. renderWeatherOverview is NOT called here: its
+  // content is static promo copy; date/time/badge are updated in-place by
+  // tick() and updateDataBadge() via element IDs, so a full overview rebuild
+  // would only re-trigger the hero entrance animation and cause a flash.
+  tick();updateDataBadge();
   renderTopPicks();
-  // Load remaining open resorts in background so detail pages have fresh data
+  // Load remaining open resorts in background so detail pages have fresh data.
+  // Use targeted re-renders (not full renderAll) to avoid visible layout shift
+  // on landing when background data resolves.
   const rest=allOpen.slice(3);
-  if(rest.length)loadWeatherForResorts(rest).then(()=>{const sy=window.scrollY;renderAll();window.scrollTo(0,sy)});
+  if(rest.length)loadWeatherForResorts(rest).then(()=>{
+    updateDataBadge();renderTopPicks();renderAllResorts();
+  });
   // Also load routes for top 3
   const origin2=getOrigin(userLocation);
   const top3WithTravel=top3.map(r=>({...r,travel:getTravelInfo(origin2,r)}));
