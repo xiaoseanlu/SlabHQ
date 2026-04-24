@@ -2,21 +2,34 @@
  * SlabHQ Smart Snow Alert
  * Runs via GitHub Actions cron at 6am PST daily.
  *
- * ALERT TYPES (by day-of-week):
- *   Thu/Fri: "Weekend Forecast" — 4"+ expected Sat-Sun, gives 1-2 days to plan
- *   Any day: "Powder Tomorrow" — 6"+ forecast for tomorrow, urgent "leave tonight"
- *   Mon/Tue: "Week Ahead" — 10"+ in next 7 days, plan your week
- *   Wed:     "Extended Outlook" — 15"+ in days 8-16, early heads-up for PTO
- *   Mon:     "Weekly Digest" — opt-in summary of all conditions
- *   Any day: "Bluebird Alert" — 6"+ fell yesterday + clear skies tomorrow
- *   Any day: "Mega Dump" — 12"+ in a single day (too good to miss, any day)
+ * Design goals (2026+):
+ *   1) Planning-first: surface the 7–16 day window early so you can book PTO / travel.
+ *   2) Forecast shift: if the best storm window or totals move meaningfully vs yesterday,
+ *      send a high-priority "update" (data/forecast-snapshot.json, committed by the workflow).
+ *   3) "Tomorrow" is NOT the default top story — it only competes at high priority when
+ *      truly exceptional (e.g. 10"+) or you're already in the 2-day prep window.
+ *   4) As storms get closer, other alerts (weekend, mega) still break through.
  *
- * PRIORITY: Mega Dump > Powder Tomorrow > Bluebird > Weekend Forecast > Week Ahead > Extended Outlook > Weekly Digest
- * Only ONE alert per subscriber per day (highest priority wins)
+ * PRIORITY (highest first, single winner per resort then best across favorites):
+ *   100  Planning window (days 7–16 — book / hold dates, note uncertainty)
+ *    98  Forecast update (model shifted vs last run in snapshot)
+ *    90  7-day snow nudge (meaningful week ahead without waiting for Mon/Tue)
+ *    88  Mega dump — 12"+ in next 0–2 days
+ *    80  This weekend (Wed) — 2+ days to prep for sat-sun
+ *    78  Thu/Fri weekend look-ahead
+ *    70  Bluebird: big snow today + clear tomorrow
+ *    68  Powder soon — 8"+ tomorrow OR strong Thu/Fri before weekend
+ *    50  Powder tomorrow — 6" class (planning-lean; check app for details)
+ *
+ *   Monday weekly digest: separate opt-in path (prefs.weekly_digest) if no other alert.
  */
 
 
+const fs = require('fs');
+const path = require('path');
 const crypto = require('crypto');
+
+const SNAPSHOT_PATH = path.join(__dirname, '..', 'data', 'forecast-snapshot.json');
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const FROM_EMAIL = process.env.FROM_EMAIL || 'SlabHQ Alerts <alerts@slabhq.com>';
@@ -220,108 +233,226 @@ function isClearDay(d) {
   return d.weatherCode <= 3 && d.wind <= 20;
 }
 
-// ── SMART TRIGGER LOGIC ──
-function determineAlertType(cond, dow) {
+// ── FORECAST SNAPSHOT (committed by GitHub Actions after each run) ──
+function loadSnapshot() {
+  if (process.env.SKIP_SNAPSHOT === '1') return { version: 1, updatedAt: null, resorts: {} };
+  try {
+    if (!fs.existsSync(SNAPSHOT_PATH)) return { version: 1, updatedAt: null, resorts: {} };
+    return JSON.parse(fs.readFileSync(SNAPSHOT_PATH, 'utf8'));
+  } catch (e) {
+    console.warn('Snapshot read failed:', e.message);
+    return { version: 1, updatedAt: null, resorts: {} };
+  }
+}
+
+function saveSnapshot(obj) {
+  if (process.env.SKIP_SNAPSHOT === '1') return;
+  try {
+    fs.mkdirSync(path.dirname(SNAPSHOT_PATH), { recursive: true });
+    obj.updatedAt = new Date().toISOString();
+    fs.writeFileSync(SNAPSHOT_PATH, `${JSON.stringify(obj, null, 2)}\n`, 'utf8');
+    console.log('Wrote forecast snapshot to', SNAPSHOT_PATH);
+  } catch (e) {
+    console.warn('Snapshot write failed:', e.message);
+  }
+}
+
+function meta7to16(cond) {
+  const d = cond.days.slice(7, 16);
+  if (!d.length) return null;
+  let peak = d[0];
+  let tot = 0;
+  let best3 = 0;
+  d.forEach((x) => {
+    tot += x.snow;
+    if (x.snow > peak.snow) peak = x;
+  });
+  for (let i = 0; i + 2 < d.length; i++) {
+    const s = d[i].snow + d[i + 1].snow + d[i + 2].snow;
+    if (s > best3) best3 = s;
+  }
+  return {
+    peakDate: peak.date,
+    peakSnow: peak.snow,
+    tot8_16: tot,
+    best3,
+    peakLabel: peak.dateFmt,
+    bestWindow: `${d[0].dateFmt} - ${d[d.length - 1].dateFmt}`,
+  };
+}
+
+function planWindowSig(m) {
+  if (!m) return '';
+  return `${m.peakDate}|${Math.round(m.tot8_16 * 10) / 10}|${Math.round(m.best3 * 10) / 10}`;
+}
+
+function getForecastShiftAlert(cond, prev) {
+  if (!prev || !prev.peakDate) return null;
+  const m = meta7to16(cond);
+  if (!m) return null;
+  const oldPeakS = prev.peakSnow8_16 || 0;
+  const newPeakS = m.peakSnow;
+  const oldTot = prev.tot8_16 || 0;
+  const newTot = m.tot8_16;
+  const peakMoved = prev.peakDate !== m.peakDate;
+  const bigPeakDiff = Math.abs(newPeakS - oldPeakS) >= 3;
+  const bigTotDiff = Math.abs(newTot - oldTot) >= 5;
+  if (!peakMoved && !bigPeakDiff && !bigTotDiff) return null;
+
+  let reason = 'The 7-16 day forecast for ' + cond.name + ' has moved vs our last run. ';
+  if (peakMoved) {
+    reason += `The best day in that window is now around ${m.peakLabel} (~${newPeakS}"). Last run: ${prev.peakLabel || prev.peakDate} (~${oldPeakS}"). `;
+  }
+  if (bigTotDiff) reason += `Total snow in that range shifted from ~${oldTot.toFixed(0)}" to ~${newTot.toFixed(0)}". `;
+  if (bigPeakDiff && !peakMoved) reason += `Peak snow on that best day went from ~${oldPeakS}" to ~${newPeakS}". `;
+  reason += 'Models drift as the storm gets closer - re-check PTO, flights, and travel.';
+
+  return {
+    type: 'forecast_shift',
+    priority: 98,
+    subject: `Forecast update: ${cond.name} - the window changed`,
+    tag: 'FORECAST UPDATE',
+    tagColor: '#7a8fa8',
+    reason,
+    day: cond.days.find((x) => x.date === m.peakDate) || null,
+  };
+}
+
+function findPlanningWindowAlert(cond, prev) {
+  const m = meta7to16(cond);
+  if (!m) return null;
+  const { tot8_16: tot, best3, peakSnow: peak } = m;
+  const strong = tot >= 8 || best3 >= 5 || peak >= 6;
+  if (!strong) return null;
+  const sig = planWindowSig(m);
+  if (prev && prev.planWindowSig === sig) return null;
+  return {
+    type: 'planning_window',
+    priority: 100,
+    subject: `Plan ahead: snow signal in ~1-2 weeks at ${cond.name}`,
+    tag: 'PLAN AHEAD',
+    tagColor: '#5b7a8f',
+    reason: `In the 7-16 day range, totals are ~${tot.toFixed(0)}" with a strong 3-day stretch to ~${best3.toFixed(0)}" and a peak day near ${m.peakLabel} (~${peak}"). Use this to block dates and watch - long-range is uncertain; we will ping you if the best day moves.`,
+    day: null,
+  };
+}
+
+function getBestAlertForResort(cond, dow, prevResortSnap) {
   const days = cond.days;
   const today = days[0];
   const tomorrow = days[1];
   const weekDays = days.slice(0, 7);
-  const extendedDays = days.slice(7, 16);
-
-  const weekSnow7 = weekDays.reduce((s, d) => s + d.snow, 0);
-  const extendedSnow = extendedDays.reduce((s, d) => s + d.snow, 0);
-
   const wkend = getWeekendSummary(days);
+  const weekSnow7 = weekDays.reduce((s, d) => s + d.snow, 0);
+  const cands = [];
 
-  // Priority 1: MEGA DUMP — 12"+ in a single day within next 3 days (any day of week)
+  const pl = findPlanningWindowAlert(cond, prevResortSnap);
+  if (pl) cands.push(pl);
+  const sh = getForecastShiftAlert(cond, prevResortSnap);
+  if (sh) cands.push(sh);
+
+  if (!pl && weekSnow7 >= 7) {
+    const best = getBestDay(weekDays);
+    cands.push({
+      type: 'near_week_snow',
+      priority: 90,
+      subject: `This week: ~${Math.round(weekSnow7)}" on the model at ${cond.name}`,
+      tag: '7-DAY SIGNAL',
+      tagColor: '#5bc4e0',
+      reason: `About ${Math.round(weekSnow7)}" in the next 7 days. Best look: ${best.fullDay} (${best.dateFmt}) with ${best.snow}". Use this to time a trip; details will change daily.`,
+      day: best,
+    });
+  }
+
   for (let i = 0; i <= 2 && i < days.length; i++) {
     if (days[i].snow >= 12) {
-      return {
+      cands.push({
         type: 'mega_dump',
-        priority: 100,
+        priority: 88,
         subject: `MEGA DUMP: ${days[i].snow}" hitting ${cond.name} ${i === 0 ? 'today' : i === 1 ? 'tomorrow' : days[i].fullDay}`,
         tag: 'MEGA DUMP',
         tagColor: '#e04040',
-        reason: `${days[i].snow}" in a single day — this is a season-defining dump. ${days[i].isWeekday ? 'Call in sick.' : 'Clear your weekend.'}`,
+        reason: `${days[i].snow}" in one day - that is season-defining. ${days[i].isWeekday ? 'Worth shuffling plans.' : 'Worth shuffling the weekend.'}`,
         day: days[i],
-      };
+      });
     }
   }
 
-  // Priority 2: POWDER TOMORROW — 6"+ forecast for tomorrow (any day)
-  // But on Thu/Fri, lower threshold since it's a weekend trip
-  const tomorrowThreshold = (dow === 4 || dow === 5) ? 4 : 6;
-  if (tomorrow && tomorrow.snow >= tomorrowThreshold) {
-    const isWeekendTrip = dow === 4 || dow === 5;
-    return {
-      type: 'powder_tomorrow',
-      priority: 90,
-      subject: `Powder Tomorrow: ${tomorrow.snow}" hitting ${cond.name} ${tomorrow.dateFmt}`,
-      tag: 'POWDER TOMORROW',
-      tagColor: '#42c97a',
-      reason: isWeekendTrip
-        ? `${tomorrow.snow}" expected ${tomorrow.fullDay} (${tomorrow.dateFmt}). Weekend trip is ON.`
-        : `${tomorrow.snow}" forecast for ${tomorrow.fullDay} (${tomorrow.dateFmt}). ${tomorrow.isWeekday ? 'Worth a day off if you can swing it.' : ''}`,
-      day: tomorrow,
-    };
+  if (dow === 3) {
+    const wk2 = getWeekendSummary(days);
+    if (wk2.snow >= 4) {
+      cands.push({
+        type: 'weekend_prep',
+        priority: 80,
+        subject: `This weekend: ${wk2.snow}" lining up at ${cond.name} - get ready`,
+        tag: 'WEEKEND STORM',
+        tagColor: '#8b6f47',
+        reason: `~${wk2.snow}" is forecast for Sat-Sun. You have a few days to pack, tune gear, and re-check I-80 / 395, etc. Numbers will wiggle - re-open SlabHQ in a day or two.`,
+      });
+    }
   }
 
-  // Priority 3: BLUEBIRD — 6"+ fell yesterday (today) + tomorrow clear + low wind
-  if (today.snow >= 6 && tomorrow && isClearDay(tomorrow)) {
-    return {
-      type: 'bluebird',
-      priority: 85,
-      subject: `Bluebird Alert: ${today.snow}" fresh + clear skies tomorrow at ${cond.name}`,
-      tag: 'BLUEBIRD DAY',
-      tagColor: '#5bc4e0',
-      reason: `${today.snow}" fell today and tomorrow is clear with ${tomorrow.wind}mph winds. Fresh powder + sunshine — the dream.`,
-      day: tomorrow,
-    };
-  }
-
-  // Priority 4: WEEKEND FORECAST — Thu/Fri only, 4"+ on Sat+Sun
   if ((dow === 4 || dow === 5) && wkend.snow >= 4) {
-    return {
+    cands.push({
       type: 'weekend_forecast',
-      priority: 75,
-      subject: `This Weekend: ${wkend.snow}" expected at ${cond.name}`,
+      priority: 78,
+      subject: `This weekend: ${wkend.snow}" expected at ${cond.name}`,
       tag: 'WEEKEND FORECAST',
       tagColor: '#8b6f47',
-      reason: `${wkend.snow}" expected Sat-Sun. ${wkend.snow >= 8 ? 'This is a GO weekend.' : 'Solid conditions for a day trip.'}${wkend.maxWind > 25 ? ` Heads up: winds up to ${wkend.maxWind}mph.` : ''}`,
-    };
+      reason: `~${wkend.snow}" for Sat-Sun. ${wkend.snow >= 8 ? 'Strong pull.' : 'Worth a look.'}${wkend.maxWind > 25 ? ` Wind to ${wkend.maxWind}mph.` : ''}`,
+    });
   }
 
-  // Priority 5: WEEK AHEAD — Mon/Tue, 10"+ in next 7 days
-  if ((dow === 1 || dow === 2) && weekSnow7 >= 10) {
-    const bestDay = getBestDay(weekDays);
-    return {
-      type: 'week_ahead',
-      priority: 60,
-      subject: `Week Ahead: ${Math.round(weekSnow7)}" coming to ${cond.name} this week`,
-      tag: 'WEEK AHEAD',
+  if (today.snow >= 6 && tomorrow && isClearDay(tomorrow)) {
+    cands.push({
+      type: 'bluebird',
+      priority: 70,
+      subject: `Bluebird: ${today.snow}" on the hill + clear tomorrow at ${cond.name}`,
+      tag: 'BLUEBIRD DAY',
       tagColor: '#5bc4e0',
-      reason: `${Math.round(weekSnow7)}" total this week. Best day: ${bestDay.fullDay} (${bestDay.dateFmt}) with ${bestDay.snow}". ${bestDay.isWeekend ? 'Weekend looking good.' : 'Weekday powder — plan accordingly.'}`,
-      day: bestDay,
-    };
+      reason: `${today.snow}" in so far; tomorrow is clear with light wind. Dream surface if it holds.`,
+      day: tomorrow,
+    });
   }
 
-  // Priority 6: EXTENDED OUTLOOK — Wed only, 15"+ in days 8-16
-  if (dow === 3 && extendedSnow >= 15) {
-    const bestExtDay = getBestDay(extendedDays);
-    return {
-      type: 'extended_outlook',
-      priority: 50,
-      subject: `Heads Up: ${Math.round(extendedSnow)}" expected at ${cond.name} in ~2 weeks`,
-      tag: 'EARLY HEADS UP',
-      tagColor: '#7a8fa8',
-      reason: `Major storm pattern forming. ${Math.round(extendedSnow)}" forecast for ${cond.name} in the next 2-3 weeks. Best window around ${bestExtDay.dateFmt}. Time to request PTO and book lodging.`,
-      day: bestExtDay,
-    };
+  const tTh = dow === 4 || dow === 5 ? 4 : 6;
+  if (tomorrow && tomorrow.snow >= tTh) {
+    const exceptional = tomorrow.snow >= 10;
+    const weekendEve = (dow === 4 || dow === 5) && tomorrow.snow >= 6;
+    cands.push({
+      type: 'powder_tomorrow',
+      priority: exceptional || weekendEve ? 68 : 50,
+      subject: exceptional
+        ? `Must-watch: ${tomorrow.snow}" tomorrow at ${cond.name}`
+        : `Snow building: ${tomorrow.snow}" tomorrow at ${cond.name}`,
+      tag: exceptional ? 'POWDER ALERT' : 'SHORT-RANGE',
+      tagColor: exceptional ? '#42c97a' : '#7a8fa8',
+      reason: exceptional
+        ? `${tomorrow.snow}" tomorrow is rare-worth moving plans.`
+        : `~${tomorrow.snow}" on ${tomorrow.dateFmt} - this is 24-48h timing; the app has your full 16-day outlook for planning further out.`,
+      day: tomorrow,
+    });
   }
 
-  return null;
+  if (cands.length === 0) return null;
+  cands.sort((a, b) => b.priority - a.priority);
+  return cands[0];
 }
 
+function buildResortSnapshotEntry(cond) {
+  const m = meta7to16(cond);
+  if (!m) {
+    return { planWindowSig: '', peakDate: null, peakSnow8_16: 0, tot8_16: 0, peakLabel: null };
+  }
+  return {
+    peakDate: m.peakDate,
+    peakSnow8_16: m.peakSnow,
+    tot8_16: m.tot8_16,
+    best3: m.best3,
+    peakLabel: m.peakLabel,
+    planWindowSig: planWindowSig(m),
+  };
+}
 // ── TRIP RECOMMENDATION (for email body) ──
 function tripRecommendation(days, weekendSnow, bestDay) {
   const weekdaySnowDays = days.filter(d => d.isWeekday && d.snow >= 4).slice(0, 7);
@@ -439,7 +570,7 @@ function buildAlertEmail(subscriber, alert, resortAlerts, allConditions, roadCon
       </div>
     </div>
 
-    ${alert.type === 'extended_outlook' ? `
+    ${['extended_outlook', 'planning_window', 'forecast_shift'].includes(alert.type) ? `
     <!-- EXTENDED OUTLOOK (days 8-16) -->
     <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #e5ddd4">
       <div style="font-size:10px;color:#7a8fa8;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">EXTENDED OUTLOOK (2-3 WEEKS)</div>
@@ -639,6 +770,13 @@ async function main() {
   }
   if (allConditions.length === 0) { console.log('No weather data. Exiting.'); return; }
 
+  // Forecast snapshot: previous run (for shift detection). Updated at end of this run.
+  const forecastSnapshot = loadSnapshot();
+  const newForecastSnapshot = { version: 1, resorts: {} };
+  for (const cond of allConditions) {
+    newForecastSnapshot.resorts[cond.id] = buildResortSnapshotEntry(cond);
+  }
+
   // Fetch road conditions for CA mountain routes
   console.log('Fetching Caltrans road conditions...');
   const roadConditions = await fetchRoadConditions(['80', '50', '89', '88', '395', '203', '108', '120', '20', '267', '158', '207', '18', '38', '330']);
@@ -660,7 +798,7 @@ async function main() {
       const isRelevant = favIds.length === 0 || favIds.includes(cond.id);
       if (!isRelevant) continue;
 
-      const alert = determineAlertType(cond, dow);
+      const alert = getBestAlertForResort(cond, dow, forecastSnapshot.resorts[cond.id] || null);
       if (alert) {
         resortAlerts.push(cond);
         if (!bestAlert || alert.priority > bestAlert.priority) {
@@ -689,6 +827,7 @@ async function main() {
     await new Promise(r => setTimeout(r, 100));
   }
 
+  saveSnapshot(newForecastSnapshot);
   console.log(`\nDone. Sent ${sentCount} email(s) to ${subscribers.length} subscriber(s).`);
 }
 
