@@ -212,9 +212,8 @@ input{font-family:inherit}
 
 /* ═══ CONTAINER ═══ */
 .container{max-width:520px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
-@media(min-width:768px){.container{max-width:680px;padding:0 24px}}
-@media(min-width:900px){.container{max-width:960px}}
-@media(min-width:1200px){.container{max-width:1320px;padding:0 28px}}
+@media(min-width:768px){.container{max-width:680px}}
+@media(min-width:1024px){.container{max-width:720px}}
 @media(min-width:1024px){
   .bottom-nav{display:none!important}
   body{padding-bottom:0!important}
@@ -773,106 +772,6 @@ html.ready .empty-state{animation:none!important}
 .tab-section{display:none}
 .tab-section.active-tab{display:block}
 
-/* ═══ MULTI-COLUMN LAYOUT (tablet + desktop) ═══
-   Mobile: single column stack (default). Tablet: 2 cols. Desktop: 3 cols. */
-.layout-grid{display:flex;flex-direction:column;gap:24px}
-.layout-col{min-width:0}
-@media(min-width:900px){
-  .layout-col--panel{
-    padding:20px 22px 22px;
-    background:color-mix(in srgb,var(--card) 92%,transparent);
-    border:1px solid var(--border);
-    border-radius:var(--r);
-    box-shadow:0 1px 0 rgba(255,255,255,.05) inset;
-  }
-  [data-theme="dark"] .layout-col--panel{
-    background:color-mix(in srgb,var(--card) 65%,transparent);
-  }
-}
-/* Home */
-@media(min-width:1200px){
-  .home-layout{
-    display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:28px;
-    align-items:start;
-  }
-}
-@media(min-width:900px) and (max-width:1199px){
-  .home-layout{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:24px;
-    align-items:start;
-    grid-template-areas:
-      "hero hero"
-      "weekend rightstack";
-  }
-  .home-layout .home-col--hero{grid-area:hero}
-  .home-layout .home-col--weekend{grid-area:weekend}
-  .home-layout .home-col--right{grid-area:rightstack}
-}
-.home-col--hero .wx-overview{margin-bottom:0}
-.home-intra-divider{height:1px;background:var(--border);margin:22px 0}
-@media(min-width:900px){
-  .home-layout .layout-col--panel > .home-zone:first-child{margin-top:0}
-}
-@media(max-width:899px){
-  .layout-col--panel{padding:0;background:none;border:none;box-shadow:none}
-}
-/* Trip tab */
-.trip-tab-wrap{padding-top:24px}
-.trip-tab-heading{margin-bottom:16px}
-@media(min-width:1200px){
-  .trip-layout{
-    display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:28px;
-    align-items:start;
-  }
-  .trip-col--planner .trip-map-el{height:260px}
-  .trip-col--planner .detail-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
-}
-@media(min-width:900px) and (max-width:1199px){
-  .trip-layout{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:24px;
-    align-items:start;
-    grid-template-areas:
-      "planner planner"
-      "itin pack";
-  }
-  .trip-layout .trip-col--planner{grid-area:planner}
-  .trip-layout .trip-col--itin{grid-area:itin}
-  .trip-layout .trip-col--pack{grid-area:pack}
-}
-.trip-itinerary-scroll{/* page scroll only — avoid nested scroll areas */}
-/* Profile tab */
-@media(min-width:1200px){
-  .profile-layout{
-    display:grid;
-    grid-template-columns:repeat(3,minmax(0,1fr));
-    gap:28px;
-    align-items:start;
-  }
-}
-@media(min-width:900px) and (max-width:1199px){
-  .profile-layout{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:24px;
-    align-items:start;
-    grid-template-areas:
-      "prof prof"
-      "mid alerts";
-  }
-  .profile-layout .profile-col--identity{grid-area:prof}
-  .profile-layout .profile-col--skills{grid-area:mid}
-  .profile-layout .profile-col--alerts{grid-area:alerts}
-}
-.profile-col--alerts .sec-label{margin-top:0}
-
 /* ── FORECAST BAR CHARTS ── */
 .fc-bar-section{margin:20px 0 24px}
 .fc-bar-legend{display:flex;gap:14px;margin-bottom:12px;font-size:10px;color:var(--text2)}
@@ -943,6 +842,9 @@ html.ready .empty-state{animation:none!important}
   .drive-row{grid-template-columns:1fr}
   .rec-score{font-size:28px}
 }
+@media(min-width:768px){
+  .container{max-width:560px}
+}
 </style>
 </head>
 <body>
@@ -981,69 +883,67 @@ html.ready .empty-state{animation:none!important}
 
   <!-- ═══ HOME SECTION ═══ -->
   <section id="home" class="tab-section active-tab">
-    <div class="layout-grid home-layout">
-      <!-- Col 1: Know before you go hero -->
-      <div class="layout-col home-col home-col--hero">
-        <div id="weatherOverview"></div>
+    <!-- 1. APP OVERVIEW -->
+    <div id="weatherOverview"></div>
+
+    <!-- 2. GO THIS WEEKEND — top 3 expanded picks -->
+    <div class="home-zone">
+      <div class="zone-header">
+        <div class="zone-title" id="weekendTitle"></div>
+        <div class="zone-subtitle" id="weekendDateRange"></div>
       </div>
-      <!-- Col 2: This weekend -->
-      <div class="layout-col home-col home-col--weekend layout-col--panel">
-        <div class="home-zone">
-          <div class="zone-header">
-            <div class="zone-title" id="weekendTitle"></div>
-            <div class="zone-subtitle" id="weekendDateRange"></div>
-          </div>
-          <div id="topPicks"></div>
-        </div>
-      </div>
-      <!-- Col 3: Next trip + all resorts -->
-      <div class="layout-col home-col home-col--right layout-col--panel">
-        <div class="home-zone">
-          <div class="zone-header">
-            <div class="zone-title" id="nextTripTitle"></div>
-            <div class="zone-subtitle">Best windows in the next 3 weeks</div>
-          </div>
-          <div id="nextTripContent"></div>
-        </div>
-        <div class="home-intra-divider" aria-hidden="true"></div>
-        <div class="sec-label" data-i18n="all_resorts">All Ikon Pass Resorts</div>
-        <div id="legendWrap"></div>
-        <div id="allResorts"></div>
-        <div id="showMoreWrap"></div>
-      </div>
+      <div id="topPicks"></div>
     </div>
+
+    <div class="sec-divider"></div>
+
+    <!-- 3. PLAN NEXT TRIP — 3-week outlook -->
+    <div class="home-zone">
+      <div class="zone-header">
+        <div class="zone-title" id="nextTripTitle"></div>
+        <div class="zone-subtitle">Best windows in the next 3 weeks</div>
+      </div>
+      <div id="nextTripContent"></div>
+    </div>
+
+    <div class="sec-divider"></div>
+
+    <!-- 4. ALL RESORTS -->
+    <div class="sec-label" data-i18n="all_resorts">All Ikon Pass Resorts</div>
+    <div id="legendWrap"></div>
+    <div id="allResorts"></div>
+    <div id="showMoreWrap"></div>
   </section>
 
   <!-- ═══ TRIP SECTION ═══ -->
   <section id="trip" class="tab-section">
-    <div class="trip-tab-wrap">
-      <div class="sec-label trip-tab-heading" data-i18n="trip_plan">Trip Planner</div>
+    <div style="padding-top:24px">
+      <div class="sec-label" data-i18n="trip_plan">Trip Planner</div>
       <div id="tripContent"></div>
     </div>
   </section>
 
   <!-- ═══ PROFILE SECTION ═══ -->
   <section id="profile" class="tab-section profile-section">
-    <div class="layout-grid profile-layout">
-      <div class="layout-col profile-col profile-col--identity layout-col--panel">
-        <div class="sec-label" data-i18n="my_profile">My Profile</div>
-        <div id="profileSettings"></div>
-      </div>
-      <div class="layout-col profile-col profile-col--skills layout-col--panel">
-        <div class="sec-label" data-i18n="my_level">My Level</div>
-        <div class="level-card" id="levelCard"></div>
-        <div class="sec-label" style="margin-top:20px" data-i18n="my_skills">My Skills</div>
-        <div id="skillSliders"></div>
-        <div class="sec-label" style="margin-top:24px" data-i18n="practice">Training Programs</div>
-        <div id="routineList"></div>
-        <div class="sec-label" style="margin-top:24px" data-i18n="resources">Resources</div>
-        <div id="resourceList"></div>
-      </div>
-      <div class="layout-col profile-col profile-col--alerts layout-col--panel">
-        <div class="sec-label" data-i18n="powder_alerts">Powder Alerts</div>
-        <div id="emailWrap"></div>
-      </div>
-    </div>
+    <div class="sec-label" data-i18n="my_profile">My Profile</div>
+
+    <!-- Location & Email -->
+    <div id="profileSettings"></div>
+
+    <div class="sec-label" style="margin-top:20px" data-i18n="my_level">My Level</div>
+    <div class="level-card" id="levelCard"></div>
+
+    <div class="sec-label" style="margin-top:20px" data-i18n="my_skills">My Skills</div>
+    <div id="skillSliders"></div>
+
+    <div class="sec-label" style="margin-top:24px" data-i18n="practice">Training Programs</div>
+    <div id="routineList"></div>
+
+    <div class="sec-label" style="margin-top:24px" data-i18n="resources">Resources</div>
+    <div id="resourceList"></div>
+
+    <!-- EMAIL SUBSCRIPTION (rendered via JS for icon support) -->
+    <div id="emailWrap" style="margin-top:24px"></div>
   </section>
 
 </div>
@@ -2265,55 +2165,47 @@ function renderTrip(){
   const adjDriveStr=`${adjH}h ${adjM}m`;
   const loadingCls=!hasRoute&&r.region!=='intl'?' class="loading-val"':'';
   document.getElementById('tripContent').innerHTML=`
-    <div class="layout-grid trip-layout">
-      <div class="layout-col trip-col trip-col--planner layout-col--panel">
-        <div class="level-card" style="margin-bottom:20px">
-          <div class="level-label">${icon('mountain',12)} ${t('selected_resort')}</div>
-          <div class="level-name">${r.name}</div>
-          <div class="level-desc">${r.loc} &middot; ${r.elev.toLocaleString()} ft &middot; Ikon: ${r.ikonDays}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:20px">
-          <div style="flex:1">
-            <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">${t('starting_from')}</div>
-            <div style="font-size:13px;color:var(--white);font-weight:600;margin-top:2px">${icon('pin',12)} ${origin.name||userLocation}</div>
-            <div style="font-size:10px;color:var(--accent);margin-top:3px;cursor:pointer" onclick="switchTab('profile');setTimeout(()=>document.getElementById('profileLocation')?.focus(),300)">${icon('edit',10)} ${t('change_location')}</div>
-          </div>
-          <a href="${gmapsUrl}" target="_blank" style="font-size:10px;color:var(--accent);text-decoration:none;display:flex;align-items:center;gap:4px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;white-space:nowrap">${icon('external-link',10)} ${t('view_on_google')}</a>
-        </div>
-        <div class="trip-map-wrap"><div class="trip-map-el" id="trip-map"></div></div>
-        <div class="detail-stats" style="margin:20px 0">
-          <div class="d-stat"><div class="d-stat-label">${icon('star',10)} ${t('score_label')}</div><div class="d-stat-val" style="color:${score>=80?'var(--fresh)':score>=65?'var(--sky)':'var(--warn)'}">${r.status==='CLOSED'?'\u2014':score}</div></div>
-          <div class="d-stat"><div class="d-stat-label">${icon('cloud-snow',10)} ${t('fresh')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getFresh24h(r)}"</a></div></div>
-          <div class="d-stat"><div class="d-stat-label">${icon('mountain',10)} ${t('base')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getBaseDepth(r)}"</a></div></div>
-          <div class="d-stat"><div class="d-stat-label">${icon('pin',10)} ${t('distance')}</div><div class="d-stat-val" id="tripDistVal"><a href="${gmapsUrl}" target="_blank" class="d-stat-link"><span${loadingCls}>${realDist}</span><span style="font-size:11px;color:var(--text2)"> mi</span></a></div></div>
-          <div class="d-stat"><div class="d-stat-label">${icon(ti.flightStr?'plane':'clock',10)} ${ti.flightStr?t('flight'):t('est_drive')}</div><div class="d-stat-val" id="tripDriveVal" style="font-size:${ti.flightStr?'11':'14'}px;line-height:1.3"><a href="${gmapsUrl}" target="_blank" class="d-stat-link"><span${loadingCls}>${ti.flightStr||adjDriveStr}</span></a></div></div>
-          <div class="d-stat"><div class="d-stat-label">${icon('bolt',10)} ${t('lifts')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${r.liftsOpen}/${r.lifts}</a></div></div>
-        </div>
-        <div style="font-size:10px;color:var(--text3);margin:-8px 0 0;display:flex;align-items:flex-start;gap:4px;line-height:1.5">${icon('alert-triangle',10)} ${t('actual_may_vary')} (+${bufferPct}% ${bufferNote}). <a href="${gmapsUrl}" target="_blank" style="color:var(--accent)">${t('view_on_google')}</a></div>
+    <div class="level-card" style="margin-bottom:20px">
+      <div class="level-label">${icon('mountain',12)} ${t('selected_resort')}</div>
+      <div class="level-name">${r.name}</div>
+      <div class="level-desc">${r.loc} &middot; ${r.elev.toLocaleString()} ft &middot; Ikon: ${r.ikonDays}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;padding:12px 14px;background:var(--card);border:1px solid var(--border);border-radius:8px;margin-bottom:20px">
+      <div style="flex:1">
+        <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.5px">${t('starting_from')}</div>
+        <div style="font-size:13px;color:var(--white);font-weight:600;margin-top:2px">${icon('pin',12)} ${origin.name||userLocation}</div>
+        <div style="font-size:10px;color:var(--accent);margin-top:3px;cursor:pointer" onclick="switchTab('profile');setTimeout(()=>document.getElementById('locInput')?.focus(),300)">${icon('edit',10)} ${t('change_location')}</div>
       </div>
-      <div class="layout-col trip-col trip-col--itin layout-col--panel">
-        <div class="sec-label">${icon('calendar',12)} ${t('itinerary')}</div>
-        <div class="trip-itinerary-scroll">
-        ${[['5:30 AM',t('depart_early'),t('depart_desc').replace('{drive}',ti.driveStr).replace('{resort}',r.name)],
-           ['~'+r.open,t('arrive_gear'),t('arrive_desc')],
-           [t('first_lift'),t('summit_fresh'),t('summit_desc')],
-           ['10:30 AM',t('sidecountry'),t('sidecountry_desc')],
-           ['12:00 PM',t('lunch_break'),t('lunch_desc')],
-           ['1:00 PM',t('park_groomers'),t('park_desc')],
-           ['3:30 PM',t('last_runs'),t('last_runs_desc')],
-           [r.close,t('apres_ski'),t('apres_desc')]
-        ].map(([time,title,detail])=>`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)"><div style="font-size:10px;color:var(--accent);min-width:60px;display:flex;align-items:flex-start;gap:4px">${icon('clock',10)} ${time}</div><div><div style="font-size:12px;font-weight:500;color:var(--white)">${title}</div><div style="font-size:11px;color:var(--text2);margin-top:2px">${detail}</div></div></div>`).join('')}
-        </div>
-      </div>
-      <div class="layout-col trip-col trip-col--pack layout-col--panel">
-        <div class="sec-label">${icon('check',12)} ${t('packing')}</div>
-        ${[[t('safety'),t('safety_items')],
-           [t('clothing'),t('clothing_items')],
-           [t('equipment'),t('equipment_items')],
-           [t('misc'),t('misc_items')]
-        ].map(([cat,items])=>`<div style="margin-bottom:12px"><div style="font-size:10px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">${cat}</div><div style="font-size:11px;color:var(--text2);line-height:1.8">${items}</div></div>`).join('')}
-      </div>
-    </div>`;
+      <a href="${gmapsUrl}" target="_blank" style="font-size:10px;color:var(--accent);text-decoration:none;display:flex;align-items:center;gap:4px;padding:6px 10px;border:1px solid var(--border);border-radius:6px;white-space:nowrap">${icon('external-link',10)} ${t('view_on_google')}</a>
+    </div>
+    <div class="trip-map-wrap"><div class="trip-map-el" id="trip-map"></div></div>
+    <div class="detail-stats" style="margin:20px 0">
+      <div class="d-stat"><div class="d-stat-label">${icon('star',10)} ${t('score_label')}</div><div class="d-stat-val" style="color:${score>=80?'var(--fresh)':score>=65?'var(--sky)':'var(--warn)'}">${r.status==='CLOSED'?'\u2014':score}</div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('cloud-snow',10)} ${t('fresh')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getFresh24h(r)}"</a></div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('mountain',10)} ${t('base')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getBaseDepth(r)}"</a></div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('pin',10)} ${t('distance')}</div><div class="d-stat-val" id="tripDistVal"><a href="${gmapsUrl}" target="_blank" class="d-stat-link"><span${loadingCls}>${realDist}</span><span style="font-size:11px;color:var(--text2)"> mi</span></a></div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon(ti.flightStr?'plane':'clock',10)} ${ti.flightStr?t('flight'):t('est_drive')}</div><div class="d-stat-val" id="tripDriveVal" style="font-size:${ti.flightStr?'11':'14'}px;line-height:1.3"><a href="${gmapsUrl}" target="_blank" class="d-stat-link"><span${loadingCls}>${ti.flightStr||adjDriveStr}</span></a></div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon('bolt',10)} ${t('lifts')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${r.liftsOpen}/${r.lifts}</a></div></div>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin:-8px 0 16px;display:flex;align-items:center;gap:4px">${icon('alert-triangle',10)} ${t('actual_may_vary')} (+${bufferPct}% ${bufferNote}). <a href="${gmapsUrl}" target="_blank" style="color:var(--accent)">${t('view_on_google')}</a></div>
+    <div style="height:1px;background:var(--border);margin:24px 0"></div>
+    <div class="sec-label">${icon('calendar',12)} ${t('itinerary')}</div>
+    ${[['5:30 AM',t('depart_early'),t('depart_desc').replace('{drive}',ti.driveStr).replace('{resort}',r.name)],
+       ['~'+r.open,t('arrive_gear'),t('arrive_desc')],
+       [t('first_lift'),t('summit_fresh'),t('summit_desc')],
+       ['10:30 AM',t('sidecountry'),t('sidecountry_desc')],
+       ['12:00 PM',t('lunch_break'),t('lunch_desc')],
+       ['1:00 PM',t('park_groomers'),t('park_desc')],
+       ['3:30 PM',t('last_runs'),t('last_runs_desc')],
+       [r.close,t('apres_ski'),t('apres_desc')]
+    ].map(([time,title,detail])=>`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)"><div style="font-size:10px;color:var(--accent);min-width:60px;display:flex;align-items:flex-start;gap:4px">${icon('clock',10)} ${time}</div><div><div style="font-size:12px;font-weight:500;color:var(--white)">${title}</div><div style="font-size:11px;color:var(--text2);margin-top:2px">${detail}</div></div></div>`).join('')}
+    <div style="height:1px;background:var(--border);margin:28px 0"></div>
+    <div class="sec-label">${icon('check',12)} ${t('packing')}</div>
+    ${[[t('safety'),t('safety_items')],
+       [t('clothing'),t('clothing_items')],
+       [t('equipment'),t('equipment_items')],
+       [t('misc'),t('misc_items')]
+    ].map(([cat,items])=>`<div style="margin-bottom:12px"><div style="font-size:10px;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">${cat}</div><div style="font-size:11px;color:var(--text2);line-height:1.8">${items}</div></div>`).join('')}`;
   // Fetch real driving route and update distance/time after DOM is ready
   if(!routeData&&r.region!=='intl'){
     fetchRoute(origin,{lat:r.lat,lng:r.lng}).then(rd=>{
