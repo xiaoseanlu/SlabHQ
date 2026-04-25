@@ -2,181 +2,181 @@
   "version": 1,
   "resorts": {
     "palisades": {
-      "peakDate": "2026-05-01",
+      "peakDate": "2026-05-02",
       "peakSnow8_16": 0,
       "tot8_16": 0,
       "best3": 0,
-      "peakLabel": "May 1",
-      "planWindowSig": "2026-05-01|0|0"
+      "peakLabel": "May 2",
+      "planWindowSig": "2026-05-02|0|0"
     },
     "mammoth": {
-      "peakDate": "2026-05-07",
-      "peakSnow8_16": 0.2,
-      "tot8_16": 0.2,
-      "best3": 0.2,
-      "peakLabel": "May 7",
-      "planWindowSig": "2026-05-07|0.2|0.2"
+      "peakDate": "2026-05-06",
+      "peakSnow8_16": 0.6,
+      "tot8_16": 0.6,
+      "best3": 0.6,
+      "peakLabel": "May 6",
+      "planWindowSig": "2026-05-06|0.6|0.6"
     },
     "kirkwood": {
-      "peakDate": "2026-05-01",
+      "peakDate": "2026-05-02",
       "peakSnow8_16": 0,
       "tot8_16": 0,
       "best3": 0,
-      "peakLabel": "May 1",
-      "planWindowSig": "2026-05-01|0|0"
+      "peakLabel": "May 2",
+      "planWindowSig": "2026-05-02|0|0"
     },
     "heavenly": {
-      "peakDate": "2026-05-01",
+      "peakDate": "2026-05-02",
       "peakSnow8_16": 0,
       "tot8_16": 0,
       "best3": 0,
-      "peakLabel": "May 1",
-      "planWindowSig": "2026-05-01|0|0"
+      "peakLabel": "May 2",
+      "planWindowSig": "2026-05-02|0|0"
     },
     "northstar": {
-      "peakDate": "2026-05-01",
+      "peakDate": "2026-05-02",
       "peakSnow8_16": 0,
       "tot8_16": 0,
       "best3": 0,
-      "peakLabel": "May 1",
-      "planWindowSig": "2026-05-01|0|0"
+      "peakLabel": "May 2",
+      "planWindowSig": "2026-05-02|0|0"
     },
     "bigbear": {
-      "peakDate": "2026-05-01",
+      "peakDate": "2026-05-02",
       "peakSnow8_16": 0,
       "tot8_16": 0,
       "best3": 0,
-      "peakLabel": "May 1",
-      "planWindowSig": "2026-05-01|0|0"
+      "peakLabel": "May 2",
+      "planWindowSig": "2026-05-02|0|0"
     },
     "mtbachelor": {
-      "peakDate": "2026-05-01",
+      "peakDate": "2026-05-02",
       "peakSnow8_16": 0,
       "tot8_16": 0,
       "best3": 0,
-      "peakLabel": "May 1",
-      "planWindowSig": "2026-05-01|0|0"
+      "peakLabel": "May 2",
+      "planWindowSig": "2026-05-02|0|0"
     },
     "crystalmt": {
-      "peakDate": "2026-05-01",
-      "peakSnow8_16": 0,
-      "tot8_16": 0,
-      "best3": 0,
-      "peakLabel": "May 1",
-      "planWindowSig": "2026-05-01|0|0"
-    },
-    "mthood": {
-      "peakDate": "2026-05-01",
-      "peakSnow8_16": 0,
-      "tot8_16": 0,
-      "best3": 0,
-      "peakLabel": "May 1",
-      "planWindowSig": "2026-05-01|0|0"
-    },
-    "stevens": {
-      "peakDate": "2026-05-01",
-      "peakSnow8_16": 0,
-      "tot8_16": 0,
-      "best3": 0,
-      "peakLabel": "May 1",
-      "planWindowSig": "2026-05-01|0|0"
-    },
-    "snowbird": {
-      "peakDate": "2026-05-04",
-      "peakSnow8_16": 0.2,
-      "tot8_16": 0.2,
-      "best3": 0.2,
-      "peakLabel": "May 4",
-      "planWindowSig": "2026-05-04|0.2|0.2"
-    },
-    "parkcity": {
-      "peakDate": "2026-05-01",
-      "peakSnow8_16": 0,
-      "tot8_16": 0,
-      "best3": 0,
-      "peakLabel": "May 1",
-      "planWindowSig": "2026-05-01|0|0"
-    },
-    "brighton": {
-      "peakDate": "2026-05-01",
-      "peakSnow8_16": 0,
-      "tot8_16": 0,
-      "best3": 0,
-      "peakLabel": "May 1",
-      "planWindowSig": "2026-05-01|0|0"
-    },
-    "jackson": {
-      "peakDate": "2026-05-09",
-      "peakSnow8_16": 0.8,
-      "tot8_16": 0.8,
-      "best3": 0.8,
-      "peakLabel": "May 9",
-      "planWindowSig": "2026-05-09|0.8|0.8"
-    },
-    "sunvalley": {
-      "peakDate": "2026-05-04",
-      "peakSnow8_16": 0.2,
-      "tot8_16": 0.2,
-      "best3": 0.2,
-      "peakLabel": "May 4",
-      "planWindowSig": "2026-05-04|0.2|0.2"
-    },
-    "steamboat": {
-      "peakDate": "2026-05-01",
-      "peakSnow8_16": 0,
-      "tot8_16": 0,
-      "best3": 0,
-      "peakLabel": "May 1",
-      "planWindowSig": "2026-05-01|0|0"
-    },
-    "vail": {
-      "peakDate": "2026-05-05",
-      "peakSnow8_16": 2.9,
-      "tot8_16": 6.4,
-      "best3": 2.9000000000000004,
-      "peakLabel": "May 5",
-      "planWindowSig": "2026-05-05|6.4|2.9"
-    },
-    "aspen": {
-      "peakDate": "2026-05-01",
-      "peakSnow8_16": 0.2,
-      "tot8_16": 0.4,
-      "best3": 0.2,
-      "peakLabel": "May 1",
-      "planWindowSig": "2026-05-01|0.4|0.2"
-    },
-    "telluride": {
-      "peakDate": "2026-05-02",
-      "peakSnow8_16": 2.3,
-      "tot8_16": 4.8,
-      "best3": 3.8,
-      "peakLabel": "May 2",
-      "planWindowSig": "2026-05-02|4.8|3.8"
-    },
-    "revelstoke": {
-      "peakDate": "2026-05-06",
+      "peakDate": "2026-05-10",
       "peakSnow8_16": 0.4,
       "tot8_16": 0.4,
       "best3": 0.4,
-      "peakLabel": "May 6",
-      "planWindowSig": "2026-05-06|0.4|0.4"
+      "peakLabel": "May 10",
+      "planWindowSig": "2026-05-10|0.4|0.4"
     },
-    "whistler": {
-      "peakDate": "2026-05-01",
+    "mthood": {
+      "peakDate": "2026-05-10",
+      "peakSnow8_16": 0.2,
+      "tot8_16": 0.2,
+      "best3": 0.2,
+      "peakLabel": "May 10",
+      "planWindowSig": "2026-05-10|0.2|0.2"
+    },
+    "stevens": {
+      "peakDate": "2026-05-10",
+      "peakSnow8_16": 1.3,
+      "tot8_16": 2.1,
+      "best3": 1.3,
+      "peakLabel": "May 10",
+      "planWindowSig": "2026-05-10|2.1|1.3"
+    },
+    "snowbird": {
+      "peakDate": "2026-05-04",
+      "peakSnow8_16": 1.5,
+      "tot8_16": 2.1,
+      "best3": 2.1,
+      "peakLabel": "May 4",
+      "planWindowSig": "2026-05-04|2.1|2.1"
+    },
+    "parkcity": {
+      "peakDate": "2026-05-04",
+      "peakSnow8_16": 0.4,
+      "tot8_16": 0.4,
+      "best3": 0.4,
+      "peakLabel": "May 4",
+      "planWindowSig": "2026-05-04|0.4|0.4"
+    },
+    "brighton": {
+      "peakDate": "2026-05-04",
+      "peakSnow8_16": 0.4,
+      "tot8_16": 0.4,
+      "best3": 0.4,
+      "peakLabel": "May 4",
+      "planWindowSig": "2026-05-04|0.4|0.4"
+    },
+    "jackson": {
+      "peakDate": "2026-05-04",
+      "peakSnow8_16": 2.2,
+      "tot8_16": 2.5000000000000004,
+      "best3": 2.5000000000000004,
+      "peakLabel": "May 4",
+      "planWindowSig": "2026-05-04|2.5|2.5"
+    },
+    "sunvalley": {
+      "peakDate": "2026-05-02",
       "peakSnow8_16": 0,
       "tot8_16": 0,
       "best3": 0,
-      "peakLabel": "May 1",
-      "planWindowSig": "2026-05-01|0|0"
+      "peakLabel": "May 2",
+      "planWindowSig": "2026-05-02|0|0"
+    },
+    "steamboat": {
+      "peakDate": "2026-05-04",
+      "peakSnow8_16": 0.4,
+      "tot8_16": 0.4,
+      "best3": 0.4,
+      "peakLabel": "May 4",
+      "planWindowSig": "2026-05-04|0.4|0.4"
+    },
+    "vail": {
+      "peakDate": "2026-05-04",
+      "peakSnow8_16": 1.5,
+      "tot8_16": 2.9000000000000004,
+      "best3": 2.3,
+      "peakLabel": "May 4",
+      "planWindowSig": "2026-05-04|2.9|2.3"
+    },
+    "aspen": {
+      "peakDate": "2026-05-06",
+      "peakSnow8_16": 0.1,
+      "tot8_16": 0.2,
+      "best3": 0.2,
+      "peakLabel": "May 6",
+      "planWindowSig": "2026-05-06|0.2|0.2"
+    },
+    "telluride": {
+      "peakDate": "2026-05-04",
+      "peakSnow8_16": 1.8,
+      "tot8_16": 3.8,
+      "best3": 3.1,
+      "peakLabel": "May 4",
+      "planWindowSig": "2026-05-04|3.8|3.1"
+    },
+    "revelstoke": {
+      "peakDate": "2026-05-02",
+      "peakSnow8_16": 0,
+      "tot8_16": 0,
+      "best3": 0,
+      "peakLabel": "May 2",
+      "planWindowSig": "2026-05-02|0|0"
+    },
+    "whistler": {
+      "peakDate": "2026-05-09",
+      "peakSnow8_16": 0.8,
+      "tot8_16": 2.4000000000000004,
+      "best3": 1.6,
+      "peakLabel": "May 9",
+      "planWindowSig": "2026-05-09|2.4|1.6"
     },
     "bigskymt": {
-      "peakDate": "2026-05-04",
-      "peakSnow8_16": 0.8,
-      "tot8_16": 0.8,
-      "best3": 0.8,
-      "peakLabel": "May 4",
-      "planWindowSig": "2026-05-04|0.8|0.8"
+      "peakDate": "2026-05-06",
+      "peakSnow8_16": 1.3,
+      "tot8_16": 3.2,
+      "best3": 1.9000000000000001,
+      "peakLabel": "May 6",
+      "planWindowSig": "2026-05-06|3.2|1.9"
     }
   },
-  "updatedAt": "2026-04-24T15:01:12.425Z"
+  "updatedAt": "2026-04-25T14:35:32.714Z"
 }
