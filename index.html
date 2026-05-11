@@ -1994,19 +1994,50 @@ function scoreResort(r,origin){
 
 function getTravelInfo(origin,r){
   const dist=Math.round(distMiles(origin,{lat:r.lat,lng:r.lng}));
-  // Use road distance factor (~1.3x straight-line) and realistic avg speed (42mph incl mountain roads)
   const roadDist=dist*1.3;
   const hours=roadDist/42;const h=Math.floor(hours);const m=Math.round((hours-h)*60);
   const driveStr=`${h}h ${m}m`;
+
+  // Flight logic:
+  // - International: always fly
+  // - Domestic Canada: always fly
+  // - US: only show flight option when drive would be > 8h (otherwise driving is faster/simpler)
   let flightStr=null;
-  if(r.region==='us'&&dist>400)flightStr='SLC ~1h 40m + drive';
-  if(r.id==='niseko')flightStr='NRT ~10h + 2.5h drive';
-  if(r.id==='revelstoke')flightStr='YLW ~2.5h + 2.5h drive';
-  if(r.id==='chamonix'||r.id==='zermatt')flightStr='GVA ~11h + drive';
-  if(r.id==='vallenevado')flightStr='SCL ~12h + 1.5h drive';
-  if(r.id==='thredbo')flightStr='SYD ~15h + 5h drive';
-  if(r.id==='tremblant')flightStr='YUL ~5h + 1.5h drive';
-  // Determine chain status from live road data when available, fall back to known chain-prone resorts
+
+  // International
+  if(r.id==='niseko'||r.id==='furano')flightStr='NRT ~10h + 2.5h drive';
+  else if(r.id==='lottearai')flightStr='TYO ~10h + 2h drive';
+  else if(r.id==='chamonix'||r.id==='zermatt')flightStr='GVA ~11h + drive';
+  else if(r.id==='grandvalira'||r.id==='ischgl')flightStr='BCN/MUC ~11h + drive';
+  else if(r.id==='vallenevado')flightStr='SCL ~12h + 1.5h drive';
+  else if(r.id==='thredbo'||r.id==='mtbuller')flightStr='SYD ~15h + drive';
+  else if(r.id==='coronetpeak'||r.id==='remarkables')flightStr='ZQN ~12h + 30min drive';
+  else if(r.id==='mthutt')flightStr='CHC ~12h + 2h drive';
+  // Canada
+  else if(r.id==='tremblant'||r.id==='lemassif')flightStr='YUL ~5h + 1.5h drive';
+  else if(r.id==='sunshine'||r.id==='lakelouise'||r.id==='norquay')flightStr='YYC ~2h + 1.5h drive';
+  else if(r.id==='whistler'||r.id==='cypress')flightStr='YVR ~2.5h + 2h drive';
+  else if(r.id==='revelstoke'||r.id==='silverstar'||r.id==='sunpeaks')flightStr='YLW ~2.5h + 2.5h drive';
+  else if(r.id==='panorama')flightStr='YXC ~2.5h + 2h drive';
+  else if(r.id==='redmtn')flightStr='YCG ~2.5h + 40min drive';
+  else if(r.id==='bluemountain')flightStr='YYZ ~1.5h + 2h drive';
+  // US domestic: only suggest flying if drive time > 8 hours
+  else if(hours>8){
+    if(['snowbird','brighton','solitude','deervalley','alta','snowbasin'].includes(r.id))flightStr='SLC ~1.5h + 35min drive';
+    else if(['jacksonhole','jackson'].includes(r.id))flightStr='JAC ~2h direct';
+    else if(r.id==='bigsky'||r.id==='bigskymt')flightStr='BZN ~2h + 1h drive';
+    else if(r.id==='steamboat')flightStr='HDN ~2h + 30min drive';
+    else if(['winterpark','copper','eldora','abasin','aspensnowmass'].includes(r.id))flightStr='DEN ~2.5h + 1.5h drive';
+    else if(r.id==='taos')flightStr='SAF ~2.5h + 2.5h drive';
+    else if(r.id==='sunvalley')flightStr='SUN ~2h direct';
+    else if(['killington','pico'].includes(r.id))flightStr='BTV ~4.5h + 2h drive';
+    else if(r.id==='sugarbush')flightStr='BTV ~4.5h + 1h drive';
+    else if(['stratton','windham'].includes(r.id))flightStr='ALB ~4.5h + 2h drive';
+    else if(r.id==='loon'||r.id==='sundayriver')flightStr='MHT ~4.5h + 2h drive';
+    else if(r.id==='sugarloaf')flightStr='PWM ~4.5h + 2.5h drive';
+    else if(r.id==='tremblant')flightStr='YUL ~5h + 1.5h drive';
+  }
+
   const liveRoads=getRoadStatus(r.id);
   const hasChain=liveRoads&&liveRoads.length>0?liveRoads.some(rc=>rc.status.startsWith('chains')):['palisades','mammoth','june','snowbird','brighton','solitude','alta'].includes(r.id);
   return{dist,driveStr,flightStr,hasChain,driveHours:hours}
@@ -2513,6 +2544,62 @@ function renderResortRow(r, offSeason=false){
   </div>`;
 }
 
+// ── DYNAMIC ITINERARY ──
+// Generates a context-aware itinerary based on drive time and travel mode.
+// Modes: same-day short (<4h), same-day early start (4-8h), overnight drive (>8h), flying.
+function buildItinerary(r, ti) {
+  const flying = !!ti.flightStr;
+  const dh = ti.driveHours;
+
+  if (flying) {
+    return [
+      ['Day 1 — 5:00 AM', 'Depart for Airport', `Head to the airport early. Ski gear bag fees: check airline policy. Book SFO outbound in advance for best fares.`],
+      ['~Midday', 'Arrive + Car/Shuttle', `Land, grab rental or shuttle. Drive ~${ti.flightStr.split('+')[1]?.trim()||'resort area'}. Check in, explore the village.`],
+      ['Afternoon', 'Gear Check & Test Run', `Get your bearings — one easy run to dial in bindings, boots, and base layers before the big day.`],
+      [r.open+' Day 2', 'First Lifts — Full Energy', `No drive fatigue. Hit the mountain the moment lifts open. Best untracked snow of the trip.`],
+      ['10:30 AM', 'Peak Window', `Storm typically settles mid-morning. Hit steeper terrain while conditions are prime.`],
+      ['12:00 PM', 'On-Mountain Lunch', `Refuel fast. Check afternoon snowfall and wind reports.`],
+      ['1:00 PM', 'Afternoon Session', `Softer afternoon snow. Park features, off-piste, or groomed cruisers depending on conditions.`],
+      [r.close, 'Après-Ski', `Rest up for Day 3 or begin the return journey. Book return flight SFO-arrival by evening.`],
+    ];
+  }
+  if (dh > 8) {
+    return [
+      ['Day Before — 4:00 PM', 'Depart the Evening Before', `${Math.round(dh)}h drive — leave by 4 PM to beat commute traffic. Arrive by evening, check in, gear ready.`],
+      ['~9:00 PM', 'Check In & Prep', `Hotel or rental near the mountain. Lay out gear. ${ti.hasChain?'Mount chains if road conditions require.':'Check chain requirements before sleep.'}`],
+      [r.open, 'First Lifts — Full Rest', `No drive fatigue. On the mountain at open. Best powder and shortest lift lines of the day.`],
+      ['10:30 AM', 'Peak Window', `Optimal snow conditions mid-morning. Hit high-consequence terrain while it's most predictable.`],
+      ['12:00 PM', 'Lunch Break', `Refuel on-mountain. Review afternoon forecast before heading back out.`],
+      ['1:00 PM', 'Afternoon Session', `Corn snow or fresh groomers depending on conditions. Park or backcountry access if avalanche risk is low.`],
+      [r.close, 'Après + Rest', `Second ski day optional. Otherwise pack up and plan return drive after a full night's sleep.`],
+      ['Day After — Noon', 'Return Drive', `Depart after a proper breakfast. ${ti.driveStr} back home. Plan for mountain road conditions.`],
+    ];
+  }
+  if (dh > 3.5) {
+    const wakeH = Math.max(3, Math.ceil(6 - dh));
+    return [
+      [`${wakeH}:00 AM`, 'Early Alarm', `${Math.round(dh*10)/10}h drive. Up early — this is the tax for day-tripping a longer resort.`],
+      [`${wakeH+1}:00 AM`, 'Hit the Road', `Depart before sunrise. ${ti.driveStr} to ${r.name}. ${ti.hasChain?'Chains likely required — keep them accessible.':'Check road conditions on Caltrans or state DOT before leaving.'} Pack coffee and snacks.`],
+      ['~'+r.open, 'Arrive & Gear Up', `Park early. Beacon check, boots buckled, pack loaded. Be at the lift queue before doors open.`],
+      ['10:00 AM', 'Peak Window', `Storms typically settle by mid-morning. Best visibility and untracked snow now.`],
+      ['12:00 PM', 'Fuel Up Fast', `Quick on-mountain lunch. You drove far for this — maximize slope time.`],
+      ['1:00 PM', 'Afternoon Session', `Softer snow opens up side-country. Keep an eye on the clock for the return drive.`],
+      [r.close, 'Last Runs, Then Road', `Final laps. Swap boots in the parking lot. ${ti.driveStr} back — expect traffic near city.`],
+    ];
+  }
+  // Short same-day trip
+  return [
+    ['5:30 AM', 'Depart Early', `${ti.driveStr} to ${r.name}. Beat parking and lift-line rush. ${ti.hasChain?'Chains in the trunk.':''}`],
+    ['~'+r.open, 'Arrive & Gear Up', `Park early. Beacon check. Snacks in the pack. First in line.`],
+    ['First Lift', 'Summit — Fresh Lines', `Take the first lift to the top. Best untracked snow of the day.`],
+    ['10:30 AM', 'Side-Country Window', `Storm usually clears by mid-morning. Best visibility window for off-piste.`],
+    ['12:00 PM', 'Lunch Break', `Refuel on-mountain. Check afternoon snow report.`],
+    ['1:00 PM', 'Park or Groomers', `Soft afternoon snow — perfect for park laps or groomed cruisers.`],
+    ['3:30 PM', 'Last Runs', `Hit your favorite lines one more time before close.`],
+    [r.close, 'Après + Drive Home', `${ti.driveStr} back. Arrive home by evening.`],
+  ];
+}
+
 // ── RENDER: TRIP ──
 function renderTrip(){
   // Determine which resort to show:
@@ -2576,21 +2663,13 @@ function renderTrip(){
       <div class="d-stat"><div class="d-stat-label">${icon('cloud-snow',10)} ${t('fresh')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getFresh24h(r)}"</a></div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('mountain',10)} ${t('base')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getBaseDepth(r)}"</a></div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('pin',10)} ${t('distance')}</div><div class="d-stat-val" id="tripDistVal"><a href="${gmapsUrl}" target="_blank" class="d-stat-link"><span${loadingCls}>${realDist}</span><span style="font-size:11px;color:var(--text2)"> mi</span></a></div></div>
-      <div class="d-stat"><div class="d-stat-label">${icon(ti.flightStr?'plane':'clock',10)} ${ti.flightStr?t('flight'):t('est_drive')}</div><div class="d-stat-val" id="tripDriveVal" style="font-size:${ti.flightStr?'11':'14'}px;line-height:1.3"><a href="${gmapsUrl}" target="_blank" class="d-stat-link"><span${loadingCls}>${ti.flightStr||adjDriveStr}</span></a></div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon(ti.flightStr?'plane':'clock',10)} ${ti.flightStr?t('flight'):t('est_drive')}</div><div class="d-stat-val" id="tripDriveVal"><a href="${gmapsUrl}" target="_blank" class="d-stat-link"><span${loadingCls}>${ti.flightStr||adjDriveStr}</span></a></div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('bolt',10)} ${t('lifts')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${r.liftsOpen}/${r.lifts}</a></div></div>
     </div>
     <div style="font-size:10px;color:var(--text3);margin:-8px 0 16px;display:flex;align-items:center;gap:4px">${icon('alert-triangle',10)} ${t('actual_may_vary')} (+${bufferPct}% ${bufferNote}). <a href="${gmapsUrl}" target="_blank" style="color:var(--accent)">${t('view_on_google')}</a></div>
     <div style="height:1px;background:var(--border);margin:24px 0"></div>
-    <div class="sec-label">${icon('calendar',12)} ${t('itinerary')}</div>
-    ${[['5:30 AM',t('depart_early'),t('depart_desc').replace('{drive}',ti.driveStr).replace('{resort}',r.name)],
-       ['~'+r.open,t('arrive_gear'),t('arrive_desc')],
-       [t('first_lift'),t('summit_fresh'),t('summit_desc')],
-       ['10:30 AM',t('sidecountry'),t('sidecountry_desc')],
-       ['12:00 PM',t('lunch_break'),t('lunch_desc')],
-       ['1:00 PM',t('park_groomers'),t('park_desc')],
-       ['3:30 PM',t('last_runs'),t('last_runs_desc')],
-       [r.close,t('apres_ski'),t('apres_desc')]
-    ].map(([time,title,detail])=>`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)"><div style="font-size:10px;color:var(--accent);min-width:60px;display:flex;align-items:flex-start;gap:4px">${icon('clock',10)} ${time}</div><div><div style="font-size:12px;font-weight:500;color:var(--white)">${title}</div><div style="font-size:11px;color:var(--text2);margin-top:2px">${detail}</div></div></div>`).join('')}
+    <div class="sec-label">${icon('calendar',12)} ${ti.flightStr?'Multi-Day Flight Trip Plan':ti.driveHours>8?'Overnight Drive Itinerary':ti.driveHours>3.5?'Same-Day Early Start Plan':'Sample Powder Day Itinerary'}</div>
+    ${buildItinerary(r,ti).map(([time,title,detail])=>`<div style="display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)"><div style="font-size:10px;color:var(--accent);min-width:72px;display:flex;align-items:flex-start;gap:4px">${icon('clock',10)} ${time}</div><div><div style="font-size:12px;font-weight:500;color:var(--white)">${title}</div><div style="font-size:11px;color:var(--text2);margin-top:2px">${detail}</div></div></div>`).join('')}
     <div style="height:1px;background:var(--border);margin:28px 0"></div>
     <div class="sec-label">${icon('check',12)} ${t('packing')}</div>
     ${[[t('safety'),t('safety_items')],

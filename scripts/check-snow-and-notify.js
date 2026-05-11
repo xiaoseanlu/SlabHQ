@@ -84,47 +84,38 @@ function unsubscribeUrl(email) {
 //       Off-season guard in main() supersedes these checks May–Sep.
 const RESORTS = [
   // === CALIFORNIA (Ikon) ===
-  { id: 'mammoth',   name: 'Mammoth Mountain',  lat: 37.6308, lng: -119.0326, status: 'GOOD',    routes: ['395', '203'] },
-  { id: 'palisades', name: 'Palisades Tahoe',   lat: 39.1968, lng: -120.2354, status: 'GOOD',    routes: ['80', '89', '20', '267'] },
-  { id: 'june',      name: 'June Mountain',     lat: 37.7772, lng: -119.0786, status: 'LIMITED', routes: ['395'] },
-  { id: 'bigbear',   name: 'Big Bear Mountain', lat: 34.2369, lng: -116.8600, status: 'CLOSED',  routes: ['18', '38', '330'] },
-  // NOTE: Heavenly, Northstar, Kirkwood are Vail Resorts (Epic Pass) — NOT on Ikon Pass.
+  { id: 'mammoth',   name: 'Mammoth Mountain',  lat: 37.6308, lng: -119.0326, status: 'GOOD',    routes: ['395', '203'], closeMonth: 6, closeDay: 1,  nextSeason: 'Mid-Nov 2026' },
+  { id: 'palisades', name: 'Palisades Tahoe',   lat: 39.1968, lng: -120.2354, status: 'GOOD',    routes: ['80', '89', '20', '267'], closeMonth: 4, closeDay: 20, nextSeason: 'Mid-Nov 2026' },
+  { id: 'june',      name: 'June Mountain',     lat: 37.7772, lng: -119.0786, status: 'LIMITED', routes: ['395'], closeMonth: 4, closeDay: 14, nextSeason: 'Dec 2026' },
+  { id: 'bigbear',   name: 'Big Bear Mountain', lat: 34.2369, lng: -116.8600, status: 'CLOSED',  routes: ['18', '38', '330'], closeMonth: 4, closeDay: 7, nextSeason: 'Nov 2026' },
 
-  // === UTAH / WYOMING (Ikon) ===
-  { id: 'snowbird',  name: 'Snowbird',          lat: 40.5830, lng: -111.6508, status: 'GOOD',    routes: [] },
-  { id: 'alta',      name: 'Alta',              lat: 40.5884, lng: -111.6386, status: 'GOOD',    routes: [] },
-  { id: 'brighton',  name: 'Brighton',          lat: 40.5980, lng: -111.5832, status: 'CLOSED',  routes: [] },
-  { id: 'solitude',  name: 'Solitude Mountain', lat: 40.6203, lng: -111.5919, status: 'CLOSED',  routes: [] },
-  { id: 'deervalley',name: 'Deer Valley',       lat: 40.6374, lng: -111.4780, status: 'LIMITED', routes: [] },
-  { id: 'jackson',   name: 'Jackson Hole',      lat: 43.5877, lng: -110.8279, status: 'LIMITED', routes: [] },
-  // NOTE: Park City and Vail are Epic Pass resorts — NOT on Ikon Pass.
+  { id: 'snowbird',  name: 'Snowbird',          lat: 40.5830, lng: -111.6508, status: 'GOOD',    routes: [], closeMonth: 5, closeDay: 26, nextSeason: 'Mid-Nov 2026' },
+  { id: 'alta',      name: 'Alta',              lat: 40.5884, lng: -111.6386, status: 'GOOD',    routes: [], closeMonth: 4, closeDay: 27, nextSeason: 'Mid-Nov 2026' },
+  { id: 'brighton',  name: 'Brighton',          lat: 40.5980, lng: -111.5832, status: 'CLOSED',  routes: [], closeMonth: 4, closeDay: 6,  nextSeason: 'Mid-Nov 2026' },
+  { id: 'solitude',  name: 'Solitude Mountain', lat: 40.6203, lng: -111.5919, status: 'CLOSED',  routes: [], closeMonth: 4, closeDay: 6,  nextSeason: 'Mid-Nov 2026' },
+  { id: 'deervalley',name: 'Deer Valley',       lat: 40.6374, lng: -111.4780, status: 'LIMITED', routes: [], closeMonth: 4, closeDay: 13, nextSeason: 'Dec 2026' },
+  { id: 'jackson',   name: 'Jackson Hole',      lat: 43.5877, lng: -110.8279, status: 'LIMITED', routes: [], closeMonth: 4, closeDay: 6,  nextSeason: 'Dec 2026' },
 
-  // === COLORADO (Ikon) ===
-  { id: 'steamboat', name: 'Steamboat',         lat: 40.4572, lng: -106.8045, status: 'LIMITED', routes: [] },
-  { id: 'winterpark',name: 'Winter Park',       lat: 39.8841, lng: -105.7625, status: 'GOOD',    routes: [] },
-  { id: 'copper',    name: 'Copper Mountain',   lat: 39.5022, lng: -106.1497, status: 'LIMITED', routes: [] },
-  { id: 'eldora',    name: 'Eldora',            lat: 39.9375, lng: -105.5831, status: 'CLOSED',  routes: [] },
-  { id: 'aspensnowmass', name: 'Aspen Snowmass',lat: 39.2084, lng: -106.9490, status: 'CLOSED',  routes: [] },
-  { id: 'abasin',    name: 'Arapahoe Basin',    lat: 39.6425, lng: -105.8719, status: 'GOOD',    routes: [] },
-  // NOTE: Vail, Breckenridge, Keystone, Telluride are Epic Pass — NOT on Ikon Pass.
+  { id: 'steamboat', name: 'Steamboat',         lat: 40.4572, lng: -106.8045, status: 'LIMITED', routes: [], closeMonth: 4, closeDay: 13, nextSeason: 'Late Nov 2026' },
+  { id: 'winterpark',name: 'Winter Park',       lat: 39.8841, lng: -105.7625, status: 'GOOD',    routes: [], closeMonth: 4, closeDay: 20, nextSeason: 'Mid-Nov 2026' },
+  { id: 'copper',    name: 'Copper Mountain',   lat: 39.5022, lng: -106.1497, status: 'LIMITED', routes: [], closeMonth: 4, closeDay: 13, nextSeason: 'Nov 2026' },
+  { id: 'eldora',    name: 'Eldora',            lat: 39.9375, lng: -105.5831, status: 'CLOSED',  routes: [], closeMonth: 4, closeDay: 6,  nextSeason: 'Nov 2026' },
+  { id: 'aspensnowmass', name: 'Aspen Snowmass',lat: 39.2084, lng: -106.9490, status: 'CLOSED',  routes: [], closeMonth: 4, closeDay: 20, nextSeason: 'Late Nov 2026' },
+  { id: 'abasin',    name: 'Arapahoe Basin',    lat: 39.6425, lng: -105.8719, status: 'GOOD',    routes: [], closeMonth: 6, closeDay: 8,  nextSeason: 'Oct 2026' },
 
-  // === PACIFIC NORTHWEST (Ikon) ===
-  { id: 'crystalmt', name: 'Crystal Mountain',  lat: 46.9282, lng: -121.5045, status: 'GOOD',    routes: [] },
-  { id: 'mtbachelor',name: 'Mt. Bachelor',      lat: 43.9792, lng: -121.6886, status: 'GOOD',    routes: [] },
-  { id: 'mthood',    name: 'Mt. Hood Meadows',  lat: 45.3311, lng: -121.6649, status: 'LIMITED', routes: [] },
-  { id: 'schweitzer',name: 'Schweitzer',        lat: 48.3680, lng: -116.6227, status: 'CLOSED',  routes: [] },
-  // NOTE: Stevens Pass was acquired by Vail Resorts and removed from Ikon Pass.
+  { id: 'crystalmt', name: 'Crystal Mountain',  lat: 46.9282, lng: -121.5045, status: 'GOOD',    routes: [], closeMonth: 4, closeDay: 20, nextSeason: 'Mid-Nov 2026' },
+  { id: 'mtbachelor',name: 'Mt. Bachelor',      lat: 43.9792, lng: -121.6886, status: 'GOOD',    routes: [], closeMonth: 5, closeDay: 25, nextSeason: 'Late Nov 2026' },
+  { id: 'mthood',    name: 'Mt. Hood Meadows',  lat: 45.3311, lng: -121.6649, status: 'LIMITED', routes: [], closeMonth: 4, closeDay: 13, nextSeason: 'Nov 2026' },
+  { id: 'schweitzer',name: 'Schweitzer',        lat: 48.3680, lng: -116.6227, status: 'CLOSED',  routes: [], closeMonth: 4, closeDay: 6,  nextSeason: 'Nov 2026' },
 
-  // === ROCKY MOUNTAIN (Ikon) ===
-  { id: 'bigsky',    name: 'Big Sky',           lat: 45.2833, lng: -111.4014, status: 'LIMITED', routes: [] },
-  { id: 'sunvalley', name: 'Sun Valley',        lat: 43.6975, lng: -114.3514, status: 'CLOSED',  routes: [] },
-  { id: 'revelstoke',name: 'Revelstoke',        lat: 50.9577, lng: -118.1649, status: 'LIMITED', routes: [] },
-  { id: 'taos',      name: 'Taos',              lat: 36.5966, lng: -105.4543, status: 'CLOSED',  routes: [] },
+  { id: 'bigsky',    name: 'Big Sky',           lat: 45.2833, lng: -111.4014, status: 'LIMITED', routes: [], closeMonth: 4, closeDay: 20, nextSeason: 'Late Nov 2026' },
+  { id: 'sunvalley', name: 'Sun Valley',        lat: 43.6975, lng: -114.3514, status: 'CLOSED',  routes: [], closeMonth: 4, closeDay: 13, nextSeason: 'Late Nov 2026' },
+  { id: 'revelstoke',name: 'Revelstoke',        lat: 50.9577, lng: -118.1649, status: 'LIMITED', routes: [], closeMonth: 4, closeDay: 20, nextSeason: 'Nov 2026' },
+  { id: 'taos',      name: 'Taos',              lat: 36.5966, lng: -105.4543, status: 'CLOSED',  routes: [], closeMonth: 4, closeDay: 6,  nextSeason: 'Late Nov 2026' },
 
-  // === CANADA (Ikon) ===
-  { id: 'whistler',  name: 'Whistler Blackcomb',lat: 50.1163, lng: -122.9574, status: 'LIMITED', routes: [] },
-  { id: 'sunshine',  name: 'Banff Sunshine',    lat: 51.1150, lng: -115.7640, status: 'CLOSED',  routes: [] },
-  { id: 'lakelouise',name: 'Lake Louise',       lat: 51.4450, lng: -116.1770, status: 'CLOSED',  routes: [] },
+  { id: 'whistler',  name: 'Whistler Blackcomb',lat: 50.1163, lng: -122.9574, status: 'LIMITED', routes: [], closeMonth: 5, closeDay: 18, nextSeason: 'Nov 2026' },
+  { id: 'sunshine',  name: 'Banff Sunshine',    lat: 51.1150, lng: -115.7640, status: 'CLOSED',  routes: [], closeMonth: 5, closeDay: 18, nextSeason: 'Nov 2026' },
+  { id: 'lakelouise',name: 'Lake Louise',       lat: 51.4450, lng: -116.1770, status: 'CLOSED',  routes: [], closeMonth: 5, closeDay: 4,  nextSeason: 'Nov 2026' },
 ];
 
 // Known origins for drive time estimates
@@ -902,6 +893,133 @@ async function sendEmail(to, subject, html) {
   return true;
 }
 
+// ── SEASON-ENDING ALERT ──
+// Fired during peak season (Feb–May) when a subscriber's favorite resort
+// is closing within the next 7 days. One alert per resort per subscriber.
+// Tracked via forecast snapshot to avoid duplicate sends.
+
+function getResortCloseDate(r) {
+  if (!r.closeMonth) return null;
+  const year = new Date().getFullYear();
+  // If we're past that month this year, it was this season (likely already past)
+  return new Date(year, r.closeMonth - 1, r.closeDay);
+}
+
+// Returns resorts closing within windowDays for a given subscriber's favorites
+function getClosingResorts(favIds, windowDays = 7) {
+  const now = new Date();
+  const results = [];
+  for (const id of favIds) {
+    const resort = RESORTS.find(r => r.id === id);
+    if (!resort) continue;
+    const closeDate = getResortCloseDate(resort);
+    if (!closeDate) continue;
+    const daysUntilClose = Math.round((closeDate - now) / 86400000);
+    // Alert when 1–7 days away and resort is not already closed
+    if (daysUntilClose >= 0 && daysUntilClose <= windowDays && resort.status !== 'CLOSED') {
+      results.push({ resort, closeDate, daysUntilClose });
+    }
+  }
+  return results.sort((a, b) => a.daysUntilClose - b.daysUntilClose);
+}
+
+function buildSeasonEndingEmail(subscriber, closingResorts) {
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const primary = closingResorts[0];
+
+  const closeDateFmt = (d) => d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  const urgencyLine = primary.daysUntilClose === 0
+    ? `<strong style="color:#e04040">Closing TODAY</strong>`
+    : primary.daysUntilClose === 1
+    ? `<strong style="color:#e0960a">Closing TOMORROW</strong>`
+    : `<strong style="color:#e0960a">Closing in ${primary.daysUntilClose} days</strong>`;
+
+  const resortRows = closingResorts.map(({ resort, closeDate, daysUntilClose }) => `
+    <div style="padding:14px 0;border-bottom:1px solid #f0ebe5">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <div style="font-size:15px;font-weight:700;color:#1a1a2e">${resort.name}</div>
+        <div style="font-size:12px;font-weight:600;color:${daysUntilClose <= 2 ? '#e04040' : '#e0960a'};white-space:nowrap">
+          ${daysUntilClose === 0 ? 'Today' : daysUntilClose === 1 ? 'Tomorrow' : daysUntilClose + ' days'}
+        </div>
+      </div>
+      <div style="font-size:12px;color:#7a8fa8;margin-bottom:4px">
+        Closing: <strong style="color:#1a1a2e">${closeDateFmt(closeDate)}</strong>
+      </div>
+      <div style="font-size:12px;color:#7a8fa8">
+        Expected to reopen: <strong style="color:#8b6f47">${resort.nextSeason || 'November 2026'}</strong>
+      </div>
+    </div>`).join('');
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f0eb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <div style="max-width:560px;margin:0 auto;padding:24px 16px">
+
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:24px;font-weight:800;color:#1a1a2e;letter-spacing:-0.5px">Slab<span style="color:#8b6f47">HQ</span></div>
+      <div style="font-size:11px;color:#e0960a;letter-spacing:2px;text-transform:uppercase;margin-top:2px">SEASON ENDING ALERT</div>
+    </div>
+
+    <!-- HERO -->
+    <div style="background:#1a1a2e;border-radius:12px;padding:28px 24px;margin-bottom:16px;color:#fff">
+      <div style="font-size:10px;color:#7a8fa8;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px">${today}</div>
+      <div style="font-size:24px;font-weight:700;line-height:1.2;margin-bottom:10px">
+        Last Chance at ${primary.resort.name}
+      </div>
+      <div style="font-size:13px;color:#d8e6f2;line-height:1.6">
+        ${urgencyLine} — ${closeDateFmt(primary.closeDate)}.
+        ${primary.resort.nextSeason ? `The mountain won't reopen until <strong>${primary.resort.nextSeason}</strong>.` : ''}
+        If you've been waiting for the right weekend, this is it.
+      </div>
+    </div>
+
+    <!-- CLOSING RESORTS -->
+    <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #e5ddd4">
+      <div style="font-size:10px;color:#7a8fa8;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">
+        YOUR TRACKED RESORTS — CLOSING SOON
+      </div>
+      ${resortRows}
+    </div>
+
+    <!-- WHAT TO DO -->
+    <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #e5ddd4">
+      <div style="font-size:10px;color:#7a8fa8;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px">BEFORE THE SEASON ENDS</div>
+      ${[
+        ['Book accommodation now', 'Last-weekend bookings go fast. Check near-mountain options tonight.'],
+        ['Check road conditions', 'Late-season mountain roads can still require chains. Verify before leaving.'],
+        ['Service your gear', 'Spring skiing is hard on bases. Get a tune before the off-season.'],
+        ['Subscribe to early alerts', 'Set up your profile in SlabHQ to get powder alerts the moment next season opens.'],
+      ].map(([title, desc]) => `
+        <div style="display:flex;gap:12px;padding:8px 0;border-bottom:1px solid #f0ebe5">
+          <div style="color:#42c97a;font-size:16px;flex-shrink:0">&#10003;</div>
+          <div><div style="font-size:12px;font-weight:600;color:#1a1a2e">${title}</div>
+          <div style="font-size:11px;color:#7a8fa8;margin-top:2px">${desc}</div></div>
+        </div>`).join('')}
+    </div>
+
+    <div style="text-align:center;margin:24px 0">
+      <a href="${SITE_URL}" style="display:inline-block;background:#8b6f47;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600">
+        Open SlabHQ &rarr;
+      </a>
+    </div>
+
+    <div style="text-align:center;font-size:10px;color:#a09890;line-height:1.8;margin-top:32px;padding-top:16px;border-top:1px solid #e5ddd4">
+      <div>${today} &middot; <a href="${SITE_URL}" style="color:#8b6f47;text-decoration:none">SlabHQ</a> &middot; Know before you go.</div>
+      <div style="margin-top:4px">Tracking: ${subscriber.favorites || 'your favorites'}</div>
+      <div style="margin-top:6px"><a href="${makeUnsubscribeUrl(subscriber.email)}" style="color:#a09890;text-decoration:underline">Unsubscribe</a></div>
+    </div>
+
+  </div>
+</body>
+</html>`;
+}
+
+// Small helper to avoid duplication
+function makeUnsubscribeUrl(email) {
+  return `${WORKER_BASE_URL}/unsubscribe?email=${encodeURIComponent(email)}&token=${makeUnsubToken(email)}`;
+}
+
 // ── MAIN ──
 async function main() {
   console.log('=== SlabHQ Smart Snow Alert ===');
@@ -1053,15 +1171,45 @@ async function main() {
       if (sent) sentCount++;
       console.log(`  ${sub.email}: ${bestAlert.type} — ${bestAlert.subject}`);
     }
-    // Weekly digest on Mondays (opt-in, only if no other alert sent)
-    else if (dow === 1 && prefs.includes('weekly_digest')) {
-      const best = [...allConditions].sort((a, b) => b.score - a.score)[0];
-      const subject = `Weekly Snow Digest: ${best.name} leads with score ${best.score}`;
-      const html = buildWeeklyDigestEmail(sub, allConditions, roadConditions);
-      const sent = await sendEmail(sub.email, subject, html);
-      if (sent) sentCount++;
-    } else {
-      console.log(`  No alert triggered for ${sub.email}`);
+    // Season-ending alert: fires in Feb–May when a favorite resort closes within 7 days
+    // Check after regular alerts so powder days still take priority the same day
+    else {
+      const closingResorts = getClosingResorts(favIds, 7);
+      if (closingResorts.length > 0) {
+        // Avoid resending: check if we already alerted for this resort this week
+        const alreadyAlerted = closingResorts.every(({ resort }) => {
+          const snap = forecastSnapshot.resorts[resort.id];
+          return snap && snap.seasonEndAlertSent && (Date.now() - new Date(snap.seasonEndAlertSent).getTime()) < 5 * 86400000;
+        });
+        if (!alreadyAlerted) {
+          const subject = closingResorts[0].daysUntilClose <= 1
+            ? `Last chance: ${closingResorts[0].resort.name} closes ${closingResorts[0].daysUntilClose === 0 ? 'TODAY' : 'TOMORROW'}`
+            : `Season ending soon: ${closingResorts.map(c => c.resort.name).join(' & ')} close in ${closingResorts[0].daysUntilClose} days`;
+          const html = buildSeasonEndingEmail(sub, closingResorts);
+          const sent = await sendEmail(sub.email, subject, html);
+          if (sent) {
+            sentCount++;
+            // Record that we sent this to prevent re-sends
+            closingResorts.forEach(({ resort }) => {
+              if (!newForecastSnapshot.resorts[resort.id]) newForecastSnapshot.resorts[resort.id] = {};
+              newForecastSnapshot.resorts[resort.id].seasonEndAlertSent = new Date().toISOString();
+            });
+          }
+          console.log(`  ${sub.email}: season_ending — ${subject}`);
+        } else {
+          console.log(`  ${sub.email}: season_ending already sent this week`);
+        }
+      }
+      // Weekly digest on Mondays (opt-in, only if no other alert sent)
+      else if (dow === 1 && prefs.includes('weekly_digest')) {
+        const best = [...allConditions].sort((a, b) => b.score - a.score)[0];
+        const subject = `Weekly Snow Digest: ${best.name} leads with score ${best.score}`;
+        const html = buildWeeklyDigestEmail(sub, allConditions, roadConditions);
+        const sent = await sendEmail(sub.email, subject, html);
+        if (sent) sentCount++;
+      } else {
+        console.log(`  No alert triggered for ${sub.email}`);
+      }
     }
 
     await new Promise(r => setTimeout(r, 100));
