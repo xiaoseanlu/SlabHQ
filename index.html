@@ -27,6 +27,7 @@
 <meta name="twitter:title" content="SlabHQ — Know Before You Go">
 <meta name="twitter:description" content="Real-time snow conditions, personalized resort rankings, and storm tracking for 35+ Ikon Pass resorts.">
 <meta name="twitter:image" content="https://slabhq.fyi/og-image.png">
+<meta name="twitter:image:alt" content="SlabHQ — ski resort rankings with mountain silhouette on navy background">
 <!-- PWA / Mobile -->
 <meta name="theme-color" content="#2a5580">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -47,8 +48,14 @@
   "author": { "@type": "Organization", "name": "SlabHQ" }
 }
 </script>
+<!-- PWA Manifest -->
+<link rel="manifest" href="/manifest.json">
+<!-- Font preload for faster render -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
@@ -89,8 +96,8 @@
   --sky: #6aafc4;
   --sky-soft: rgba(106,175,196,0.1);
   --text: #eee6dc;
-  --text2: #a89c90;
-  --text3: #5a5048;
+  --text2: #bdb3a8; /* was #a89c90 (~3.7:1) → now ~5.4:1 */
+  --text3: #6e6055; /* was #5a5048 (~2.4:1) → now ~3.5:1, decorative only */
   --white: #f5efe8;
   --overlay: rgba(12,11,10,0.7);
 }
@@ -836,16 +843,100 @@ html.ready .empty-state{animation:none!important}
 .yoy-fill{height:100%;border-radius:4px}
 .yoy-val{font-size:11px;font-weight:500;min-width:44px}
 
-/* ═══ RESPONSIVE ═══ */
+/* ═══ OFF-SEASON MODE ═══ */
+.offseason-hero {
+  background: linear-gradient(160deg, #1a1208 0%, #2a1e0a 40%, #1e1508 100%);
+  border: 1px solid rgba(196,149,106,.18);
+  border-radius: var(--r);
+  padding: 28px 20px 20px;
+  margin: 16px 0 24px;
+  position: relative;
+  overflow: hidden;
+  animation: reveal .5s var(--ease-out) .05s both;
+}
+.offseason-hero::before {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0; height: 60px;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 60' preserveAspectRatio='none'%3E%3Cpath d='M0 60V30l80-10 120 6 100-14 80 9 120-12 80 7 120-6 100 9V60z' fill='%23c4956a' opacity='.06'/%3E%3C/svg%3E") no-repeat bottom/100%;
+}
+.offseason-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  background: rgba(196,149,106,.12); border: 1px solid rgba(196,149,106,.25);
+  color: var(--accent); border-radius: 4px; padding: 3px 8px;
+  margin-bottom: 14px;
+}
+.offseason-headline {
+  font-family: var(--font-display);
+  font-size: 26px; color: var(--white); line-height: 1.25;
+  margin-bottom: 10px;
+}
+.offseason-sub {
+  font-size: 12px; color: var(--text2); line-height: 1.75;
+  margin-bottom: 18px;
+}
+
+/* Season Countdown Strip */
+.countdown-strip {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+  margin: 16px 0 12px;
+}
+.countdown-cell {
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(196,149,106,.15);
+  border-radius: var(--r-sm); padding: 12px 10px; text-align: center;
+}
+.countdown-val {
+  font-family: var(--font-display);
+  font-size: 28px; color: var(--accent); line-height: 1;
+}
+.countdown-label { font-size: 10px; color: var(--text2); margin-top: 4px; letter-spacing: .5px; }
+
+/* Top Resorts for Next Season */
+.next-season-card {
+  display: flex; align-items: center; gap: 12px;
+  padding: 12px; background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--r-sm); margin-bottom: 8px;
+  transition: all .15s;
+}
+.next-season-card:hover { border-color: var(--accent); }
+.ns-rank { font-family: var(--font-display); font-size: 22px; color: var(--text3); min-width: 28px; text-align: right; flex-shrink: 0; }
+.ns-info { flex: 1; min-width: 0; }
+.ns-name { font-family: var(--font-display); font-size: 15px; color: var(--white); }
+.ns-meta { font-size: 10px; color: var(--text2); margin-top: 2px; }
+.ns-stats { text-align: right; flex-shrink: 0; }
+.ns-snow { font-size: 13px; font-weight: 600; color: var(--sky); }
+.ns-open { font-size: 10px; color: var(--text3); margin-top: 2px; }
+.offseason-note {
+  font-size: 10px; color: var(--text3);
+  padding: 10px 14px; background: rgba(0,0,0,.2);
+  border-radius: var(--r-sm); margin-top: 12px;
+  line-height: 1.6;
+}
+.offseason-note a { color: var(--accent); }
+
+/* ═══ KEYBOARD / FOCUS-VISIBLE ═══ */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+.nav-item:focus-visible,
+.top-btn:focus-visible,
+.lang-trigger:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* Remove default outline since we handle it via :focus-visible */
+button:focus:not(:focus-visible),
+a:focus:not(:focus-visible) { outline: none; }
+
 @media(max-width:380px){
-  .detail-stats{grid-template-columns:1fr 1fr}
-  .drive-row{grid-template-columns:1fr}
-  .rec-score{font-size:28px}
+  .countdown-strip { grid-template-columns: repeat(3,1fr); }
+  .countdown-val { font-size: 22px; }
 }
-@media(min-width:768px){
-  .container{max-width:560px}
-}
-</style>
+
 </head>
 <body>
 <a href="#home" class="skip-link">Skip to content</a>
@@ -961,12 +1052,12 @@ html.ready .empty-state{animation:none!important}
     <strong>Disclaimer:</strong> SlabHQ is an independent tool and is not affiliated with, endorsed by, or sponsored by Alterra Mountain Company, Ikon Pass, or any resort listed. Resort names and trademarks belong to their respective owners.<br><br>
     Snow forecasts, road conditions, and resort data are provided for informational purposes only and may not reflect real-time conditions. <strong>Always verify conditions directly with the resort and Caltrans before traveling.</strong> SlabHQ is not responsible for inaccurate data, travel delays, road closures, or any decisions made based on information displayed here.<br><br>
     Weather data from <a href="https://open-meteo.com">Open-Meteo</a> (CC BY 4.0). Road data from <a href="https://roads.dot.ca.gov">Caltrans</a>. Operating hours, lift status, and trail counts are sourced from resort websites and may be outdated.<br><br>
-    &copy; <span id="footerYear"></span> SlabHQ. Not for commercial use.
+    &copy; <span id="footerYear">2026</span> SlabHQ. Not for commercial use.
   </div>
 </footer>
 
 <!-- RESORT DETAIL OVERLAY -->
-<div class="detail-overlay" id="detailOverlay" onclick="closeDetail(event)" role="dialog" aria-modal="true" aria-label="Resort details">
+<div class="detail-overlay" id="detailOverlay" onclick="closeDetail(event)" role="dialog" aria-modal="true" aria-labelledby="detailResortName" aria-label="Resort details">
   <div class="detail-sheet" id="detailSheet">
     <div class="sheet-handle"></div>
     <button class="sheet-close" onclick="closeDetail()" aria-label="Close resort detail"></button>
@@ -976,15 +1067,15 @@ html.ready .empty-state{animation:none!important}
 
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav" id="bottomNav" aria-label="Main navigation">
-  <a class="nav-item active" data-tab="home" onclick="switchTab('home')">
+  <a class="nav-item active" data-tab="home" onclick="switchTab('home')" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' '){switchTab('home');event.preventDefault()}" aria-current="page">
     <div class="nav-icon"></div>
     <div class="nav-label" data-i18n="home">Home</div>
   </a>
-  <a class="nav-item" data-tab="trip" onclick="switchTab('trip')">
+  <a class="nav-item" data-tab="trip" onclick="switchTab('trip')" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' '){switchTab('trip');event.preventDefault()}">
     <div class="nav-icon"></div>
     <div class="nav-label" data-i18n="trip">Trip</div>
   </a>
-  <a class="nav-item" data-tab="profile" onclick="switchTab('profile')">
+  <a class="nav-item" data-tab="profile" onclick="switchTab('profile')" tabindex="0" role="button" onkeydown="if(event.key==='Enter'||event.key===' '){switchTab('profile');event.preventDefault()}">
     <div class="nav-icon"></div>
     <div class="nav-label" data-i18n="profile">Profile</div>
   </a>
@@ -1699,6 +1790,167 @@ async function loadRoutesForResorts(resorts) {
   await Promise.allSettled(promises);
 }
 
+// ── OFF-SEASON DETECTION ──
+// May (4) through September (8) = full off-season
+// October (9) = early-season preview mode
+function isOffSeason() {
+  const m = new Date().getMonth(); // 0=Jan … 11=Dec
+  return m >= 4 && m <= 8; // May–Sep
+}
+function isEarlySeason() {
+  return new Date().getMonth() === 9; // October
+}
+
+// Compute days, hours, minutes until a target date
+function daysUntil(targetDate) {
+  const now = new Date();
+  const diff = targetDate - now;
+  if (diff <= 0) return { days: 0, hours: 0, mins: 0 };
+  const days = Math.floor(diff / 86400000);
+  const hours = Math.floor((diff % 86400000) / 3600000);
+  const mins = Math.floor((diff % 3600000) / 60000);
+  return { days, hours, mins };
+}
+
+// ── RENDER: OFF-SEASON HERO ──
+function renderOffSeasonHero() {
+  // Target: Nov 15 of the upcoming season as proxy for first typical openings
+  const now = new Date();
+  const seasonYear = now.getFullYear(); // 2026
+  const openingDay = new Date(seasonYear, 10, 15); // Nov 15
+  if (openingDay < now) openingDay.setFullYear(seasonYear + 1);
+
+  const { days, hours, mins } = daysUntil(openingDay);
+
+  // Top 5 resorts by 5-year average snowfall (historical signal for best next season)
+  const byAvg = [...RESORTS]
+    .filter(r => r.yoy && r.yoy.avg > 0)
+    .sort((a, b) => b.yoy.avg - a.yoy.avg)
+    .slice(0, 5);
+
+  document.getElementById('weatherOverview').innerHTML = `
+    <div class="offseason-hero">
+      <div class="offseason-badge">${icon('snowflake',10)} Off-Season — ${seasonYear}/${seasonYear+1} Planning Mode</div>
+      <div class="offseason-headline">Plan Your Best<br>Season Yet.</div>
+      <div class="offseason-sub">
+        The lifts are quiet, but the powder is coming. Use the off-season to lock in your trip windows, study historical snowfall, and subscribe to early-season alerts.
+      </div>
+
+      <div class="countdown-strip">
+        <div class="countdown-cell">
+          <div class="countdown-val">${days}</div>
+          <div class="countdown-label">Days</div>
+        </div>
+        <div class="countdown-cell">
+          <div class="countdown-val">${hours}</div>
+          <div class="countdown-label">Hours</div>
+        </div>
+        <div class="countdown-cell">
+          <div class="countdown-val">${mins}</div>
+          <div class="countdown-label">Minutes</div>
+        </div>
+      </div>
+      <div style="text-align:center;font-size:10px;color:var(--text3);margin-top:-4px;margin-bottom:16px">Until first typical resort openings (Nov 15, ${seasonYear})</div>
+
+      <div id="dateDisplay" style="display:none"></div>
+      <div id="timeDisplay" style="display:none"></div>
+      <div id="dataBadge" style="display:none"></div>
+
+      <div class="offseason-note">
+        ${icon('info',11)} Live conditions, drive-time routing, and road alerts will re-activate when resorts begin opening in November.
+        ${icon('bell',11)} <a href="#" onclick="switchTab('profile');return false">Subscribe to email alerts</a> for early-season powder days.
+      </div>
+    </div>`;
+}
+
+// ── RENDER: OFF-SEASON TOP PICKS (historical rankings) ──
+function renderTopPicksOffSeason() {
+  const seasonYear = new Date().getFullYear();
+  const byAvg = [...RESORTS]
+    .filter(r => r.yoy && r.yoy.avg > 0)
+    .sort((a, b) => b.yoy.avg - a.yoy.avg)
+    .slice(0, 5);
+
+  const weekendTitle = document.getElementById('weekendTitle');
+  if (weekendTitle) weekendTitle.innerHTML = `${icon('star', 18)} Top Resorts — Historical Snowfall`;
+  const weekendDateRange = document.getElementById('weekendDateRange');
+  if (weekendDateRange) weekendDateRange.textContent = `5-year average · ${seasonYear}/26 season`;
+
+  document.getElementById('topPicks').innerHTML = byAvg.map((r, i) => {
+    const regionTag = r.region === 'ca' ? 'CA' : r.region === 'us' ? 'US' : 'INTL';
+    const tagClass = r.region === 'ca' ? 'cat-ca' : r.region === 'us' ? 'cat-us' : 'cat-intl';
+    return `<div class="next-season-card">
+      <div class="ns-rank">${i + 1}</div>
+      <div class="ns-info">
+        <div class="ns-name">${r.name}</div>
+        <div class="ns-meta">
+          <span class="rec-category ${tagClass}" style="margin-right:4px">${regionTag}</span>
+          ${r.loc} &middot; ${r.elev.toLocaleString()}ft
+        </div>
+      </div>
+      <div class="ns-stats">
+        <div class="ns-snow">${r.yoy.avg}"<span style="font-size:9px;color:var(--text3);font-weight:400"> avg/yr</span></div>
+        <div class="ns-open">Opens ~${r.nextSeason || 'Nov 2026'}</div>
+      </div>
+    </div>`;
+  }).join('') + `<div style="font-size:10px;color:var(--text3);margin-top:8px;display:flex;align-items:center;gap:5px">
+    ${icon('info', 10)} Rankings based on 5-year average seasonal snowfall. Live scoring resumes at season open.
+  </div>`;
+}
+
+// ── RENDER: OFF-SEASON NEXT TRIP (projected opening windows) ──
+function renderNextTripOffSeason() {
+  const seasonYear = new Date().getFullYear();
+  const nextTripTitle = document.getElementById('nextTripTitle');
+  if (nextTripTitle) nextTripTitle.innerHTML = `${icon('calendar', 18)} Projected Opening Windows`;
+  const ntSub = nextTripTitle ? nextTripTitle.parentElement.querySelector('.zone-subtitle') : null;
+  if (ntSub) ntSub.textContent = `${seasonYear}/${String(seasonYear+1).slice(2)} season preview`;
+
+  // Group resorts by projected open month
+  const openGroups = {};
+  RESORTS.forEach(r => {
+    if (!r.nextSeason) return;
+    const key = r.nextSeason.replace(/^\d{4}$/, 'Nov $&'); // normalize bare year
+    if (!openGroups[key]) openGroups[key] = [];
+    openGroups[key].push(r);
+  });
+
+  // Sort by approximate open date
+  const monthOrder = ['Oct', 'Nov', 'Mid-Nov', 'Late Nov', 'Dec', 'Early Dec'];
+  const sorted = Object.entries(openGroups).sort(([a], [b]) => {
+    const ai = monthOrder.findIndex(m => a.startsWith(m) || a.includes(m));
+    const bi = monthOrder.findIndex(m => b.startsWith(m) || b.includes(m));
+    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+  });
+
+  document.getElementById('nextTripContent').innerHTML = sorted.map(([label, resorts]) => {
+    const topResorts = resorts.sort((a, b) => (b.yoy?.avg || 0) - (a.yoy?.avg || 0)).slice(0, 3);
+    return `<div class="outlook-row">
+      <div class="outlook-header">
+        <div class="outlook-title"><span class="outlook-week">${label}</span> — Est. Opening Window</div>
+        <div class="outlook-trend" style="color:var(--fresh)">${icon('snowflake', 10)} ${resorts.length} resort${resorts.length > 1 ? 's' : ''}</div>
+      </div>
+      <div class="outlook-detail" style="color:var(--text3);font-size:10px">Based on historical opening averages — subject to snowpack conditions</div>
+      ${topResorts.map(r => {
+        const regionTag = r.region === 'ca' ? 'CA' : r.region === 'us' ? 'US' : 'INTL';
+        const tagClass = r.region === 'ca' ? 'cat-ca' : r.region === 'us' ? 'cat-us' : 'cat-intl';
+        return `<div class="outlook-resort-row">
+          <span class="outlook-region-tag ${tagClass}">${regionTag}</span>
+          <div style="flex:1;min-width:0">
+            <a href="${r.links.official}" target="_blank" class="outlook-resort-name">${r.name}</a>
+            <div class="outlook-resort-meta">${r.loc}</div>
+          </div>
+          <div class="outlook-resort-stats">
+            <div style="color:var(--sky)">${r.yoy?.avg || '—'}"<span style="font-size:9px;color:var(--text3);font-weight:400"> avg</span></div>
+            <div style="font-size:10px;color:var(--text3)">${r.elev.toLocaleString()}ft</div>
+          </div>
+        </div>`;
+      }).join('')}
+      ${resorts.length > 3 ? `<div style="font-size:10px;color:var(--text3);padding:6px 0">+${resorts.length - 3} more resorts in this window</div>` : ''}
+    </div>`;
+  }).join('') + `<div class="wx-source" style="margin-top:6px">${icon('external-link', 10)} Historical data via <a href="https://open-meteo.com" target="_blank">Open-Meteo Historical API</a> &middot; Opening dates estimated from past 5 seasons</div>`;
+}
+
 // ── SCORING (Fixed granular travel score) ──
 function scoreResort(r,origin){
   if(r.status==='CLOSED')return 0;
@@ -1847,8 +2099,9 @@ function switchTab(tab){
   currentTab=tab;
   document.querySelectorAll('.tab-section').forEach(s=>s.classList.remove('active-tab'));
   document.getElementById(tab).classList.add('active-tab');
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.querySelector(`.nav-item[data-tab="${tab}"]`)?.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{n.classList.remove('active');n.removeAttribute('aria-current');});
+  const activeNav=document.querySelector(`.nav-item[data-tab="${tab}"]`);
+  if(activeNav){activeNav.classList.add('active');activeNav.setAttribute('aria-current','page');}
   // Update desktop nav
   document.querySelectorAll('.top-desktop-nav button').forEach(b=>b.classList.remove('active'));
   document.querySelector(`.top-desktop-nav button[data-dtab="${tab}"]`)?.classList.add('active');
@@ -1860,6 +2113,7 @@ function switchTab(tab){
 
 // ── RENDER: WEATHER OVERVIEW ──
 function renderWeatherOverview(){
+  if(isOffSeason()||isEarlySeason()){renderOffSeasonHero();return;}
   document.getElementById('weatherOverview').innerHTML=`
     <div class="wx-overview">
       <div style="text-align:center;margin-bottom:14px">
@@ -1894,6 +2148,7 @@ function renderWeatherOverview(){
 
 // ── RENDER: NEXT TRIP (3-week outlook with 3 resorts per week) ──
 function renderNextTrip(){
+  if(isOffSeason()||isEarlySeason()){renderNextTripOffSeason();return;}
   const now=new Date();
   const origin=getOrigin(userLocation);
   document.getElementById('nextTripTitle').innerHTML=`${icon('calendar',18)} ${t('plan_next')}`;
@@ -1993,6 +2248,7 @@ function scrollToResort(id){
 
 // ── RENDER: TOP 3 (expanded by default, with storm context, clickable stats) ──
 function renderTopPicks(){
+  if(isOffSeason()||isEarlySeason()){renderTopPicksOffSeason();return;}
   const origin=getOrigin(userLocation);
   const scored=RESORTS.filter(r=>r.status!=='CLOSED').map(r=>({...r,score:scoreResort(r,origin),travel:getTravelInfo(origin,r)}));
   const caTop=scored.filter(r=>r.region==='ca').sort((a,b)=>b.score-a.score)[0];
@@ -3113,6 +3369,22 @@ renderAll(); // Stage 1: render immediately with hardcoded data
 // when sections re-render with live weather data (prevents landing flicker).
 requestAnimationFrame(()=>document.documentElement.classList.add('ready'));
 setInterval(tick,1000);
+// Off-season: refresh countdown every minute
+if(isOffSeason()||isEarlySeason()){
+  setInterval(()=>{
+    const hero=document.querySelector('.offseason-hero');
+    if(!hero)return;
+    const now=new Date();
+    const seasonYear=now.getFullYear();
+    const openingDay=new Date(seasonYear,10,15);
+    if(openingDay<now)openingDay.setFullYear(seasonYear+1);
+    const {days,hours,mins}=daysUntil(openingDay);
+    const cells=hero.querySelectorAll('.countdown-val');
+    if(cells[0])cells[0].textContent=days;
+    if(cells[1])cells[1].textContent=hours;
+    if(cells[2])cells[2].textContent=mins;
+  },60000);
+}
 
 // Live location: lat/lng of user's current GPS position (updated continuously while app is open)
 // Separate from userLocation/geocodedOrigin which represent the saved home/profile location
@@ -3173,6 +3445,11 @@ if(navigator.geolocation){
 
 // Stage 2 & 3: fetch real weather data in background, then update UI
 (async function initWeatherAndRoutes(){
+  // Off-season: skip live API calls — resorts are closed, data is meaningless
+  if(isOffSeason()||isEarlySeason()){
+    console.log('[SlabHQ] Off-season mode — skipping weather/route API calls');
+    return;
+  }
   const origin=getOrigin(userLocation);
   const allOpen=RESORTS.filter(r=>r.status!=='CLOSED')
     .map(r=>({...r,score:scoreResort(r,origin)}))

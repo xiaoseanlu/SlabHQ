@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0a1628;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#12253e;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1a3050;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="mtnGrad" x1="600" y1="120" x2="600" y2="520" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" style="stop-color:#5a9cc4;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2a5580;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="accentLine" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#c4956a;stop-opacity:0" />
+      <stop offset="30%" style="stop-color:#c4956a;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#c4956a;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#c4956a;stop-opacity:0" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGrad)" />
+
+  <!-- Subtle noise texture overlay -->
+  <rect width="1200" height="630" fill="none" opacity="0.03"
+    style="filter:url(#noise)" />
+
+  <!-- Mountain silhouette (large, background) -->
+  <path d="M0 630 L200 630 L300 430 L380 380 L440 320 L520 240 L600 120 L680 240 L760 300 L840 360 L920 400 L1000 450 L1200 630 Z"
+    fill="url(#mtnGrad)" opacity="0.18" />
+
+  <!-- Mountain silhouette (mid) -->
+  <path d="M100 630 L250 630 L380 480 L500 400 L600 280 L700 380 L820 450 L950 500 L1100 630 Z"
+    fill="#2a5580" opacity="0.22" />
+
+  <!-- Snow line terrain at bottom -->
+  <path d="M0 630 V540 L80 528 L160 535 L260 520 L360 530 L460 518 L560 525 L660 515 L760 522 L860 510 L960 520 L1060 508 L1160 518 L1200 512 V630 Z"
+    fill="#e8f4ff" opacity="0.06" />
+
+  <!-- Snowflake particle constellation (decorative) -->
+  <g opacity="0.12" fill="#8ec5e8">
+    <circle cx="80" cy="80" r="2" />
+    <circle cx="140" cy="55" r="1.5" />
+    <circle cx="200" cy="100" r="2" />
+    <circle cx="160" cy="140" r="1" />
+    <circle cx="1060" cy="70" r="2" />
+    <circle cx="1100" cy="120" r="1.5" />
+    <circle cx="1020" cy="50" r="1" />
+    <circle cx="1140" cy="90" r="2" />
+  </g>
+
+  <!-- Accent bar (top) -->
+  <rect x="0" y="0" width="1200" height="3" fill="url(#accentLine)" opacity="0.7" />
+
+  <!-- Logo group -->
+  <!-- Mountain icon -->
+  <g transform="translate(80, 72)">
+    <path d="M32 4L60 52H4z" fill="url(#mtnGrad)" opacity="0.9" />
+    <path d="M32 4l14 26-7-3.5L32 32l-7-6-7 3.5z" fill="#fff" opacity="0.35" />
+    <path d="M10 52l8-14 7 7 7-12 7 9 7-5 10 15z" fill="#e8f4ff" opacity="0.7" />
+  </g>
+
+  <!-- "SlabHQ" wordmark -->
+  <text x="152" y="108" font-family="Georgia, serif" font-size="72" font-weight="normal"
+    fill="#f0e8df" letter-spacing="-1" opacity="0.95">Slab<tspan fill="#c4956a">HQ</tspan></text>
+
+  <!-- Tagline -->
+  <text x="82" y="145" font-family="'Courier New', monospace" font-size="18"
+    fill="#8ec5e8" letter-spacing="3" opacity="0.8">KNOW BEFORE YOU GO</text>
+
+  <!-- Divider -->
+  <rect x="82" y="170" width="400" height="1" fill="#c4956a" opacity="0.35" />
+
+  <!-- Feature pills row -->
+  <g transform="translate(82, 195)">
+    <!-- Pill 1 -->
+    <rect x="0" y="0" width="190" height="36" rx="18" fill="#1e3450" stroke="#6aafc4" stroke-width="0.8" opacity="0.9" />
+    <text x="20" y="23" font-family="'Courier New', monospace" font-size="14" fill="#8ec5e8" opacity="0.9">❄  Live Snow Forecasts</text>
+
+    <!-- Pill 2 -->
+    <rect x="206" y="0" width="200" height="36" rx="18" fill="#1e3450" stroke="#c4956a" stroke-width="0.8" opacity="0.9" />
+    <text x="226" y="23" font-family="'Courier New', monospace" font-size="14" fill="#c4956a" opacity="0.9">★  Resort Rankings</text>
+
+    <!-- Pill 3 -->
+    <rect x="422" y="0" width="220" height="36" rx="18" fill="#1e3450" stroke="#6abf7b" stroke-width="0.8" opacity="0.9" />
+    <text x="442" y="23" font-family="'Courier New', monospace" font-size="14" fill="#6abf7b" opacity="0.9">⚑  Road Conditions</text>
+  </g>
+
+  <!-- "50+ Ikon Pass Resorts" big stat -->
+  <g transform="translate(82, 290)">
+    <text font-family="Georgia, serif" font-size="96" font-weight="normal" fill="#fff" opacity="0.08">50+</text>
+  </g>
+
+  <!-- Right side: resort score cards (decorative) -->
+  <g transform="translate(750, 200)" opacity="0.85">
+    <!-- Card 1 -->
+    <rect x="0" y="0" width="360" height="90" rx="12" fill="#1a2d45" stroke="#6aafc4" stroke-width="0.8" />
+    <text x="20" y="28" font-family="Georgia, serif" font-size="36" fill="#f0e8df" opacity="0.9">92</text>
+    <text x="72" y="22" font-family="'Courier New', monospace" font-size="16" fill="#f0e8df" opacity="0.8">Mammoth Mountain</text>
+    <text x="72" y="42" font-family="'Courier New', monospace" font-size="12" fill="#8ec5e8" opacity="0.7">Mammoth Lakes, CA</text>
+    <rect x="72" y="54" width="60" height="20" rx="4" fill="rgba(106,191,123,0.15)" stroke="rgba(106,191,123,0.3)" stroke-width="0.8" />
+    <text x="82" y="68" font-family="'Courier New', monospace" font-size="10" fill="#6abf7b">EPIC</text>
+    <text x="280" y="50" font-family="'Courier New', monospace" font-size="22" fill="#6aafc4" text-anchor="middle">8"</text>
+    <text x="280" y="66" font-family="'Courier New', monospace" font-size="10" fill="#5a7090" text-anchor="middle">fresh</text>
+
+    <!-- Card 2 -->
+    <rect x="0" y="106" width="360" height="90" rx="12" fill="#1a2d45" stroke="#c4956a" stroke-width="0.8" />
+    <text x="20" y="134" font-family="Georgia, serif" font-size="36" fill="#f0e8df" opacity="0.9">87</text>
+    <text x="72" y="128" font-family="'Courier New', monospace" font-size="16" fill="#f0e8df" opacity="0.8">Snowbird</text>
+    <text x="72" y="148" font-family="'Courier New', monospace" font-size="12" fill="#8ec5e8" opacity="0.7">Little Cottonwood, UT</text>
+    <rect x="72" y="160" width="50" height="20" rx="4" fill="rgba(196,149,106,0.15)" stroke="rgba(196,149,106,0.3)" stroke-width="0.8" />
+    <text x="82" y="174" font-family="'Courier New', monospace" font-size="10" fill="#c4956a">PRIME</text>
+    <text x="280" y="156" font-family="'Courier New', monospace" font-size="22" fill="#6aafc4" text-anchor="middle">6"</text>
+    <text x="280" y="172" font-family="'Courier New', monospace" font-size="10" fill="#5a7090" text-anchor="middle">fresh</text>
+
+    <!-- Card 3 -->
+    <rect x="0" y="212" width="360" height="90" rx="12" fill="#1a2d45" stroke="#33302c" stroke-width="0.8" />
+    <text x="20" y="240" font-family="Georgia, serif" font-size="36" fill="#f0e8df" opacity="0.7">81</text>
+    <text x="72" y="234" font-family="'Courier New', monospace" font-size="16" fill="#f0e8df" opacity="0.7">Alta</text>
+    <text x="72" y="254" font-family="'Courier New', monospace" font-size="12" fill="#8ec5e8" opacity="0.6">Little Cottonwood, UT</text>
+    <rect x="72" y="266" width="60" height="20" rx="4" fill="rgba(106,175,196,0.12)" stroke="rgba(106,175,196,0.25)" stroke-width="0.8" />
+    <text x="82" y="280" font-family="'Courier New', monospace" font-size="10" fill="#6aafc4">GOOD</text>
+    <text x="280" y="262" font-family="'Courier New', monospace" font-size="22" fill="#6aafc4" text-anchor="middle">4"</text>
+    <text x="280" y="278" font-family="'Courier New', monospace" font-size="10" fill="#5a7090" text-anchor="middle">fresh</text>
+  </g>
+
+  <!-- Bottom bar -->
+  <rect x="0" y="590" width="1200" height="40" fill="#06101c" opacity="0.5" />
+  <text x="82" y="614" font-family="'Courier New', monospace" font-size="14" fill="#5a7090">slabhq.fyi</text>
+  <text x="1118" y="614" font-family="'Courier New', monospace" font-size="14" fill="#5a7090" text-anchor="end">Powered by Open-Meteo · Valhalla · Caltrans</text>
+</svg>

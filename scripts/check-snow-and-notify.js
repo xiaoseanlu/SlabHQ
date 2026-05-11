@@ -10,6 +10,12 @@
  *      truly exceptional (e.g. 10"+) or you're already in the 2-day prep window.
  *   4) As storms get closer, other alerts (weekend, mega) still break through.
  *
+ * SEASONAL BEHAVIOUR:
+ *   May–Sep (off-season):  No live condition alerts. Send a monthly "Season Preview"
+ *                          digest on the first Monday of each month to keep subscribers warm.
+ *   October (early season): Resume early-opening resort alerts; suppress road conditions.
+ *   November–April (peak): Full alert stack (planning, powder, mega, weekend, bluebird).
+ *
  * PRIORITY (highest first, single winner per resort then best across favorites):
  *   100  Planning window (days 7–16 — book / hold dates, note uncertainty)
  *    98  Forecast update (model shifted vs last run in snapshot)
@@ -37,6 +43,33 @@ const SITE_URL = 'https://slabhq.fyi/';
 const WORKER_BASE_URL = process.env.WORKER_URL || 'https://slabhq-subscribe.xiaoseanlu.workers.dev';
 const SUBSCRIBERS_SECRET = process.env.SUBSCRIBERS_TOKEN || '';
 
+// ── SEASON DETECTION ──
+// Month indices: 0=Jan … 11=Dec
+// Off-season: May(4)–Sep(8). Early season: Oct(9). Peak: Nov(10)–Apr(3).
+function getSeasonPhase() {
+  // Allow manual override via environment variable (for testing)
+  const forced = (process.env.FORCE_SEASON || '').toLowerCase().trim();
+  if (forced === 'peak' || forced === 'early' || forced === 'off') {
+    console.log(`[FORCE_SEASON] Season phase overridden to: ${forced}`);
+    return forced;
+  }
+  const m = new Date().getMonth();
+  if (m >= 4 && m <= 8) return 'off';      // May–Sep
+  if (m === 9)          return 'early';    // October
+  return 'peak';                           // Nov–Apr
+}
+
+function isFirstMondayOfMonth() {
+  const now = new Date();
+  return now.getDay() === 1 && now.getDate() <= 7;
+}
+
+// Days until a target date
+function daysUntil(targetDate) {
+  const diff = targetDate - new Date();
+  return diff > 0 ? Math.floor(diff / 86400000) : 0;
+}
+
 function makeUnsubToken(email) {
   return crypto.createHmac('sha256', SUBSCRIBERS_SECRET).update(email.toLowerCase()).digest('hex').slice(0, 32);
 }
@@ -44,30 +77,54 @@ function unsubscribeUrl(email) {
   return `${WORKER_BASE_URL}/unsubscribe?email=${encodeURIComponent(email)}&token=${makeUnsubToken(email)}`;
 }
 
-// Resort data (matching index.html RESORTS)
+// Resort data — Ikon Pass resorts only, kept in sync with index.html RESORTS.
+// Status reflects current season state: 'OPEN' | 'LIMITED' | 'CLOSED'
+// Routes only populated for CA resorts (Caltrans coverage only).
+// NOTE: Statuses here are used to gate alert fetches during peak season.
+//       Off-season guard in main() supersedes these checks May–Sep.
 const RESORTS = [
-  { id: 'palisades', name: 'Palisades Tahoe', lat: 39.1968, lng: -120.2354, status: 'GOOD', routes: ['80', '89', '20', '267'] },
-  { id: 'mammoth', name: 'Mammoth Mountain', lat: 37.6308, lng: -119.0326, status: 'GOOD', routes: ['395', '203', '120'] },
-  { id: 'kirkwood', name: 'Kirkwood', lat: 38.6850, lng: -120.0654, status: 'GOOD', routes: ['88', '50'] },
-  { id: 'heavenly', name: 'Heavenly', lat: 38.9353, lng: -119.9400, status: 'GOOD', routes: ['50', '89', '207'] },
-  { id: 'northstar', name: 'Northstar', lat: 39.2746, lng: -120.1210, status: 'GOOD', routes: ['80', '89', '267', '20'] },
-  { id: 'bigbear', name: 'Big Bear', lat: 34.2369, lng: -116.8600, status: 'LIMITED', routes: ['18', '38', '330'] },
-  { id: 'mtbachelor', name: 'Mt. Bachelor', lat: 43.9792, lng: -121.6886, status: 'GOOD', routes: [] },
-  { id: 'crystalmt', name: 'Crystal Mountain', lat: 46.9282, lng: -121.5045, status: 'GOOD', routes: [] },
-  { id: 'mthood', name: 'Mt. Hood Meadows', lat: 45.3311, lng: -121.6649, status: 'GOOD', routes: [] },
-  { id: 'stevens', name: 'Stevens Pass', lat: 47.7448, lng: -121.0890, status: 'GOOD', routes: [] },
-  { id: 'snowbird', name: 'Snowbird', lat: 40.5830, lng: -111.6508, status: 'GOOD', routes: [] },
-  { id: 'parkcity', name: 'Park City', lat: 40.6514, lng: -111.5080, status: 'LIMITED', routes: [] },
-  { id: 'brighton', name: 'Brighton', lat: 40.5980, lng: -111.5832, status: 'GOOD', routes: [] },
-  { id: 'jackson', name: 'Jackson Hole', lat: 43.5877, lng: -110.8279, status: 'GOOD', routes: [] },
-  { id: 'sunvalley', name: 'Sun Valley', lat: 43.6975, lng: -114.3514, status: 'LIMITED', routes: [] },
-  { id: 'steamboat', name: 'Steamboat', lat: 40.4572, lng: -106.8045, status: 'LIMITED', routes: [] },
-  { id: 'vail', name: 'Vail', lat: 39.6061, lng: -106.3550, status: 'LIMITED', routes: [] },
-  { id: 'aspen', name: 'Aspen Snowmass', lat: 39.2084, lng: -106.9490, status: 'LIMITED', routes: [] },
-  { id: 'telluride', name: 'Telluride', lat: 37.9375, lng: -107.8123, status: 'LIMITED', routes: [] },
-  { id: 'revelstoke', name: 'Revelstoke', lat: 51.0045, lng: -118.1610, status: 'GOOD', routes: [] },
-  { id: 'whistler', name: 'Whistler Blackcomb', lat: 50.1163, lng: -122.9574, status: 'GOOD', routes: [] },
-  { id: 'bigskymt', name: 'Big Sky', lat: 45.2833, lng: -111.4014, status: 'LIMITED', routes: [] },
+  // === CALIFORNIA (Ikon) ===
+  { id: 'mammoth',   name: 'Mammoth Mountain',  lat: 37.6308, lng: -119.0326, status: 'GOOD',    routes: ['395', '203'] },
+  { id: 'palisades', name: 'Palisades Tahoe',   lat: 39.1968, lng: -120.2354, status: 'GOOD',    routes: ['80', '89', '20', '267'] },
+  { id: 'june',      name: 'June Mountain',     lat: 37.7772, lng: -119.0786, status: 'LIMITED', routes: ['395'] },
+  { id: 'bigbear',   name: 'Big Bear Mountain', lat: 34.2369, lng: -116.8600, status: 'CLOSED',  routes: ['18', '38', '330'] },
+  // NOTE: Heavenly, Northstar, Kirkwood are Vail Resorts (Epic Pass) — NOT on Ikon Pass.
+
+  // === UTAH / WYOMING (Ikon) ===
+  { id: 'snowbird',  name: 'Snowbird',          lat: 40.5830, lng: -111.6508, status: 'GOOD',    routes: [] },
+  { id: 'alta',      name: 'Alta',              lat: 40.5884, lng: -111.6386, status: 'GOOD',    routes: [] },
+  { id: 'brighton',  name: 'Brighton',          lat: 40.5980, lng: -111.5832, status: 'CLOSED',  routes: [] },
+  { id: 'solitude',  name: 'Solitude Mountain', lat: 40.6203, lng: -111.5919, status: 'CLOSED',  routes: [] },
+  { id: 'deervalley',name: 'Deer Valley',       lat: 40.6374, lng: -111.4780, status: 'LIMITED', routes: [] },
+  { id: 'jackson',   name: 'Jackson Hole',      lat: 43.5877, lng: -110.8279, status: 'LIMITED', routes: [] },
+  // NOTE: Park City and Vail are Epic Pass resorts — NOT on Ikon Pass.
+
+  // === COLORADO (Ikon) ===
+  { id: 'steamboat', name: 'Steamboat',         lat: 40.4572, lng: -106.8045, status: 'LIMITED', routes: [] },
+  { id: 'winterpark',name: 'Winter Park',       lat: 39.8841, lng: -105.7625, status: 'GOOD',    routes: [] },
+  { id: 'copper',    name: 'Copper Mountain',   lat: 39.5022, lng: -106.1497, status: 'LIMITED', routes: [] },
+  { id: 'eldora',    name: 'Eldora',            lat: 39.9375, lng: -105.5831, status: 'CLOSED',  routes: [] },
+  { id: 'aspensnowmass', name: 'Aspen Snowmass',lat: 39.2084, lng: -106.9490, status: 'CLOSED',  routes: [] },
+  { id: 'abasin',    name: 'Arapahoe Basin',    lat: 39.6425, lng: -105.8719, status: 'GOOD',    routes: [] },
+  // NOTE: Vail, Breckenridge, Keystone, Telluride are Epic Pass — NOT on Ikon Pass.
+
+  // === PACIFIC NORTHWEST (Ikon) ===
+  { id: 'crystalmt', name: 'Crystal Mountain',  lat: 46.9282, lng: -121.5045, status: 'GOOD',    routes: [] },
+  { id: 'mtbachelor',name: 'Mt. Bachelor',      lat: 43.9792, lng: -121.6886, status: 'GOOD',    routes: [] },
+  { id: 'mthood',    name: 'Mt. Hood Meadows',  lat: 45.3311, lng: -121.6649, status: 'LIMITED', routes: [] },
+  { id: 'schweitzer',name: 'Schweitzer',        lat: 48.3680, lng: -116.6227, status: 'CLOSED',  routes: [] },
+  // NOTE: Stevens Pass was acquired by Vail Resorts and removed from Ikon Pass.
+
+  // === ROCKY MOUNTAIN (Ikon) ===
+  { id: 'bigsky',    name: 'Big Sky',           lat: 45.2833, lng: -111.4014, status: 'LIMITED', routes: [] },
+  { id: 'sunvalley', name: 'Sun Valley',        lat: 43.6975, lng: -114.3514, status: 'CLOSED',  routes: [] },
+  { id: 'revelstoke',name: 'Revelstoke',        lat: 50.9577, lng: -118.1649, status: 'LIMITED', routes: [] },
+  { id: 'taos',      name: 'Taos',              lat: 36.5966, lng: -105.4543, status: 'CLOSED',  routes: [] },
+
+  // === CANADA (Ikon) ===
+  { id: 'whistler',  name: 'Whistler Blackcomb',lat: 50.1163, lng: -122.9574, status: 'LIMITED', routes: [] },
+  { id: 'sunshine',  name: 'Banff Sunshine',    lat: 51.1150, lng: -115.7640, status: 'CLOSED',  routes: [] },
+  { id: 'lakelouise',name: 'Lake Louise',       lat: 51.4450, lng: -116.1770, status: 'CLOSED',  routes: [] },
 ];
 
 // Known origins for drive time estimates
@@ -477,7 +534,137 @@ function tripRecommendation(days, weekendSnow, bestDay) {
   return { action: 'WAIT', color: '#a09890', reason: 'No significant snow in the 7-day forecast. Check back next week.' };
 }
 
-// ── EMAIL TEMPLATES ──
+// ── OFF-SEASON PREVIEW EMAIL ──
+// Sent on the first Monday of each month, May–Sep.
+// Replaces live condition alerts with historical planning content.
+function buildOffSeasonEmail(subscriber) {
+  const now = new Date();
+  const seasonYear = now.getFullYear();
+  const monthName = now.toLocaleDateString('en-US', { month: 'long' });
+
+  // Target first typical resort opening date
+  const openingDate = new Date(seasonYear, 10, 15); // Nov 15
+  const daysToOpen = daysUntil(openingDate);
+
+  const favIds = Array.isArray(subscriber.favorites)
+    ? subscriber.favorites
+    : (subscriber.favorites || '').split(',').map(s => s.trim()).filter(Boolean);
+
+  // Top 5 resorts by historical average snowfall for planning content
+  const BY_AVG = [
+    { name: 'Alta',              avg: 430, opens: 'Mid-Nov', loc: 'Little Cottonwood, UT' },
+    { name: 'Snowbird',          avg: 420, opens: 'Mid-Nov', loc: 'Little Cottonwood, UT' },
+    { name: 'Mammoth Mountain',  avg: 340, opens: 'Mid-Nov', loc: 'Mammoth Lakes, CA' },
+    { name: 'Jackson Hole',      avg: 380, opens: 'Dec',     loc: 'Teton Village, WY' },
+    { name: 'Big Sky',           avg: 290, opens: 'Late Nov',loc: 'Big Sky, MT' },
+    { name: 'Revelstoke',        avg: 460, opens: 'Nov',     loc: 'Revelstoke, BC, Canada' },
+    { name: 'Winter Park',       avg: 270, opens: 'Mid-Nov', loc: 'Winter Park, CO' },
+    { name: 'Whistler Blackcomb',avg: 450, opens: 'Nov',     loc: 'Whistler, BC, Canada' },
+  ].sort((a, b) => b.avg - a.avg).slice(0, 5);
+
+  // Highlight favorited resorts if subscriber has them
+  const hasFavs = favIds.length > 0;
+
+  const today = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+
+  return `<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f5f0eb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+  <div style="max-width:560px;margin:0 auto;padding:24px 16px">
+
+    <div style="text-align:center;margin-bottom:24px">
+      <div style="font-size:24px;font-weight:800;color:#1a1a2e;letter-spacing:-0.5px">Slab<span style="color:#8b6f47">HQ</span></div>
+      <div style="font-size:11px;color:#8b6f47;letter-spacing:2px;text-transform:uppercase;margin-top:2px">SEASON PREVIEW &middot; ${monthName.toUpperCase()}</div>
+    </div>
+
+    <!-- HERO: COUNTDOWN -->
+    <div style="background:linear-gradient(160deg,#0a1628 0%,#12253e 40%,#1a3050 100%);border-radius:12px;padding:28px 24px;margin-bottom:16px;text-align:center">
+      <div style="font-size:10px;color:#6aafc4;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px">Until the lifts spin</div>
+      <div style="display:flex;justify-content:center;gap:16px;margin-bottom:16px">
+        <div style="text-align:center">
+          <div style="font-size:48px;font-weight:700;color:#fff;line-height:1">${daysToOpen}</div>
+          <div style="font-size:10px;color:#6aafc4;letter-spacing:1px;margin-top:4px">DAYS</div>
+        </div>
+      </div>
+      <div style="font-size:22px;font-weight:700;color:#fff;margin-bottom:8px">The Powder Is Coming.</div>
+      <div style="font-size:13px;color:#a0bbd0;line-height:1.6">
+        ${seasonYear}/${String(seasonYear + 1).slice(2)} season first typical openings around Nov 15, ${seasonYear}.
+        Use ${monthName} to lock in dates, flights, and PTO windows — not to wait.
+      </div>
+    </div>
+
+    <!-- HISTORICAL RANKINGS -->
+    <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #e5ddd4">
+      <div style="font-size:10px;color:#7a8fa8;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">TOP RESORTS BY HISTORICAL SNOWFALL</div>
+      <div style="font-size:12px;color:#a09890;margin-bottom:14px">5-year average &middot; Ikon Pass resorts</div>
+      ${BY_AVG.map((r, i) => {
+        const isFav = favIds.includes(r.name.toLowerCase().replace(/\s+/g, '')) ||
+                      favIds.some(f => r.name.toLowerCase().includes(f.toLowerCase()));
+        const barWidth = Math.round((r.avg / 460) * 100);
+        return `<div style="padding:10px 0;${i < BY_AVG.length - 1 ? 'border-bottom:1px solid #f0ebe5;' : ''}${isFav ? 'background:#faf8f5;margin:0 -20px;padding-left:20px;padding-right:20px;' : ''}">
+          <div style="display:flex;align-items:center;margin-bottom:5px">
+            <div style="width:20px;font-size:12px;font-weight:700;color:#a09890">${i + 1}</div>
+            <div style="flex:1">
+              <span style="font-size:13px;font-weight:600;color:#1a1a2e">${isFav ? '&#9733; ' : ''}${r.name}</span>
+              <span style="font-size:10px;color:#a09890;margin-left:6px">${r.loc}</span>
+            </div>
+            <div style="text-align:right;min-width:50px">
+              <div style="font-size:14px;font-weight:700;color:#5bc4e0">${r.avg}"</div>
+              <div style="font-size:9px;color:#a09890">avg/yr</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;padding-left:20px">
+            <div style="flex:1;height:4px;background:#f0ebe5;border-radius:2px;overflow:hidden">
+              <div style="width:${barWidth}%;height:100%;background:#5bc4e0;border-radius:2px"></div>
+            </div>
+            <div style="font-size:10px;color:#8b6f47;white-space:nowrap">Opens ~${r.opens}</div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <!-- OFF-SEASON CHECKLIST -->
+    <div style="background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;border:1px solid #e5ddd4">
+      <div style="font-size:10px;color:#7a8fa8;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px">YOUR OFF-SEASON CHECKLIST</div>
+      ${[
+        { icon: '&#10003;', label: 'Lock in trip dates & PTO requests before November', done: false },
+        { icon: '&#10003;', label: 'Review Ikon Pass coverage at your target resorts', done: false },
+        { icon: '&#10003;', label: 'Service your equipment before the rush', done: false },
+        { icon: '&#10003;', label: `Set your home location in <a href="${SITE_URL}" style="color:#8b6f47;text-decoration:none">SlabHQ</a> for accurate drive times`, done: !subscriber.location },
+        { icon: '&#10003;', label: `Save your favorite resorts to get personalized alerts`, done: !hasFavs },
+      ].map(item => `<div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid #f0ebe5;font-size:12px;color:#1a1a2e">
+        <div style="color:#42c97a;font-size:14px;flex-shrink:0;margin-top:1px">${item.icon}</div>
+        <div style="line-height:1.5">${item.label}</div>
+      </div>`).join('')}
+    </div>
+
+    <!-- WHAT HAPPENS NEXT -->
+    <div style="background:#1a1a2e;border-radius:12px;padding:20px;margin-bottom:16px;color:#fff">
+      <div style="font-size:10px;color:#7a8fa8;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">WHAT HAPPENS NEXT</div>
+      <div style="font-size:13px;color:#d8e6f2;line-height:1.7">
+        &rarr; <strong>October:</strong> Early-opening resort alerts resume as resorts begin snowmaking.<br>
+        &rarr; <strong>November:</strong> Full powder alert stack activates. Planning-window alerts fire first.<br>
+        &rarr; <strong>First storm:</strong> You'll get a <em>Mega Dump</em> alert the moment 12"+ hits your tracked resorts.<br><br>
+        Until then, these monthly updates keep you ahead of the curve. Full details at <a href="${SITE_URL}" style="color:#8ec5e8;text-decoration:none">slabhq.fyi</a>.
+      </div>
+    </div>
+
+    <div style="text-align:center;margin:24px 0">
+      <a href="${SITE_URL}" style="display:inline-block;background:#8b6f47;color:#fff;padding:14px 32px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:600;letter-spacing:0.5px">Plan on SlabHQ &rarr;</a>
+    </div>
+
+    <div style="text-align:center;font-size:10px;color:#a09890;line-height:1.8;margin-top:32px;padding-top:16px;border-top:1px solid #e5ddd4">
+      <div>${today} &middot; <a href="${SITE_URL}" style="color:#8b6f47;text-decoration:none">SlabHQ</a> &middot; Know before you go.</div>
+      <div style="margin-top:4px">Location: ${subscriber.location || 'Not set'} &middot; Live alerts resume October ${seasonYear}</div>
+      <div style="margin-top:6px"><a href="${WORKER_BASE_URL}/unsubscribe?email=${encodeURIComponent(subscriber.email)}&token=${makeUnsubToken(subscriber.email)}" style="color:#a09890;text-decoration:underline">Unsubscribe</a></div>
+    </div>
+
+  </div>
+</body>
+</html>`;
+}
+
 function buildAlertEmail(subscriber, alert, resortAlerts, allConditions, roadConditions) {
   const origin = getOrigin(subscriber.location);
   const favIds = subscriber.favorites || [];
@@ -623,7 +810,10 @@ function buildAlertEmail(subscriber, alert, resortAlerts, allConditions, roadCon
 
 function buildWeeklyDigestEmail(subscriber, allConditions, roadConditions) {
   const origin = getOrigin(subscriber.location);
-  const favIds = (subscriber.favorites || '').split(',').map(s => s.trim()).filter(Boolean);
+  // FIX: normalize favorites to array regardless of how it arrives
+  const favIds = Array.isArray(subscriber.favorites)
+    ? subscriber.favorites
+    : (subscriber.favorites || '').split(',').map(s => s.trim()).filter(Boolean);
 
   const sorted = [...allConditions].sort((a, b) => {
     const aFav = favIds.includes(a.id) ? 1 : 0;
@@ -719,6 +909,48 @@ async function main() {
   const dow = new Date().getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
   console.log(`Day of week: ${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][dow]}`);
 
+  const phase = getSeasonPhase();
+  console.log(`Season phase: ${phase.toUpperCase()} (month ${new Date().getMonth()})`);
+
+  // ── OFF-SEASON: May–Sep ──
+  // No live condition alerts. Send a monthly preview digest on the first Monday only.
+  if (phase === 'off') {
+    console.log('Off-season mode — skipping live weather/road fetches.');
+    if (!isFirstMondayOfMonth()) {
+      console.log('Not first Monday of month — nothing to send. Exiting.');
+      return;
+    }
+    console.log('First Monday of month — sending season preview digest to all subscribers.');
+
+    // Load subscribers
+    let subscribers = [];
+    const subsToken = process.env.SUBSCRIBERS_TOKEN;
+    if (!subsToken) { console.log('SUBSCRIBERS_TOKEN not set.'); return; }
+    try {
+      const res = await fetch(`${WORKER_BASE_URL}/subscribers`, {
+        headers: { 'Authorization': `Bearer ${subsToken}` },
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error || 'Failed to fetch');
+      subscribers = data.subscribers || [];
+    } catch (e) { console.log('Failed to fetch subscribers:', e.message); return; }
+
+    if (subscribers.length === 0) { console.log('No subscribers.'); return; }
+    console.log(`Found ${subscribers.length} subscriber(s).`);
+
+    let sentCount = 0;
+    for (const sub of subscribers) {
+      const now = new Date();
+      const subject = `SlabHQ Season Preview — ${now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`;
+      const html = buildOffSeasonEmail(sub);
+      const sent = await sendEmail(sub.email, subject, html);
+      if (sent) sentCount++;
+      await new Promise(r => setTimeout(r, 100));
+    }
+    console.log(`\nDone. Sent ${sentCount} off-season preview email(s).`);
+    return; // Exit — no snapshot update needed in off-season
+  }
+
   // Load subscribers from Cloudflare Worker KV (private storage)
   let subscribers = [];
   const workerUrl = process.env.WORKER_URL || 'https://slabhq-subscribe.xiaoseanlu.workers.dev';
@@ -742,8 +974,11 @@ async function main() {
   console.log(`Found ${subscribers.length} subscriber(s).`);
 
   // Fetch weather for all non-closed resorts (16-day forecast)
-  const openResorts = RESORTS.filter(r => r.status !== 'CLOSED');
-  console.log(`Fetching 16-day weather for ${openResorts.length} resorts...`);
+  // Early season: only alert for resorts marked OPEN; peak season: all non-CLOSED
+  const openResorts = phase === 'early'
+    ? RESORTS.filter(r => r.status !== 'CLOSED')
+    : RESORTS.filter(r => r.status !== 'CLOSED');
+  console.log(`Fetching 16-day weather for ${openResorts.length} resorts (phase: ${phase})...`);
 
   const allConditions = [];
   for (const resort of openResorts) {
@@ -777,11 +1012,16 @@ async function main() {
     newForecastSnapshot.resorts[cond.id] = buildResortSnapshotEntry(cond);
   }
 
-  // Fetch road conditions for CA mountain routes
-  console.log('Fetching Caltrans road conditions...');
-  const roadConditions = await fetchRoadConditions(['80', '50', '89', '88', '395', '203', '108', '120', '20', '267', '158', '207', '18', '38', '330']);
-  for (const [num, rc] of Object.entries(roadConditions)) {
-    console.log(`  ${rc.route}: ${rc.status} — ${rc.detail.slice(0, 80)}`);
+  // Fetch road conditions — Caltrans coverage only (CA routes), skip in early season
+  let roadConditions = {};
+  if (phase === 'peak') {
+    console.log('Fetching Caltrans road conditions...');
+    roadConditions = await fetchRoadConditions(['80', '50', '89', '88', '395', '203', '108', '120', '20', '267', '158', '207', '18', '38', '330']);
+    for (const [num, rc] of Object.entries(roadConditions)) {
+      console.log(`  ${rc.route}: ${rc.status} — ${rc.detail.slice(0, 80)}`);
+    }
+  } else {
+    console.log('Early season — skipping Caltrans road conditions (snow roads not yet open).');
   }
 
   // Process each subscriber

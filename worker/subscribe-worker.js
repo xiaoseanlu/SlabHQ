@@ -469,6 +469,30 @@ export default {
 };
 
 function buildWelcomeEmail(email, location, favorites, unsubUrl) {
+  const now = new Date();
+  const month = now.getMonth(); // 0=Jan … 11=Dec
+  const isOffSeason = month >= 4 && month <= 8;   // May–Sep
+  const isEarlySeason = month === 9;               // October
+  const seasonYear = now.getFullYear();
+  const openingDate = new Date(seasonYear, 10, 15); // Nov 15
+  const diffDays = Math.max(0, Math.floor((openingDate - now) / 86400000));
+
+  // Seasonal messaging
+  const seasonBanner = isOffSeason
+    ? `<div style="background:#fff8ee;border:1px solid #e8d5b4;border-radius:8px;padding:14px 16px;margin-bottom:20px;font-size:12px;color:#8b6f47;line-height:1.6">
+        <strong style="display:block;margin-bottom:4px">&#9973; Off-Season Mode Active</strong>
+        It's currently off-season (May–Sep). Live powder alerts will resume in October as resorts begin opening.
+        You'll receive a <strong>monthly Season Preview digest</strong> in the meantime — historical rankings, projected opening dates, and trip planning content.
+        <strong style="display:block;margin-top:6px">&#8987; ${diffDays} days until first typical openings (~Nov 15, ${seasonYear}).</strong>
+      </div>`
+    : isEarlySeason
+    ? `<div style="background:#eefff4;border:1px solid #b4e8c8;border-radius:8px;padding:14px 16px;margin-bottom:20px;font-size:12px;color:#1a7a45;line-height:1.6">
+        <strong style="display:block;margin-bottom:4px">&#127808; Early Season — Alerts Resuming</strong>
+        October means early openings are starting. You'll receive alerts as resorts begin spinning lifts.
+        Full powder alert stack activates in November.
+      </div>`
+    : '';
+
   return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -484,8 +508,12 @@ function buildWelcomeEmail(email, location, favorites, unsubUrl) {
       <div style="font-size:22px;font-weight:700;color:#1a1a2e;margin-bottom:8px">Welcome to Powder Alerts</div>
       <div style="font-size:13px;color:#7a8fa8;line-height:1.6;margin-bottom:24px">
         You're all set, <strong style="color:#1a1a2e">${email}</strong>.<br>
-        We'll send you alerts when conditions are worth the drive.
+        ${isOffSeason
+          ? "We'll keep you warm with monthly Season Previews until the snow flies."
+          : "We'll send you alerts when conditions are worth the drive."}
       </div>
+
+      ${seasonBanner}
 
       <div style="background:#f5f0eb;border-radius:8px;padding:16px;text-align:left;margin-bottom:20px">
         <div style="font-size:10px;color:#7a8fa8;letter-spacing:1px;text-transform:uppercase;margin-bottom:10px">YOUR SETTINGS</div>
@@ -494,12 +522,16 @@ function buildWelcomeEmail(email, location, favorites, unsubUrl) {
         <div style="font-size:12px;color:#1a1a2e">&#128276; Alerts: Powder days, Storm warnings, Epic conditions</div>
       </div>
 
-      <div style="font-size:11px;color:#7a8fa8;line-height:1.8">
+      <div style="font-size:11px;color:#7a8fa8;line-height:1.8;text-align:left">
         <strong style="color:#1a1a2e">What to expect:</strong><br>
-        &#10052; Powder alerts when 8"+ hits your tracked resorts<br>
-        &#127786;&#65039; Storm warnings for 12"+ incoming systems<br>
-        &#127775; Epic condition alerts when scores hit 85+<br>
-        &#128197; Weekly digest every Monday morning
+        ${isOffSeason
+          ? `&#128197; Monthly Season Preview digest (May–Sep)<br>
+             &#127808; Early-season resort alerts starting October<br>
+             &#10052; Full powder alert stack from November`
+          : `&#10052; Powder alerts when 8"+ hits your tracked resorts<br>
+             &#127786;&#65039; Storm warnings for 12"+ incoming systems<br>
+             &#127775; Epic condition alerts when scores hit 85+<br>
+             &#128197; Weekly digest every Monday morning`}
       </div>
     </div>
 
