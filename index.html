@@ -1546,7 +1546,7 @@ function setLang(l){
 }
 
 // ── STATE ──
-let activeResort=localStorage.getItem('sbResort')||'mammoth';
+let activeResort=localStorage.getItem('sbResort')||null;
 let userLocation=localStorage.getItem('sbOrigin')||'San Francisco, CA';
 let currentTab='home';
 let showAllResorts=false;
@@ -2322,26 +2322,77 @@ function getChainAlertHTML(r){
   return`<div class="chain-alert"><div class="chain-icon">${icon('alert-triangle',16)}</div><div><div class="chain-title">${icon('chain',12)} ${t('chain_ctrl')} ${levelLabel} \u2014 ${worst.route}</div><div class="chain-meta">${worst.detail}</div><div class="chain-source"><a href="https://roads.dot.ca.gov" target="_blank">Caltrans ${icon('external-link',10)}</a>${roadConditionsUpdatedAt?' &middot; Updated '+new Date(roadConditionsUpdatedAt).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):''}</div></div></div>`;
 }
 
+// ── OFF-SEASON PLANNING SCORE ──
+// Replaces live score when all resorts are CLOSED (May–Sep).
+// Ranks by: historical avg snowfall (50%) + proximity (30%) + favorites (20%)
+// Output: 0–100, same scale as live score so same UI thresholds apply.
+function scoreResortOffSeason(r, origin) {
+  const maxAvg = 460; // Revelstoke — top of scale
+  const avg = r.yoy?.avg || 0;
+  const snowRank = Math.round((avg / maxAvg) * 50); // 0–50 pts
+
+  const dist = distMiles(origin, {lat: r.lat, lng: r.lng});
+  let travelRank;
+  if (r.region === 'intl') travelRank = 5;
+  else if (dist < 100) travelRank = 30;
+  else if (dist < 500) travelRank = Math.round(30 - (dist / 500) * 24);
+  else travelRank = 4;
+
+  const favs = getFavorites();
+  const favBonus = favs.includes(r.id) ? 20 : 0;
+
+  return Math.round(Math.min(snowRank + travelRank + favBonus, 100));
+}
+
+// Returns the open-window label for a resort in off-season (Oct / Nov / Dec)
+function getOpeningWindow(r) {
+  const ns = (r.nextSeason || '').toLowerCase();
+  if (ns.includes('oct')) return 'Oct';
+  if (ns.includes('dec')) return 'Dec';
+  return 'Nov';
+}
+
 // ── RENDER: LEGEND ──
 function renderLegend(){
-  document.getElementById('legendWrap').innerHTML=`
-    <div class="legend-toggle" id="legendToggle" onclick="toggleLegend()">
-      ${icon('info',14)} ${t('score_explain')} ${icon('chevron-down',12)}
-    </div>
-    <div class="legend-body" id="legendBody">
-      <div class="legend-content">
-        <strong>${t('score_label')} (0-100)</strong> — ${t('composite_ranking')}:
-        <div style="padding-left:12px;margin:4px 0">
-          ${t('snow_conditions')} <strong>40%</strong> &middot; ${t('weather')} <strong>18%</strong> &middot; ${t('travel_distance')} <strong>25%</strong> &middot; ${t('crowd_factor')} <strong>10%</strong> &middot; ${t('skill_match')} <strong>7%</strong>
-        </div>
-        <div style="margin-top:10px"><strong>${t('status_labels')}:</strong></div>
-        <div class="legend-row"><div class="legend-dot" style="background:var(--fresh)"></div> <strong>${t('epic')}</strong> — ${t('epic_desc')}</div>
-        <div class="legend-row"><div class="legend-dot" style="background:var(--sky)"></div> <strong>${t('prime')}</strong> — ${t('prime_desc')}</div>
-        <div class="legend-row"><div class="legend-dot" style="background:var(--accent)"></div> <strong>${t('good')}</strong> — ${t('good_desc')}</div>
-        <div class="legend-row"><div class="legend-dot" style="background:var(--warn)"></div> <strong>${t('limited')}</strong> — ${t('limited_desc')}</div>
-        <div class="legend-row"><div class="legend-dot" style="background:var(--text3)"></div> <strong>${t('closed')}</strong> — ${t('closed_desc')}</div>
+  const off = isOffSeason() || isEarlySeason();
+  if (off) {
+    document.getElementById('legendWrap').innerHTML=`
+      <div class="legend-toggle" id="legendToggle" onclick="toggleLegend()">
+        ${icon('info',14)} How resorts are ranked ${icon('chevron-down',12)}
       </div>
-    </div>`;
+      <div class="legend-body" id="legendBody">
+        <div class="legend-content">
+          <strong>Planning Score (0–100)</strong> — off-season composite ranking:
+          <div style="padding-left:12px;margin:4px 0">
+            Historical avg snowfall <strong>50%</strong> &middot; Drive distance <strong>30%</strong> &middot; Saved favorites <strong>20%</strong>
+          </div>
+          <div style="margin-top:10px"><strong>Opening window:</strong></div>
+          <div class="legend-row"><div class="legend-dot" style="background:var(--warn)"></div> <strong>Oct</strong> — Early openers, heavy snowmaking</div>
+          <div class="legend-row"><div class="legend-dot" style="background:var(--sky)"></div> <strong>Nov</strong> — Peak opening month (most Ikon resorts)</div>
+          <div class="legend-row"><div class="legend-dot" style="background:var(--accent)"></div> <strong>Dec</strong> — Late openers — Canada &amp; international</div>
+          <div style="margin-top:10px;font-size:10px;color:var(--text3)">Live scoring resumes automatically when resorts begin opening in October.</div>
+        </div>
+      </div>`;
+  } else {
+    document.getElementById('legendWrap').innerHTML=`
+      <div class="legend-toggle" id="legendToggle" onclick="toggleLegend()">
+        ${icon('info',14)} ${t('score_explain')} ${icon('chevron-down',12)}
+      </div>
+      <div class="legend-body" id="legendBody">
+        <div class="legend-content">
+          <strong>${t('score_label')} (0-100)</strong> — ${t('composite_ranking')}:
+          <div style="padding-left:12px;margin:4px 0">
+            ${t('snow_conditions')} <strong>40%</strong> &middot; ${t('weather')} <strong>18%</strong> &middot; ${t('travel_distance')} <strong>25%</strong> &middot; ${t('crowd_factor')} <strong>10%</strong> &middot; ${t('skill_match')} <strong>7%</strong>
+          </div>
+          <div style="margin-top:10px"><strong>${t('status_labels')}:</strong></div>
+          <div class="legend-row"><div class="legend-dot" style="background:var(--fresh)"></div> <strong>${t('epic')}</strong> — ${t('epic_desc')}</div>
+          <div class="legend-row"><div class="legend-dot" style="background:var(--sky)"></div> <strong>${t('prime')}</strong> — ${t('prime_desc')}</div>
+          <div class="legend-row"><div class="legend-dot" style="background:var(--accent)"></div> <strong>${t('good')}</strong> — ${t('good_desc')}</div>
+          <div class="legend-row"><div class="legend-dot" style="background:var(--warn)"></div> <strong>${t('limited')}</strong> — ${t('limited_desc')}</div>
+          <div class="legend-row"><div class="legend-dot" style="background:var(--text3)"></div> <strong>${t('closed')}</strong> — ${t('closed_desc')}</div>
+        </div>
+      </div>`;
+  }
 }
 
 function toggleLegend(){
@@ -2351,38 +2402,81 @@ function toggleLegend(){
   body.classList.toggle('open');
 }
 
-// ── RENDER: ALL RESORTS (top 10 + show more, grouped by status when expanded) ──
+// ── RENDER: ALL RESORTS ──
+// Peak season: top 10 by live composite score, expand groups by status
+// Off-season:  top 10 by historical planning score, expand groups by opening window
 function renderAllResorts(){
   const origin=getOrigin(userLocation);
-  const scored=RESORTS.map(r=>({...r,score:scoreResort(r,origin),travel:getTravelInfo(origin,r)})).sort((a,b)=>b.score-a.score);
+  const off=isOffSeason()||isEarlySeason();
+
+  const scored = off
+    ? RESORTS
+        .map(r=>({...r, score:scoreResortOffSeason(r,origin), travel:getTravelInfo(origin,r)}))
+        .sort((a,b)=>b.score-a.score)
+    : RESORTS
+        .map(r=>({...r, score:scoreResort(r,origin), travel:getTravelInfo(origin,r)}))
+        .sort((a,b)=>b.score-a.score);
 
   renderLegend();
 
   if(!showAllResorts){
-    // Show top 10 by score
     const toShow=scored.slice(0,10);
-    document.getElementById('allResorts').innerHTML=toShow.map(r=>renderResortRow(r)).join('');
-    document.getElementById('showMoreWrap').innerHTML=`<button class="show-more-btn" onclick="showAllResorts=true;renderAllResorts()">${icon('chevron-down',14)} ${t('show_all')} ${scored.length} ${t('resorts')}</button>`;
+    document.getElementById('allResorts').innerHTML=toShow.map(r=>renderResortRow(r,off)).join('');
+    const label=off?`${scored.length} resorts · ranked by planning score`:`${t('show_all')} ${scored.length} ${t('resorts')}`;
+    document.getElementById('showMoreWrap').innerHTML=`<button class="show-more-btn" onclick="showAllResorts=true;renderAllResorts()">${icon('chevron-down',14)} ${label}</button>`;
   } else {
-    // Group by status: EPIC, PRIME, GOOD, LIMITED, CLOSED
-    const statusOrder=['EPIC','PRIME','GOOD','LIMITED','CLOSED'];
-    const statusColors={EPIC:'var(--fresh)',PRIME:'var(--sky)',GOOD:'var(--accent)',LIMITED:'var(--warn)',CLOSED:'var(--text3)'};
     let html='';
-    statusOrder.forEach(status=>{
-      const group=scored.filter(r=>r.status===status);
-      if(group.length===0)return;
-      html+=`<div class="status-group-header" style="color:${statusColors[status]}">${t(status.toLowerCase())} (${group.length})</div>`;
-      html+=group.map(r=>renderResortRow(r)).join('');
-    });
+    if (off) {
+      // Off-season: group by opening window Oct / Nov / Dec
+      const windows={Oct:[],Nov:[],Dec:[]};
+      scored.forEach(r=>{ const w=getOpeningWindow(r); windows[w]=(windows[w]||[]); windows[w].push(r); });
+      const winColors={Oct:'var(--warn)',Nov:'var(--sky)',Dec:'var(--accent)'};
+      const winNotes={Oct:'Early openers — heavy snowmaking',Nov:'Peak opening month',Dec:'Late openers — Canada & international'};
+      ['Oct','Nov','Dec'].forEach(w=>{
+        const group=windows[w]||[];
+        if(!group.length)return;
+        html+=`<div class="status-group-header" style="color:${winColors[w]}">${w} ${new Date().getFullYear()} — ${winNotes[w]} (${group.length})</div>`;
+        html+=group.map(r=>renderResortRow(r,true)).join('');
+      });
+    } else {
+      // Peak season: group by status
+      const statusOrder=['EPIC','PRIME','GOOD','LIMITED','CLOSED'];
+      const statusColors={EPIC:'var(--fresh)',PRIME:'var(--sky)',GOOD:'var(--accent)',LIMITED:'var(--warn)',CLOSED:'var(--text3)'};
+      statusOrder.forEach(status=>{
+        const group=scored.filter(r=>r.status===status);
+        if(group.length===0)return;
+        html+=`<div class="status-group-header" style="color:${statusColors[status]}">${t(status.toLowerCase())} (${group.length})</div>`;
+        html+=group.map(r=>renderResortRow(r,false)).join('');
+      });
+    }
     document.getElementById('allResorts').innerHTML=html;
     document.getElementById('showMoreWrap').innerHTML=`<button class="show-more-btn" onclick="showAllResorts=false;renderAllResorts()">${icon('chevron-up',14)} ${t('show_less')}</button>`;
   }
 }
 
-function renderResortRow(r){
+function renderResortRow(r, offSeason=false){
+  const travelLine=r.travel.flightStr?icon('plane',10)+' '+r.travel.flightStr:r.travel.driveStr;
+
+  if (offSeason) {
+    // Off-season: chip = opening window (Oct/Nov/Dec), score = historical avg
+    const win=getOpeningWindow(r);
+    const winColor=win==='Oct'?'var(--warn)':win==='Nov'?'var(--sky)':'var(--accent)';
+    const winBg=win==='Oct'?'status-bg-limited':win==='Nov'?'status-bg-prime':'status-bg-good';
+    const chipCls=win==='Oct'?'ch-limited':win==='Nov'?'ch-prime':'ch-good';
+    const avg=r.yoy?.avg||null;
+    return`<div class="resort-row ${winBg}" data-resort-id="${r.id}" onclick="openDetail('${r.id}')">
+      <div class="rr-info">
+        <div class="rr-name">${r.name}</div>
+        <div class="rr-meta">${locLink(r)} &middot; Opens ~${r.nextSeason||win+' '+new Date().getFullYear()} &middot; ${travelLine}</div>
+      </div>
+      <div class="rr-chip ${chipCls}" style="color:${winColor}">${win}</div>
+      <div class="rr-score" style="font-size:14px">${avg?avg+'"':'—'}</div>
+    </div>`;
+  }
+
+  // Peak season: original status-based display
   const chipClass=r.status==='EPIC'?'ch-epic':r.status==='PRIME'?'ch-prime':r.status==='GOOD'?'ch-good':r.status==='LIMITED'?'ch-limited':'ch-closed';
   const bgClass=r.status==='EPIC'?'status-bg-epic':r.status==='PRIME'?'status-bg-prime':r.status==='GOOD'?'status-bg-good':r.status==='LIMITED'?'status-bg-limited':'status-bg-closed';
-  const travelLine=r.travel.flightStr?icon('plane',10)+' '+r.travel.flightStr:r.travel.driveStr;
   return`<div class="resort-row ${bgClass}${r.status==='CLOSED'?' closed-resort':''}" data-resort-id="${r.id}" onclick="openDetail('${r.id}')">
     <div class="rr-info"><div class="rr-name">${r.name}</div><div class="rr-meta">${locLink(r)} &middot; ${icon('cloud-snow',10)} ${getFresh24h(r)}" ${t('fresh')} &middot; ${getWeekSnowfall(r)}" wk &middot; ${travelLine}${roadStatusRowIcon(r.id)}</div></div>
     <div class="rr-chip ${chipClass}">${t(r.status.toLowerCase())}</div>
@@ -2392,7 +2486,32 @@ function renderResortRow(r){
 
 // ── RENDER: TRIP ──
 function renderTrip(){
-  const r=RESORTS.find(x=>x.id===activeResort)||RESORTS[0];
+  // Determine which resort to show:
+  // 1. Explicitly selected resort (activeResort set via openDetail or resort list)
+  // 2. First saved favorite
+  // 3. Empty state — prompt user to set favorites
+  const favs = getFavorites();
+  const hasExplicitSelection = localStorage.getItem('sbResort') !== null;
+
+  if (!hasExplicitSelection && favs.length === 0) {
+    // ── EMPTY STATE ──
+    document.getElementById('tripContent').innerHTML=`
+      <div class="empty-state" style="padding:40px 20px">
+        <div class="empty-icon">${icon('mountain',48)}</div>
+        <div class="empty-title">No resort selected</div>
+        <div class="empty-body">Save up to 3 favorite resorts in your Profile to unlock your personalized trip planner — itinerary, drive time, packing list, and live map.</div>
+        <button class="cta-btn" style="max-width:280px;margin:0 auto" onclick="switchTab('profile')">${icon('user',14)} Set up my Profile</button>
+        <div style="margin-top:20px;font-size:11px;color:var(--text3)">Or tap any resort in the Home tab to open its trip details.</div>
+      </div>`;
+    return;
+  }
+
+  // Use first favorite if no explicit selection
+  const resortId = hasExplicitSelection
+    ? (localStorage.getItem('sbResort') || (favs[0] || 'mammoth'))
+    : favs[0];
+
+  const r=RESORTS.find(x=>x.id===resortId)||RESORTS.find(x=>x.id===favs[0])||RESORTS[0];
   const origin=getOrigin(userLocation);
   const ti=getTravelInfo(origin,r);
   const score=scoreResort(r,origin);
