@@ -1,8 +1,19 @@
 name: Daily Snow Alert
 on:
   schedule:
-    - cron: '0 14 * * *'  # 6:00 AM PST (UTC-8) / 7:00 AM PDT (UTC-7)
-  workflow_dispatch: {}     # manual trigger for testing
+    # 6:00 AM PST (UTC-8) / 7:00 AM PDT (UTC-7)
+    # Runs year-round — seasonal behaviour is controlled inside the script:
+    #   May–Sep:  Off-season. First Monday of each month sends a "Season Preview" digest.
+    #             All other days exit immediately with no API calls.
+    #   October:  Early-season. Live alerts resume for partially-open resorts.
+    #   Nov–Apr:  Peak season. Full powder/storm/planning alert stack.
+    - cron: '0 14 * * *'
+  workflow_dispatch:
+    inputs:
+      force_season:
+        description: 'Override season phase (peak | early | off). Leave blank to auto-detect.'
+        required: false
+        default: ''
 
 jobs:
   check-and-notify:
@@ -14,6 +25,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+
       - name: Check snow conditions and send alerts
         run: node scripts/check-snow-and-notify.js
         env:
@@ -21,7 +33,12 @@ jobs:
           FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
           SUBSCRIBERS_TOKEN: ${{ secrets.SUBSCRIBERS_TOKEN }}
           WORKER_URL: ${{ secrets.WORKER_URL }}
+          # Optional: override season detection for manual testing
+          # Set FORCE_SEASON=peak to test peak-season alerts in July.
+          FORCE_SEASON: ${{ github.event.inputs.force_season }}
+
       - name: Commit forecast snapshot
+        # Only runs in peak/early season when the script actually writes a snapshot
         if: always()
         run: |
           git config user.name "github-actions[bot]"
