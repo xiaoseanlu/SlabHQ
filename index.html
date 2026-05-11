@@ -559,18 +559,45 @@ html.ready .empty-state{animation:none!important}
   position:fixed;inset:0;z-index:700;
   background:var(--overlay);backdrop-filter:blur(6px);
   opacity:0;pointer-events:none;transition:opacity .3s var(--ease-std);
+  /* on desktop: flex-center the sheet */
+  display:flex;align-items:flex-end;justify-content:center;
 }
 .detail-overlay.open{opacity:1;pointer-events:auto}
 .detail-sheet{
-  position:fixed;bottom:0;left:0;right:0;z-index:710;
-  max-height:90dvh;overflow-y:auto;
+  position:relative;z-index:710; /* above overlay backdrop */
+  width:100%;max-width:520px;
+  max-height:90dvh;overflow-y:auto;overflow-x:hidden;
   background:var(--bg);border-top:1px solid var(--border);
   border-radius:var(--r) var(--r) 0 0;
   padding:16px 20px calc(20px + env(safe-area-inset-bottom,0px));
-  max-width:520px;margin:0 auto;
   transform:translateY(100%);transition:transform .38s var(--ease-spring);
+  /* prevent inner elements from blowing out sheet width */
+  box-sizing:border-box;
 }
 .detail-overlay.open .detail-sheet{transform:translateY(0)}
+
+/* Desktop: centered dialog instead of bottom sheet */
+@media(min-width:768px){
+  .detail-overlay{
+    align-items:center;
+  }
+  .detail-sheet{
+    max-width:600px;
+    max-height:85vh;
+    border-radius:var(--r);      /* all four corners */
+    border-top:none;
+    border:1px solid var(--border);
+    box-shadow:0 24px 64px rgba(0,0,0,.4);
+    transform:translateY(24px) scale(.97);
+    transition:transform .28s var(--ease-out), opacity .25s var(--ease-out);
+    opacity:0;
+  }
+  .detail-overlay.open .detail-sheet{
+    transform:translateY(0) scale(1);
+    opacity:1;
+  }
+  .sheet-handle{display:none}   /* no drag handle needed on desktop */
+}
 .sheet-handle{
   width:36px;height:4px;background:var(--border2);border-radius:2px;
   margin:0 auto 16px;
@@ -587,6 +614,8 @@ html.ready .empty-state{animation:none!important}
 .forecast-strip{
   display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory;
   padding:8px 0;margin:12px 0 20px;-webkit-overflow-scrolling:touch;
+  /* Contain within sheet — prevents blowing out sheet width */
+  max-width:100%;min-width:0;
 }
 .forecast-strip::-webkit-scrollbar{height:2px}
 .forecast-day{
@@ -3099,6 +3128,17 @@ function openDetail(id){
 
   document.getElementById('detailOverlay').classList.add('open');
   document.body.style.overflow='hidden';
+
+  // Always fetch weather for this specific resort when the detail opens,
+  // even in off-season — the user tapped it and expects live forecast data.
+  if (!getCachedWeather(id)) {
+    loadWeatherForResorts([r]).then(() => {
+      // Only refresh if this overlay is still showing the same resort
+      if (activeResort === id && document.getElementById('detailOverlay').classList.contains('open')) {
+        openDetail(id); // re-render with live data (classList.add('open') is a no-op)
+      }
+    }).catch(() => {}); // silently ignore network errors — placeholder data already shown
+  }
   // Fetch OSRM route for accurate drive time in detail overlay
   if(r.region!=='intl'&&!routeCache[`${origin.lat},${origin.lng}-${r.lat},${r.lng}`]){
     fetchRoute(origin,{lat:r.lat,lng:r.lng}).then(rd=>{
