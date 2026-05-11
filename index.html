@@ -2663,7 +2663,7 @@ function renderTrip(){
       <div class="d-stat"><div class="d-stat-label">${icon('cloud-snow',10)} ${t('fresh')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getFresh24h(r)}"</a></div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('mountain',10)} ${t('base')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${getBaseDepth(r)}"</a></div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('pin',10)} ${t('distance')}</div><div class="d-stat-val" id="tripDistVal"><a href="${gmapsUrl}" target="_blank" class="d-stat-link"><span${loadingCls}>${realDist}</span><span style="font-size:11px;color:var(--text2)"> mi</span></a></div></div>
-      <div class="d-stat"><div class="d-stat-label">${icon(ti.flightStr?'plane':'clock',10)} ${ti.flightStr?t('flight'):t('est_drive')}</div><div class="d-stat-val" id="tripDriveVal"><a href="${gmapsUrl}" target="_blank" class="d-stat-link"><span${loadingCls}>${ti.flightStr||adjDriveStr}</span></a></div></div>
+      <div class="d-stat"><div class="d-stat-label">${icon(ti.flightStr?'plane':'clock',10)} ${ti.flightStr?t('flight'):t('est_drive')}</div><div class="d-stat-val" id="tripDriveVal">${ti.flightStr?`<div style="font-size:13px;color:var(--white)">${ti.flightStr}</div><div style="font-size:10px;color:var(--text3);margin-top:3px">${icon('clock',9)} Drive: loading…</div>`:`<a href="${gmapsUrl}" target="_blank" class="d-stat-link"><span${loadingCls}>${adjDriveStr}</span></a>`}</div></div>
       <div class="d-stat"><div class="d-stat-label">${icon('bolt',10)} ${t('lifts')}</div><div class="d-stat-val"><a href="${r.links.snow}" target="_blank" class="d-stat-link">${r.liftsOpen}/${r.lifts}</a></div></div>
     </div>
     <div style="font-size:10px;color:var(--text3);margin:-8px 0 16px;display:flex;align-items:center;gap:4px">${icon('alert-triangle',10)} ${t('actual_may_vary')} (+${bufferPct}% ${bufferNote}). <a href="${gmapsUrl}" target="_blank" style="color:var(--accent)">${t('view_on_google')}</a></div>
@@ -2696,10 +2696,23 @@ function updateTripStats(rd,ti,gmapsUrl){
   const bp=ti.hasChain?25:15;
   const am=Math.round((rd.duration/60)*(1+bp/100));
   const ah=Math.floor(am/60),amm=am%60;
+  const adjDriveStr=`${ah}h ${amm}m`;
+
+  // Always update the distance with the real Valhalla value
   const tripDist=document.getElementById('tripDistVal');
-  const tripDrive=document.getElementById('tripDriveVal');
   if(tripDist)tripDist.innerHTML=`<a href="${gmapsUrl}" target="_blank" class="d-stat-link">${rd.miles}<span style="font-size:11px;color:var(--text2)"> mi</span></a>`;
-  if(tripDrive)tripDrive.innerHTML=`<a href="${gmapsUrl}" target="_blank" class="d-stat-link">${ah}h ${amm}m</a>`;
+
+  const tripDrive=document.getElementById('tripDriveVal');
+  if(!tripDrive)return;
+
+  if(ti.flightStr){
+    // Flying trip: keep the flight string as the primary value.
+    // Add a secondary "drive alternative" note so the user can compare.
+    tripDrive.innerHTML=`<div style="font-size:14px;color:var(--white)">${ti.flightStr}</div><div style="font-size:10px;color:var(--text3);margin-top:3px">${icon('clock',9)} Drive alt: ${adjDriveStr}</div>`;
+  } else {
+    // Driving trip: show the real Valhalla-computed drive time
+    tripDrive.innerHTML=`<a href="${gmapsUrl}" target="_blank" class="d-stat-link">${adjDriveStr}</a>`;
+  }
 }
 
 function initTripMap(el,r){
