@@ -50,12 +50,9 @@
 </script>
 <!-- PWA Manifest -->
 <link rel="manifest" href="/manifest.json">
-<!-- Font preload for faster render -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-<noscript><link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"></noscript>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
@@ -3364,7 +3361,12 @@ renderNavIcons();
 updateThemeIcon();
 // Clear weather cache on every page load so data is always fresh
 Object.keys(weatherCache).forEach(k=>delete weatherCache[k]);
-renderAll(); // Stage 1: render immediately with hardcoded data
+try {
+  renderAll(); // Stage 1: render immediately with hardcoded data
+} catch(e) {
+  console.error('[SlabHQ] renderAll failed:', e);
+  document.getElementById('weatherOverview').innerHTML = `<div style="padding:20px;color:var(--danger);font-family:monospace;font-size:12px">Error: ${e.message}<br><small>${e.stack}</small></div>`;
+}
 // After first paint, mark root as ready so entrance animations don't re-run
 // when sections re-render with live weather data (prevents landing flicker).
 requestAnimationFrame(()=>document.documentElement.classList.add('ready'));
