@@ -1810,58 +1810,48 @@ function daysUntil(targetDate) {
   return { days, hours, mins };
 }
 
-// ── RENDER: OFF-SEASON HERO ──
+// ── RENDER: OFF-SEASON HERO — uses same wx-overview card as peak season ──
 function renderOffSeasonHero() {
-  // Target: Nov 15 of the upcoming season as proxy for first typical openings
   const now = new Date();
-  const seasonYear = now.getFullYear(); // 2026
+  const seasonYear = now.getFullYear();
   const openingDay = new Date(seasonYear, 10, 15); // Nov 15
   if (openingDay < now) openingDay.setFullYear(seasonYear + 1);
-
-  const { days, hours, mins } = daysUntil(openingDay);
-
-  // Top 5 resorts by 5-year average snowfall (historical signal for best next season)
-  const byAvg = [...RESORTS]
-    .filter(r => r.yoy && r.yoy.avg > 0)
-    .sort((a, b) => b.yoy.avg - a.yoy.avg)
-    .slice(0, 5);
+  const { days } = daysUntil(openingDay);
 
   document.getElementById('weatherOverview').innerHTML = `
-    <div class="offseason-hero">
-      <div class="offseason-badge">${icon('snowflake',10)} Off-Season — ${seasonYear}/${seasonYear+1} Planning Mode</div>
-      <div class="offseason-headline">Plan Your Best<br>Season Yet.</div>
-      <div class="offseason-sub">
-        The lifts are quiet, but the powder is coming. Use the off-season to lock in your trip windows, study historical snowfall, and subscribe to early-season alerts.
+    <div class="wx-overview">
+      <div style="text-align:center;margin-bottom:14px">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="opacity:.9">
+          <path d="M28 8L48 42H8z" fill="url(#heroMtnG)" />
+          <path d="M28 8l10 18-5-2.5L28 28l-5-4.5L18 26z" fill="#fff" opacity=".4"/>
+          <path d="M14 42l6-10 5 5 5-8 5 6 5-3 8 10z" fill="#e8f4ff" opacity=".6"/>
+          <circle cx="44" cy="14" r="3" fill="#fff" opacity=".5"/>
+          <path d="M38 14l1.5-1.5M44 8v2M50 14l-1.5-1.5M38 20l1.5 1.5" stroke="#fff" stroke-width=".6" opacity=".3"/>
+          <defs><linearGradient id="heroMtnG" x1="28" y1="8" x2="28" y2="42" gradientUnits="userSpaceOnUse"><stop stop-color="#5a9cc4"/><stop offset="1" stop-color="#2a5580"/></linearGradient></defs>
+        </svg>
       </div>
-
-      <div class="countdown-strip">
-        <div class="countdown-cell">
-          <div class="countdown-val">${days}</div>
-          <div class="countdown-label">Days</div>
-        </div>
-        <div class="countdown-cell">
-          <div class="countdown-val">${hours}</div>
-          <div class="countdown-label">Hours</div>
-        </div>
-        <div class="countdown-cell">
-          <div class="countdown-val">${mins}</div>
-          <div class="countdown-label">Minutes</div>
-        </div>
+      <div class="wx-eyebrow" style="justify-content:center">${seasonYear}/${String(seasonYear+1).slice(2)} Season Planning</div>
+      <div class="wx-headline" style="text-align:center">Plan Your Best<br>Season Yet.</div>
+      <div class="wx-summary" style="line-height:1.8;text-align:center">
+        The mountain is quiet — but the data isn't. Study historical snowfall, lock in your dates, and be ready when the first lifts spin.
       </div>
-      <div style="text-align:center;font-size:10px;color:var(--text3);margin-top:-4px;margin-bottom:16px">Until first typical resort openings (Nov 15, ${seasonYear})</div>
-
-      <div id="dateDisplay" style="display:none"></div>
-      <div id="timeDisplay" style="display:none"></div>
-      <div id="dataBadge" style="display:none"></div>
-
-      <div class="offseason-note">
-        ${icon('info',11)} Live conditions, drive-time routing, and road alerts will re-activate when resorts begin opening in November.
-        ${icon('bell',11)} <a href="#" onclick="switchTab('profile');return false">Subscribe to email alerts</a> for early-season powder days.
+      <div style="text-align:center;margin-top:10px;margin-bottom:2px;font-size:10px;color:rgba(200,221,239,.6)">
+        <span id="dateDisplay"></span> <span id="timeDisplay"></span>
+        <span id="dataBadge" style="color:var(--sky);font-weight:600">&bull; ${days} days to first openings</span>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px;position:relative;z-index:1">
+        <div style="padding:8px 10px;background:rgba(255,255,255,.06);border-radius:8px;font-size:11px;line-height:1.5;color:#d8e6f2;display:flex;align-items:flex-start;gap:8px"><span style="flex-shrink:0;margin-top:2px">${icon('star',12)}</span> <span>Top 5 resorts by historical snowfall</span></div>
+        <div style="padding:8px 10px;background:rgba(255,255,255,.06);border-radius:8px;font-size:11px;line-height:1.5;color:#d8e6f2;display:flex;align-items:flex-start;gap:8px"><span style="flex-shrink:0;margin-top:2px">${icon('calendar',12)}</span> <span>Projected opening windows Oct–Dec</span></div>
+        <div style="padding:8px 10px;background:rgba(255,255,255,.06);border-radius:8px;font-size:11px;line-height:1.5;color:#d8e6f2;display:flex;align-items:flex-start;gap:8px"><span style="flex-shrink:0;margin-top:2px">${icon('mountain',12)}</span> <span>All Ikon Pass resorts — top 10 by score</span></div>
+        <div style="padding:8px 10px;background:rgba(255,255,255,.06);border-radius:8px;font-size:11px;line-height:1.5;color:#d8e6f2;display:flex;align-items:flex-start;gap:8px"><span style="flex-shrink:0;margin-top:2px">${icon('bell',12)}</span> <span>Monthly preview emails until opening day</span></div>
+      </div>
+      <div style="margin-top:14px;padding:10px 14px;background:rgba(142,197,232,.12);border:1px solid rgba(142,197,232,.2);border-radius:8px;font-size:11px;line-height:1.6;color:#c8ddef;text-align:center;position:relative;z-index:1">
+        <strong style="color:#fff">Get early alerts</strong> — Head to the <a href="#" onclick="switchTab('profile');return false" style="color:#8ec5e8;font-weight:600">Profile</a> tab to set your location and subscribe to powder alerts before the season starts.
       </div>
     </div>`;
 }
 
-// ── RENDER: OFF-SEASON TOP PICKS (historical rankings) ──
+// ── RENDER: OFF-SEASON TOP PICKS — uses same rec-card as peak season ──
 function renderTopPicksOffSeason() {
   const seasonYear = new Date().getFullYear();
   const byAvg = [...RESORTS]
@@ -1869,84 +1859,84 @@ function renderTopPicksOffSeason() {
     .sort((a, b) => b.yoy.avg - a.yoy.avg)
     .slice(0, 5);
 
-  const weekendTitle = document.getElementById('weekendTitle');
-  if (weekendTitle) weekendTitle.innerHTML = `${icon('star', 18)} Top Resorts — Historical Snowfall`;
-  const weekendDateRange = document.getElementById('weekendDateRange');
-  if (weekendDateRange) weekendDateRange.textContent = `5-year average · ${seasonYear}/26 season`;
+  document.getElementById('weekendTitle').innerHTML = `${icon('cloud-snow',20)} Top 5 by Historical Snowfall`;
+  document.getElementById('weekendDateRange').textContent = `Planning for ${seasonYear}/${String(seasonYear+1).slice(2)} season`;
 
   document.getElementById('topPicks').innerHTML = byAvg.map((r, i) => {
-    const regionTag = r.region === 'ca' ? 'CA' : r.region === 'us' ? 'US' : 'INTL';
-    const tagClass = r.region === 'ca' ? 'cat-ca' : r.region === 'us' ? 'cat-us' : 'cat-intl';
-    return `<div class="next-season-card">
-      <div class="ns-rank">${i + 1}</div>
-      <div class="ns-info">
-        <div class="ns-name">${r.name}</div>
-        <div class="ns-meta">
-          <span class="rec-category ${tagClass}" style="margin-right:4px">${regionTag}</span>
-          ${r.loc} &middot; ${r.elev.toLocaleString()}ft
+    const catLabel = r.region==='ca'?'CA':r.region==='us'?'US':'INTL';
+    const catClass = r.region==='ca'?'cat-ca':r.region==='us'?'cat-us':'cat-intl';
+    const hlClass = r.yoy.avg >= 350 ? 'hl-go' : r.yoy.avg >= 250 ? 'hl-good' : 'hl-ok';
+    const hlText = r.yoy.avg >= 350 ? 'High snowfall history' : r.yoy.avg >= 250 ? 'Solid snowfall history' : 'Moderate snowfall';
+    return `<div class="rec-card" data-resort="${r.id}">
+      <div class="rec-header" style="cursor:default">
+        <div class="rec-info">
+          <div class="rec-category ${catClass}">${catLabel}</div>
+          <div class="rec-name">${r.name}</div>
+          <div class="rec-sub">${r.loc} &middot; ${r.elev.toLocaleString()}ft &middot; Opens ~${r.nextSeason||'Nov '+seasonYear}</div>
+          <div class="rec-highlight ${hlClass}">${icon('star',10)} ${hlText}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div class="rec-score">${r.yoy.avg}"</div>
+          <div style="font-size:9px;color:var(--text3);text-align:center;margin-top:2px">avg/yr</div>
         </div>
       </div>
-      <div class="ns-stats">
-        <div class="ns-snow">${r.yoy.avg}"<span style="font-size:9px;color:var(--text3);font-weight:400"> avg/yr</span></div>
-        <div class="ns-open">Opens ~${r.nextSeason || 'Nov 2026'}</div>
-      </div>
     </div>`;
-  }).join('') + `<div style="font-size:10px;color:var(--text3);margin-top:8px;display:flex;align-items:center;gap:5px">
-    ${icon('info', 10)} Rankings based on 5-year average seasonal snowfall. Live scoring resumes at season open.
-  </div>`;
+  }).join('');
 }
 
-// ── RENDER: OFF-SEASON NEXT TRIP (projected opening windows) ──
+// ── RENDER: OFF-SEASON NEXT TRIP — uses same outlook-row as peak season, 3 cards: Oct/Nov/Dec ──
 function renderNextTripOffSeason() {
   const seasonYear = new Date().getFullYear();
-  const nextTripTitle = document.getElementById('nextTripTitle');
-  if (nextTripTitle) nextTripTitle.innerHTML = `${icon('calendar', 18)} Projected Opening Windows`;
-  const ntSub = nextTripTitle ? nextTripTitle.parentElement.querySelector('.zone-subtitle') : null;
-  if (ntSub) ntSub.textContent = `${seasonYear}/${String(seasonYear+1).slice(2)} season preview`;
+  document.getElementById('nextTripTitle').innerHTML = `${icon('calendar',18)} Projected Opening Windows`;
+  const ntSub = document.getElementById('nextTripTitle').parentElement.querySelector('.zone-subtitle');
+  if (ntSub) ntSub.textContent = `${seasonYear}/${String(seasonYear+1).slice(2)} season · based on historical averages`;
 
-  // Group resorts by projected open month
-  const openGroups = {};
+  // Assign each resort to Oct, Nov, or Dec based on nextSeason field
+  const slots = { oct: [], nov: [], dec: [] };
   RESORTS.forEach(r => {
-    if (!r.nextSeason) return;
-    const key = r.nextSeason.replace(/^\d{4}$/, 'Nov $&'); // normalize bare year
-    if (!openGroups[key]) openGroups[key] = [];
-    openGroups[key].push(r);
+    const ns = (r.nextSeason || '').toLowerCase();
+    if (ns.includes('oct')) slots.oct.push(r);
+    else if (ns.includes('dec')) slots.dec.push(r);
+    else slots.nov.push(r); // Mid-Nov, Late Nov, Nov all go here
   });
 
-  // Sort by approximate open date
-  const monthOrder = ['Oct', 'Nov', 'Mid-Nov', 'Late Nov', 'Dec', 'Early Dec'];
-  const sorted = Object.entries(openGroups).sort(([a], [b]) => {
-    const ai = monthOrder.findIndex(m => a.startsWith(m) || a.includes(m));
-    const bi = monthOrder.findIndex(m => b.startsWith(m) || b.includes(m));
-    return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
-  });
+  const windows = [
+    { key: 'oct', label: 'October',  note: 'Early openers — snowmaking starts',      icon_color: 'var(--warn)'  },
+    { key: 'nov', label: 'November', note: 'Peak opening month — most resorts open',  icon_color: 'var(--sky)'   },
+    { key: 'dec', label: 'December', note: 'Late openers — international & Canada',   icon_color: 'var(--accent)'},
+  ];
 
-  document.getElementById('nextTripContent').innerHTML = sorted.map(([label, resorts]) => {
-    const topResorts = resorts.sort((a, b) => (b.yoy?.avg || 0) - (a.yoy?.avg || 0)).slice(0, 3);
+  document.getElementById('nextTripContent').innerHTML = windows.map(w => {
+    const resorts = slots[w.key].sort((a, b) => (b.yoy?.avg||0) - (a.yoy?.avg||0));
+    const top3 = resorts.slice(0, 3);
+    const count = resorts.length;
     return `<div class="outlook-row">
       <div class="outlook-header">
-        <div class="outlook-title"><span class="outlook-week">${label}</span> — Est. Opening Window</div>
-        <div class="outlook-trend" style="color:var(--fresh)">${icon('snowflake', 10)} ${resorts.length} resort${resorts.length > 1 ? 's' : ''}</div>
+        <div class="outlook-title">
+          <span class="outlook-week" style="color:${w.icon_color}">${w.label.toUpperCase()}</span>
+          ${w.label} ${seasonYear}
+        </div>
+        <div class="outlook-trend" style="color:${w.icon_color}">${icon('mountain',10)} ${count} resort${count!==1?'s':''}</div>
       </div>
-      <div class="outlook-detail" style="color:var(--text3);font-size:10px">Based on historical opening averages — subject to snowpack conditions</div>
-      ${topResorts.map(r => {
-        const regionTag = r.region === 'ca' ? 'CA' : r.region === 'us' ? 'US' : 'INTL';
-        const tagClass = r.region === 'ca' ? 'cat-ca' : r.region === 'us' ? 'cat-us' : 'cat-intl';
-        return `<div class="outlook-resort-row">
+      <div class="outlook-detail">${w.note}</div>
+      ${top3.map(r => {
+        const regionTag = r.region==='ca'?'CA':r.region==='us'?'US':'INTL';
+        const tagClass  = r.region==='ca'?'cat-ca':r.region==='us'?'cat-us':'cat-intl';
+        return `<div class="outlook-resort-row" onclick="scrollToResort('${r.id}');event.stopPropagation()">
           <span class="outlook-region-tag ${tagClass}">${regionTag}</span>
           <div style="flex:1;min-width:0">
-            <a href="${r.links.official}" target="_blank" class="outlook-resort-name">${r.name}</a>
+            <a href="${r.links.official}" target="_blank" onclick="event.stopPropagation()" class="outlook-resort-name">${r.name}</a>
             <div class="outlook-resort-meta">${r.loc}</div>
           </div>
           <div class="outlook-resort-stats">
-            <div style="color:var(--sky)">${r.yoy?.avg || '—'}"<span style="font-size:9px;color:var(--text3);font-weight:400"> avg</span></div>
-            <div style="font-size:10px;color:var(--text3)">${r.elev.toLocaleString()}ft</div>
+            <div style="color:var(--sky)">${r.yoy?.avg||'—'}"<span style="font-size:9px;color:var(--text3);font-weight:400"> avg</span></div>
+            <div style="font-size:10px;color:var(--text3)">${r.nextSeason||''}</div>
           </div>
         </div>`;
       }).join('')}
-      ${resorts.length > 3 ? `<div style="font-size:10px;color:var(--text3);padding:6px 0">+${resorts.length - 3} more resorts in this window</div>` : ''}
+      ${count > 3 ? `<div style="font-size:10px;color:var(--text3);padding:6px 0">+${count-3} more resorts in this window</div>` : ''}
     </div>`;
-  }).join('') + `<div class="wx-source" style="margin-top:6px">${icon('external-link', 10)} Historical data via <a href="https://open-meteo.com" target="_blank">Open-Meteo Historical API</a> &middot; Opening dates estimated from past 5 seasons</div>`;
+  }).join('') + `<div class="wx-source" style="margin-top:6px">${icon('info',10)} Opening dates based on historical averages — actual dates depend on snowpack. Live forecasts resume when resorts open.</div>`;
 }
 
 // ── SCORING (Fixed granular travel score) ──
